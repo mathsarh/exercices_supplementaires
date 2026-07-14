@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Numération – 1re Secondaire</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #1E2A3A;
+      --surface:   #FFFFFF;
+      --surface2:  #F0F4FF;
+      --accent:    #4F6EF7;
+      --accent-dk: #3A56D4;
+      --success:   #22C55E;
+      --error:     #EF4444;
+      --warning:   #F59E0B;
+      --text:      #1E293B;
+      --muted:     #64748B;
+      --border:    #E2E8F0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #253447 0%, #1A2D47 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 32px 24px 28px;
+      text-align: center;
+    }
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    header p {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.9rem;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* ── Score bar ── */
+    #score-bar {
+      max-width: 760px;
+      margin: 24px auto 0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+    }
+    #score-bar .score-pill {
+      background: rgba(79,110,247,0.18);
+      border: 1px solid rgba(79,110,247,0.35);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #A5B4FC;
+      white-space: nowrap;
+    }
+    #score-bar .progress-wrap {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+    }
+    #score-bar .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4F6EF7, #22C55E);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    /* ── Section headers ── */
+    .section-header {
+      max-width: 760px;
+      margin: 36px auto 12px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .section-pill {
+      background: rgba(79,110,247,0.15);
+      border: 1px solid rgba(79,110,247,0.3);
+      border-radius: 6px;
+      padding: 2px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #818CF8;
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+    }
+
+    /* ── Exercise cards ── */
+    .exercises-list {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ex-card {
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 20px 22px;
+      border: 2px solid transparent;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      position: relative;
+    }
+    .ex-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+    .ex-card.correct  { border-color: var(--success); background: #F0FDF4; }
+    .ex-card.revealed { border-color: var(--warning); background: #FFFBEB; }
+
+    .ex-question {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .ex-question strong { color: #1E40AF; font-weight: 700; }
+
+    .ex-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ex-input {
+      width: 160px;
+      padding: 9px 14px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--surface2);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .ex-input:focus { border-color: var(--accent); background: #fff; }
+    .ex-input:disabled { background: #F1F5F9; color: var(--muted); cursor: not-allowed; }
+
+    .ex-btn {
+      padding: 9px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .ex-btn:hover:not(:disabled) { background: var(--accent-dk); transform: translateY(-1px); }
+    .ex-btn:disabled { background: #CBD5E1; cursor: not-allowed; }
+
+    .ex-feedback {
+      font-size: 0.92rem;
+      font-weight: 700;
+      min-width: 120px;
+    }
+    .ex-feedback.ok    { color: var(--success); }
+    .ex-feedback.ko    { color: var(--error); }
+    .ex-feedback.shown { color: var(--warning); }
+
+    /* attempt dots */
+    .ex-attempts {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      display: flex;
+      gap: 5px;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+    .dot.used { background: var(--error); }
+    .dot.ok   { background: var(--success); }
+
+    /* correction block */
+    .ex-correction {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #FEF3C7;
+      border-left: 3px solid var(--warning);
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      color: #92400E;
+      display: none;
+    }
+    .ex-correction strong { font-weight: 700; }
+
+    /* ── Footer ── */
+    #footer {
+      max-width: 760px;
+      margin: 40px auto 0;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    #footer .score-display {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    #footer .score-display span {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      margin-left: 8px;
+      font-family: 'Inter', sans-serif;
+    }
+    #refresh-btn {
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(79,110,247,0.35);
+    }
+    #refresh-btn:hover { background: var(--accent-dk); transform: translateY(-2px); }
+
+    /* ── Animations ── */
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+    @keyframes pop   { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .shake { animation: shake 0.35s ease; }
+    .pop   { animation: pop 0.3s ease; }
+    .fade-up { animation: fadeUp 0.3s ease both; }
+
+    @media (max-width: 520px) {
+      .ex-input { width: 130px; }
+      #footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Numération – Exercices</h1>
+  <p>1re Secondaire</p>
+</header>
+
+<div id="score-bar">
+  <div class="score-pill" id="score-pill">0 / 0</div>
+  <div class="progress-wrap"><div class="progress-fill" id="progress-fill"></div></div>
+</div>
+
+<div id="app"></div>
+
+<div id="footer">
+  <div class="score-display" id="score-main">0 / 0 <span>exercices réussis</span></div>
+  <button id="refresh-btn" onclick="generateAll()">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    Nouveaux exercices
+  </button>
+</div>
+
+<script>
+  // ── Utilities ──────────────────────────────────────────────────────────────
+  let scoreOk = 0, scoreTotal = 0;
+
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = rand(0, i);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function pickN(arr, n) { return shuffle(arr).slice(0, n); }
+
+  // ── Normalization & comparison ─────────────────────────────────────────────
+  function normalize(str) {
+    let n = str.trim().toLowerCase();
+    n = n.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // Unify all dash variants
+    n = n.replace(/[\u002D\u2010\u2011\u2012\u2013\u2014\u2015\uFE58\uFE63\uFF0D\u2212]/g, "-");
+    // Compound positional names
+    n = n.replace(/dizaines?\s*-?\s*de\s*-?\s*(mille|mil)/g,        "dizainesdemille");
+    n = n.replace(/centaines?\s*-?\s*de\s*-?\s*(mille|mil)/g,       "centainesdemille");
+    n = n.replace(/unites?\s*-?\s*de\s*-?\s*(mille|mil)/g,          "unitesdemille");
+    n = n.replace(/unites?\s*-?\s*de\s*-?\s*millions?/g,            "unitesdemillions");
+    n = n.replace(/dix\s*-?\s*milliemes?/g,                         "dixmilliemes");
+    n = n.replace(/cent\s*-?\s*milliemes?/g,                        "centmilliemes");
+    // French articles
+    n = n.replace(/\b(le|la|les|un|une|des|de|d|l)\b/g, "");
+    n = n.replace(/[\s\-]/g, "");
+    n = n.replace(/\./g, ",");
+    return n;
+  }
+
+  function numNorm(s) {
+    // Return [intPart, decPart] both as strings, decPart stripped of trailing zeros
+    if (s.includes(",")) {
+      const [i, d] = s.split(",");
+      return [i, (d || "").replace(/0+$/, "")];
+    }
+    return [s, ""];
+  }
+
+  function compareAnswers(userAnswer, correctAnswer) {
+    const u = normalize(userAnswer);
+    const c = normalize(correctAnswer);
+    if (u === c) return true;
+    const [uI, uD] = numNorm(u);
+    const [cI, cD] = numNorm(c);
+    return uI === cI && uD === cD;
+  }
+
+  // ── Exercise generators ────────────────────────────────────────────────────
+
+  function genZeroExercises() {
+    const cases = [
+      { q: "56,0120",    a: "56,012"    },
+      { q: "0400,3210",  a: "400,321"   },
+      { q: "050,060",    a: "50,06"     },
+      { q: "950,12",     a: "950,12"    },
+      { q: "65,0",       a: "65"        },
+      { q: "0102,30",    a: "102,3"     },
+      { q: "00,0084",    a: "0,0084"    },
+      { q: "084,01",     a: "84,01"     },
+      { q: "13,200",     a: "13,2"      },
+      { q: "043",        a: "43"        },
+      { q: "007,5600",   a: "7,56"      },
+      { q: "0,0009",     a: "0,0009"    },
+      { q: "102,0001",   a: "102,0001"  },
+      { q: "5000,00",    a: "5000"      },
+      { q: "09,0070",    a: "9,007"     },
+      { q: "0012,3400",  a: "12,34"     },
+      { q: "800,0",      a: "800"       },
+      { q: "0560,2010",  a: "560,201"   },
+      { q: "00340,100",  a: "340,1"     },
+      { q: "025,00009",  a: "25,00009"  },
+      { q: "0,00050",    a: "0,0005"    },
+      { q: "3020,05",    a: "3020,05"   },
+      { q: "001234,6",   a: "1234,6"    },
+      { q: "0700,0800",  a: "700,08"    },
+      { q: "9000,90",    a: "9000,9"    },
+    ];
+    return pickN(cases, 5).map(c => ({
+      question: "Supprime les zéros inutiles : <strong>" + c.q + "</strong>",
+      answer: c.a
+    }));
+  }
+
+  function genWriteInDigits() {
+    // Items grouped in deliberate "trap pairs" testing singular vs plural
+    // (e.g. "trois cent-millièmes" = 0,00003 vs "trois cents millièmes" = 0,300)
+    // and large numbers with multiple grand-scale words (milliards/millions).
+    const items = [
+      // Simple / medium whole numbers
+      { q: "Deux mille trois cent septante-cinq",                                                                  a: "2375"           },
+      { q: "Cinq cent nonante-deux mille quatre cent huit",                                                         a: "592408"         },
+      { q: "Trois millions sept cent mille vingt-cinq",                                                            a: "3700025"        },
+      { q: "Treize millions quatre cent mille six",                                                                a: "13400006"       },
+      { q: "Soixante-dix-neuf mille deux cent trente-quatre",                                                      a: "79234"          },
+
+      // Large numbers with milliards
+      { q: "Vingt-quatre milliards trois cent dix millions septante-deux mille huit cent nonante-cinq",            a: "24310072895"    },
+      { q: "Sept milliards deux cent millions quinze mille trois",                                                 a: "7200015003"     },
+      { q: "Un milliard cent mille deux",                                                                          a: "1000100002"     },
+
+      // Large number with decimal part (mille/millions + millièmes)
+      { q: "Quarante millions treize mille huit cent soixante-trois unités vingt-quatre millièmes",                a: "40013863,024"   },
+      { q: "Trois cent six mille cent vingt-deux unités treize centièmes",                                         a: "306122,13"      },
+
+      // Trap pair 1: cent-millième (singulier, position) vs cents millièmes (pluriel, quantité)
+      { q: "Dix-sept unités trois cent-millièmes",                                                                 a: "17,00003"       },
+      { q: "Dix-sept unités trois cents millièmes",                                                                a: "17,300"         },
+
+      // Trap pair 2: cent millième vs cents millièmes
+      { q: "Cinq unités deux cent millièmes",                                                                      a: "5,00002"        },
+      { q: "Cinq unités deux cents millièmes",                                                                     a: "5,200"          },
+
+      // Trap pair 3: même logique avec sept
+      { q: "Nonante-huit unités sept cent millièmes",                                                              a: "98,00007"       },
+      { q: "Nonante-huit unités sept cents millièmes",                                                             a: "98,700"         },
+
+      // Trap pair 4
+      { q: "Sept unités cent millièmes",                                                                           a: "7,00001"        },
+      { q: "Sept unités cents millièmes",                                                                          a: "7,100"          },
+
+      // Other decimal subtleties
+      { q: "Huit unités quarante-cinq centièmes",                                                                  a: "8,45"           },
+      { q: "Cent trois unités sept dixièmes",                                                                      a: "103,7"          },
+      { q: "Quarante-deux unités treize dix-millièmes",                                                            a: "42,0013"        },
+      { q: "Neuf unités cent-vingt-trois cent-millièmes",                                                          a: "9,00123"        },
+      { q: "Cinquante-six unités sept millionièmes",                                                               a: "56,000007"      },
+      { q: "Onze unités un dix-millième",                                                                          a: "11,0001"        },
+      { q: "Quatre cent vingt-six unités douze centièmes",                                                         a: "426,12"         },
+      { q: "Mille unités un centième",                                                                             a: "1000,01"        },
+      { q: "Nonante-neuf unités nonante-neuf centièmes",                                                           a: "99,99"          },
+      { q: "Deux cent nonante-neuf unités quatre millionièmes",                                                    a: "299,000004"     },
+      { q: "Cent vingt-trois unités cinquante-deux dix-millièmes",                                                 a: "123,0052"       },
+      { q: "Quatre-vingt-un unités un millième",                                                                   a: "81,001"         },
+    ];
+    return pickN(items, 5).map(it => ({
+      question: "Écris en chiffres : <strong>" + it.q + "</strong>",
+      answer: it.a
+    }));
+  }
+
+  function genPlaceValue() {
+    // All named positions with their meaning
+    const positions = [
+      { name: "unités",             side: "left",  idx: 0 },
+      { name: "dizaines",           side: "left",  idx: 1 },
+      { name: "centaines",          side: "left",  idx: 2 },
+      { name: "unités de mille",    side: "left",  idx: 3 },
+      { name: "dizaines de mille",  side: "left",  idx: 4 },
+      { name: "centaines de mille", side: "left",  idx: 5 },
+      { name: "unités de millions", side: "left",  idx: 6 },
+      { name: "dixièmes",           side: "right", idx: 1 },
+      { name: "centièmes",          side: "right", idx: 2 },
+      { name: "millièmes",          side: "right", idx: 3 },
+      { name: "dix-millièmes",      side: "right", idx: 4 },
+      { name: "cent-millièmes",     side: "right", idx: 5 },
+      { name: "millionièmes",       side: "right", idx: 6 },
+    ];
+
+    const exercises = [];
+    for (let i = 0; i < 5; i++) {
+      const pos = positions[rand(0, positions.length - 1)];
+
+      // Generate random digits for left (7) and right (6) sides
+      const left  = Array.from({length: 7}, () => rand(0, 9));
+      const right = Array.from({length: 6}, () => rand(0, 9));
+
+      // Ensure no leading zero in integer part
+      if (left[6] === 0) left[6] = rand(1, 9);
+
+      // Pick a target digit that is unique across ALL positions (avoid ambiguity)
+      // Try up to 20 times to find a digit that appears only at the target position
+      let targetDigit = null;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const d = rand(1, 9);
+        // Check uniqueness
+        const allDigits = [...left, ...right];
+        const targetIndex = pos.side === "left"
+          ? (6 - pos.idx)   // left array: index 6=millions, 0=units
+          : pos.idx - 1;    // right array: index 0=dixièmes
+        const countElsewhere = allDigits.filter((v, flatIdx) => {
+          if (pos.side === "left")  return flatIdx !== (6 - pos.idx) && v === d;
+          else                      return flatIdx !== (7 + pos.idx - 1) && v === d;
+        }).length;
+        if (countElsewhere === 0) { targetDigit = d; break; }
+      }
+      if (targetDigit === null) targetDigit = rand(1, 9); // fallback
+
+      // Set the target digit at the right place
+      if (pos.side === "left") {
+        left[6 - pos.idx] = targetDigit;
+      } else {
+        right[pos.idx - 1] = targetDigit;
+      }
+
+      // Format: intPart,decPart (remove potential leading zeros from int string)
+      let intStr = left.join("");
+      intStr = intStr.replace(/^0+/, "") || "0";
+      const decStr = right.join("");
+      const num = intStr + "," + decStr;
+
+      exercises.push({
+        question: "Que représente le chiffre <strong>" + targetDigit + "</strong> dans <strong>" + num + "</strong> ?",
+        answer: pos.name
+      });
+    }
+    return exercises;
+  }
+
+  function genPlaceComma() {
+    const items = [
+      { digits: "147325",   constraint: "4 soit le chiffre des centaines",          answer: "1473,25"    },
+      { digits: "2364",     constraint: "6 soit le chiffre des centièmes",           answer: "2,364"      },
+      { digits: "95286245", constraint: "8 soit le chiffre des unités de mille",    answer: "9528624,5"  },
+      { digits: "4236",     constraint: "2 soit le chiffre des dixièmes",            answer: "4,236"      },
+      { digits: "23548",    constraint: "5 soit le chiffre des millièmes",           answer: "0,23548"    },
+      { digits: "25390",    constraint: "9 soit le chiffre des unités",              answer: "2539,0"     },
+      { digits: "156789",   constraint: "7 soit le chiffre des centièmes",           answer: "15,6789"    },
+      { digits: "54321",    constraint: "4 soit le chiffre des dixièmes",            answer: "5,4321"     },
+      { digits: "87654",    constraint: "8 soit le chiffre des unités de mille",    answer: "8765,4"     },
+      { digits: "321450",   constraint: "2 soit le chiffre des centaines",           answer: "3214,50"    },
+      { digits: "456789",   constraint: "5 soit le chiffre des dixièmes",            answer: "4,56789"    },
+      { digits: "789012",   constraint: "9 soit le chiffre des unités",              answer: "789,012"    },
+      { digits: "234567",   constraint: "4 soit le chiffre des millièmes",           answer: "0,234567"   },
+      { digits: "654321",   constraint: "6 soit le chiffre des unités de mille",    answer: "6543,21"    },
+      { digits: "567890",   constraint: "8 soit le chiffre des centièmes",           answer: "56,7890"    },
+      { digits: "123456",   constraint: "2 soit le chiffre des centaines",           answer: "1234,56"    },
+      { digits: "963852",   constraint: "8 soit le chiffre des dizaines",            answer: "96385,2"    },
+      { digits: "654987",   constraint: "9 soit le chiffre des dixièmes",            answer: "654,987"    },
+      { digits: "48153",    constraint: "8 soit le chiffre des centaines",           answer: "4815,3"     },
+      { digits: "51743",    constraint: "1 soit le chiffre des centaines",           answer: "5174,3"     },
+      { digits: "90312",    constraint: "3 soit le chiffre des centièmes",           answer: "9,0312"     },
+      { digits: "329641",   constraint: "1 soit le chiffre des dix-millièmes",       answer: "32,9641"    },
+      { digits: "756214",   constraint: "4 soit le chiffre des cent-millièmes",      answer: "7,56214"    },
+      { digits: "482037",   constraint: "7 soit le chiffre des cent-millièmes",      answer: "4,82037"    },
+      { digits: "705392",   constraint: "2 soit le chiffre des cent-millièmes",      answer: "7,05392"    },
+      { digits: "561894",   constraint: "1 soit le chiffre des dixièmes",            answer: "56,1894"    },
+      { digits: "748502",   constraint: "5 soit le chiffre des cent-millièmes",      answer: "7,48502"    },
+    ];
+    return pickN(items, 4).map(it => ({
+      question: "Place la virgule dans <strong>" + it.digits + "</strong> pour que " + it.constraint + ". <em>(Si nécessaire, ajoute ou supprime un zéro.)</em>",
+      answer: it.answer
+    }));
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  const MAX_TRIES = 3;
+
+  const SECTIONS = [
+    { title: "Zéros inutiles",       gen: genZeroExercises    },
+    { title: "Écriture en chiffres", gen: genWriteInDigits    },
+    { title: "Valeur positionnelle", gen: genPlaceValue       },
+    { title: "Placement de virgule", gen: genPlaceComma       },
+  ];
+
+  function generateAll() {
+    scoreOk = 0; scoreTotal = 0;
+    updateScore();
+
+    const app = document.getElementById("app");
+    app.innerHTML = "";
+
+    SECTIONS.forEach(section => {
+      // Section header
+      const hdr = document.createElement("div");
+      hdr.className = "section-header";
+      hdr.innerHTML =
+        '<span class="section-label">' + section.title + '</span>' +
+        '<span class="section-line"></span>';
+      app.appendChild(hdr);
+
+      // Exercise list container
+      const list = document.createElement("div");
+      list.className = "exercises-list";
+      app.appendChild(list);
+
+      const exercises = section.gen();
+      exercises.forEach((ex, localIdx) => {
+        const globalIdx = app.querySelectorAll(".ex-card").length;
+        const card = buildCard(ex, globalIdx);
+        list.appendChild(card);
+      });
+    });
+  }
+
+  function buildCard(ex, idx) {
+    const card = document.createElement("div");
+    card.className = "ex-card fade-up";
+    card.dataset.answer   = ex.answer;
+    card.dataset.tries    = "0";
+    card.dataset.solved   = "false";
+
+    // Attempt dots
+    const dotsHtml = Array.from({length: MAX_TRIES}, () => '<span class="dot"></span>').join("");
+
+    card.innerHTML =
+      '<div class="ex-attempts">' + dotsHtml + '</div>' +
+      '<p class="ex-question">' + ex.question + '</p>' +
+      '<div class="ex-controls">' +
+        '<input class="ex-input" type="text" placeholder="Ta réponse" autocomplete="off" spellcheck="false" aria-label="Réponse">' +
+        '<button class="ex-btn">Vérifier</button>' +
+        '<span class="ex-feedback"></span>' +
+      '</div>' +
+      '<div class="ex-correction"></div>';
+
+    const input  = card.querySelector(".ex-input");
+    const btn    = card.querySelector(".ex-btn");
+    const fb     = card.querySelector(".ex-feedback");
+    const corr   = card.querySelector(".ex-correction");
+    const dots   = card.querySelectorAll(".dot");
+
+    function check() {
+      if (card.dataset.solved === "true") return;
+      const tries = parseInt(card.dataset.tries);
+      const correct = card.dataset.answer;
+      const isOk = compareAnswers(input.value, correct);
+
+      if (isOk) {
+        // Success
+        card.dataset.solved = "true";
+        scoreOk++;
+        scoreTotal++;
+        dots[tries] && dots[tries].classList.add("ok");
+        fb.textContent = ["🎉 Bravo !", "✅ Correct !", "⭐ Super !", "💪 Bien joué !"][rand(0,3)];
+        fb.className = "ex-feedback ok pop";
+        card.classList.add("correct");
+        input.disabled = true;
+        btn.disabled   = true;
+        updateScore();
+      } else {
+        // Wrong
+        const newTries = tries + 1;
+        card.dataset.tries = newTries;
+        dots[tries] && dots[tries].classList.add("used");
+
+        if (newTries >= MAX_TRIES) {
+          // Show correction
+          scoreTotal++;
+          fb.textContent = "❌ Correction affichée";
+          fb.className = "ex-feedback shown";
+          card.classList.add("revealed");
+          corr.innerHTML = "La bonne réponse était : <strong>" + correct + "</strong>";
+          corr.style.display = "block";
+          input.disabled = true;
+          btn.disabled   = true;
+          updateScore();
+        } else {
+          fb.textContent = "❌ Essaie encore ! (" + (MAX_TRIES - newTries) + " essai" + (MAX_TRIES - newTries > 1 ? "s" : "") + " restant)";
+          fb.className = "ex-feedback ko shake";
+          setTimeout(() => fb.classList.remove("shake"), 400);
+        }
+      }
+    }
+
+    btn.addEventListener("click", check);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+
+    return card;
+  }
+
+  function updateScore() {
+    const pct = scoreTotal === 0 ? 0 : Math.round((scoreOk / scoreTotal) * 100);
+    document.getElementById("score-pill").textContent  = scoreOk + " / " + scoreTotal;
+    document.getElementById("score-main").innerHTML    = scoreOk + " / " + scoreTotal + ' <span>exercices réussis</span>';
+    document.getElementById("progress-fill").style.width = pct + "%";
+  }
+
+  generateAll();
+</script>
+</body>
+</html>
