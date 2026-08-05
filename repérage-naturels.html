@@ -23,6 +23,8 @@
     --rouge-fond: #fbe9e9;
     --gris: #6b7280;
     --gris-clair: #e2e6ec;
+    --ambre: #b45309;
+    --ambre-fond: #fef3e2;
   }
   *{ box-sizing: border-box; }
   html, body{
@@ -126,6 +128,13 @@
     background: var(--vert);
     color:#fff;
   }
+  #liste-etapes li.revele{
+    color: var(--ambre);
+  }
+  #liste-etapes li.revele .puce{
+    background: var(--ambre);
+    color:#fff;
+  }
   #carte-etape{
     background: #f8fafc;
     border:1px solid var(--gris-clair);
@@ -224,6 +233,12 @@
     background: var(--rouge-fond);
     color: var(--rouge);
     border:1px solid #f0bcbc;
+  }
+  #zone-retour.info{
+    display:block;
+    background: var(--ambre-fond);
+    color: var(--ambre);
+    border:1px solid #f3d9a8;
   }
   #panneau-final{
     display:none;
@@ -355,7 +370,8 @@
 <script>
 (function(){
 
-  const TOL = 0.28; // tolérance numérique pour la vérification des placements de points
+  const FRACTION_TOL = 0.15; // tolérance = 15 % de la distance d'une unité (spécifique à chaque exercice)
+  const TOL_PLANCHER = 0.05; // tolérance minimale, pour ne jamais être à 0
 
   // ---------------------------------------------------------------------
   // Fonctions utilitaires géométriques (API GeoGebra)
@@ -383,13 +399,54 @@
     });
   }
 
-  // Vérifie qu'un point a été placé exactement aux coordonnées attendues.
-  function verifierPlacementAbscisse(ciblex, cibley){
+  // ---------------------------------------------------------------------
+  // Magnétisme : tout point placé (ou déplacé) par l'élève est
+  // automatiquement recalé sur la graduation entière la plus proche, dans
+  // le repère propre à l'exercice en cours (origine et unité éventuellement
+  // décalées/inversées/dilatées). On se base sur les deux graduations de
+  // référence (O et U) déjà fournies dans ex.graduation pour retrouver
+  // l'origine et l'unité "monde", sans dépendre d'une grille GeoGebra
+  // classique (qui ignorerait le décalage/l'inversion/la dilatation).
+  // ---------------------------------------------------------------------
+  function abscisseMondeLaPlusProche(x){
+    const g = exercices[indexExerciceCourant].graduation;
+    if(!g || g.length < 2) return x;
+    const origine = g[0].x;
+    const unite = g[1].x - origine;
+    if(Math.abs(unite) < 1e-9) return x;
+    const k = Math.round((x - origine) / unite);
+    return origine + k*unite;
+  }
+
+  function magnetiserPoint(nom){
+    const a = api();
+    if(!a.exists(nom) || a.getObjectType(nom) !== "point") return;
+    const nomsPointsDepart = Object.keys(exercices[indexExerciceCourant].points || {});
+    if(nomsPointsDepart.indexOf(nom) !== -1) return; // point fixe de l'énoncé, pas concerné
+    const c = coordonneesPoint(nom);
+    const xCible = abscisseMondeLaPlusProche(c.x);
+    if(Math.abs(c.x - xCible) > 1e-6 || Math.abs(c.y) > 1e-6){
+      a.setCoords(nom, xCible, 0);
+    }
+  }
+
+  // Vérifie qu'un point a été placé aux coordonnées attendues, avec une
+  // tolérance calculée par rapport à la distance d'une unité dans CET
+  // exercice (echelleUnite = distance "monde" correspondant à 1 unité
+  // d'abscisse). Une tolérance absolue fixe serait soit trop stricte,
+  // soit — comme c'était le cas ici — beaucoup trop permissive dès que
+  // l'unité de l'exercice est petite (ex : 1 unité = 1 distance entre
+  // deux graduations, avec une tolérance fixe qui représentait alors
+  // près d'un tiers d'unité, donc un placement visiblement décalé qui se
+  // faisait quand même valider).
+  function verifierPlacementAbscisse(ciblex, cibley, echelleUnite){
+    const echelle = Math.abs(echelleUnite) || 1;
+    const tol = Math.max(TOL_PLANCHER, FRACTION_TOL * echelle);
     return function(){
       const candidats = pointsLibresCandidats();
       for(let i=0;i<candidats.length;i++){
         const c = coordonneesPoint(candidats[i]);
-        if(Math.hypot(c.x - ciblex, c.y - cibley) < TOL) return true;
+        if(Math.hypot(c.x - ciblex, c.y - cibley) < tol) return true;
       }
       return false;
     };
@@ -517,7 +574,8 @@
           titre:"Étape 1 — Placer le point " + nom + " d'abscisse " + absc,
           consigne:"Sur cette droite graduée, place le point " + nom + " d'abscisse " + absc + "." + precision,
           indice:"Repère O et U : la distance OU correspond à une unité. Compte " + absc + " unités à partir de O, dans le sens de la graduation, puis utilise l'outil « Point » pour placer " + nom + " à cet endroit.",
-          verifier: verifierPlacementAbscisse(xMonde, 0)
+          verifier: verifierPlacementAbscisse(xMonde, 0, cfg.uniteMonde),
+          cible: { x: xMonde, nom: nom }
         }
       ]
     };
@@ -525,27 +583,31 @@
 
   // Choisit un couple de points-repères (i0 = abscisse 0, i1 = abscisse 1)
   // et un point-cible p dont l'abscisse dans ce nouveau repère est
-  // garantie entière et positive : p = i0 + k*(i1-i0), réponse attendue = k.
+  // garantie entière, positive et STRICTEMENT SUPÉRIEURE À 1 :
+  // p = i0 + k*(i1-i0) avec k >= 2, réponse attendue = k.
+  // (k=1 donnerait p = i1, c'est-à-dire demander l'abscisse du point qui
+  // vient justement d'être fixé comme valant 1 : une question triviale,
+  // puisque la réponse est alors donnée par l'énoncé lui-même.)
   function choisirEtapeRepere(nbPoints){
-    const pas = choixAleatoire([1,1,2,2,3]);
-    let i0 = 0, i1 = Math.min(pas, nbPoints-1), trouve = false;
-    for(let essai=0; essai<40; essai++){
-      const iCandidat = entierAleatoire(0, nbPoints-1);
-      const direction = choixAleatoire([1,-1]);
-      const i1Candidat = iCandidat + direction*pas;
-      if(i1Candidat >= 0 && i1Candidat <= nbPoints-1 && i1Candidat !== iCandidat){
-        i0 = iCandidat; i1 = i1Candidat; trouve = true; break;
-      }
-    }
-    const kMax = Math.max(1, Math.floor((nbPoints-1)/pas));
-    let p = i1, k = 1;
-    for(let essai=0; essai<40; essai++){
-      const kCandidat = entierAleatoire(1, kMax);
-      const pCandidat = i0 + kCandidat*(i1-i0);
-      if(pCandidat >= 0 && pCandidat <= nbPoints-1 && pCandidat !== i0){
-        p = pCandidat; k = kCandidat; break;
-      }
-    }
+    // On choisit d'abord "pas" (l'écart, en nombre de graduations de la
+    // droite, entre les deux points qui définissent le repère) avec des
+    // poids fixes : ~50% deux points consécutifs (pas=1), ~33% en sautant
+    // un point (pas=2, "2 graduations"), ~17% en sautant deux points
+    // (pas=3, "3 graduations"). On choisit ensuite k avec un poids qui
+    // favorise les petites valeurs (2 et 3), tout en gardant de temps en
+    // temps des valeurs plus grandes (jusqu'à 6) pour la variété — sans
+    // que ça devienne la norme.
+    const poolK = [2,2,2,2,2, 3,3,3,3, 4,4,4,4, 5,5,5, 6,6,6];
+    const pas = choixAleatoire([1,1,1,2,2,3]);
+    const kMax = Math.max(2, Math.min(6, Math.floor((nbPoints-1)/pas)));
+    const candidatsK = poolK.filter(function(k){ return k <= kMax; });
+    const k = choixAleatoire(candidatsK);
+    const direction = choixAleatoire([1,-1]);
+    const i0 = (direction === 1)
+      ? entierAleatoire(0, nbPoints-1-k*pas)
+      : entierAleatoire(k*pas, nbPoints-1);
+    const i1 = i0 + direction*pas;
+    const p  = i0 + direction*k*pas;
     return { i0: i0, i1: i1, p: p, k: k, pas: pas };
   }
 
@@ -593,35 +655,67 @@
   function genererDeterminerRepere(){
     // Deux valeurs consécutives (n et n+1) sont marquées sur la droite,
     // ce qui suffit à déterminer le repère.
-    const vSmall = entierAleatoire(2, 8);
+    const vSmall = entierAleatoire(2, 6);
     const vBig   = vSmall + 1;
     const ampleur = choixAleatoire([1, 1, 1, 2]);
     const sensSign = choixAleatoire([1, -1]);
     const unite = sensSign * ampleur;
 
-    // Position physique (monde GeoGebra) du tick portant la valeur vSmall.
-    const worldXSmall = entierAleatoire(4, 8);
-    const xO = worldXSmall - vSmall * unite;   // position de l'origine O
-    const x1 = xO + unite;                     // position de U
-    const worldXBig = worldXSmall + unite;
+    // Nombre de points nommés sur la droite, et position d'INDEX (pas
+    // encore la position physique) des deux graduations connues, choisie
+    // pour laisser de la place à un troisième point nommé dont on
+    // demandera l'abscisse (voir plus bas : idxSmall doit rester dans
+    // [0, nbPoints-1] quel que soit le sens du repère).
+    const nbPoints = entierAleatoire(9, 13);
+    const idxSmall = (sensSign === 1)
+      ? entierAleatoire(0, nbPoints-1)
+      : entierAleatoire(0, nbPoints-1);
+    const idxBig = idxSmall + sensSign; // graduation immédiatement voisine
+    // Si idxBig sort de la droite, on décale idxSmall pour que les deux
+    // graduations connues restent visibles.
+    let idxSmallFinal = idxSmall, idxBigFinal = idxBig;
+    if(idxBigFinal < 0){ idxSmallFinal = 1; idxBigFinal = 0; }
+    else if(idxBigFinal > nbPoints-1){ idxSmallFinal = nbPoints-2; idxBigFinal = nbPoints-1; }
 
-    // Point C à placer (abscisse entière ≥ 2, distincte des deux valeurs connues).
-    const bassin = [];
-    for(let a = 2; a <= 14; a++){ if(a !== vSmall && a !== vBig) bassin.push(a); }
-    const abscC = choixAleatoire(bassin);
-    const xC = xO + abscC * unite;
+    // Un troisième point nommé (différent des deux graduations connues)
+    // dont on demande l'abscisse : c'est la vraie question de lecture.
+    // On ne garde que les positions qui donnent une abscisse naturelle
+    // raisonnable (0 à 20), pour rester cohérent avec le niveau visé.
+    const candidatsX = [];
+    for(let i=0; i<nbPoints; i++){
+      if(i === idxSmallFinal || i === idxBigFinal) continue;
+      const valeur = vSmall + sensSign*(i - idxSmallFinal);
+      if(valeur >= 0 && valeur <= 20) candidatsX.push({ idx:i, valeur:valeur });
+    }
+    const choixX = choixAleatoire(candidatsX);
 
-    // Lettres utilisées pour la droite (8-12 graduations visibles).
-    const nbPoints = entierAleatoire(8, 12);
+    // Lettres et positions physiques (monde GeoGebra) des points.
     const lettres = tirerLettres(nbPoints);
     const points = {};
-    // Répartition des points régulièrement autour de la zone d'intérêt.
-    const debut = Math.min(xO, xC, worldXSmall) - entierAleatoire(1,2)*Math.abs(unite);
-    lettres.forEach(function(nom, i){ points[nom] = debut + i * Math.abs(unite); });
+    lettres.forEach(function(nom, i){ points[nom] = i * Math.abs(unite); });
+    const worldXSmall = points[lettres[idxSmallFinal]];
+    const worldXBig    = points[lettres[idxBigFinal]];
+    const nomX = lettres[choixX.idx];
 
-    // On fait figurer les deux ticks avec leurs valeurs (vSmall, vBig).
-    // Les points de la droite sont tous fixés ; C est à construire.
-    const nomC = tirerLettres(1).filter(function(l){ return !lettres.includes(l); })[0] || 'C';
+    // Point C à construire en partie 1b. Chaque lettre déjà tracée occupe
+    // une abscisse entière (les lettres sont régulièrement espacées d'une
+    // unité), et ces abscisses sont TOUTES consécutives : il n'y a donc
+    // aucun "trou" entre elles. La seule façon de garantir que l'élève
+    // puisse réellement créer un nouveau point (et pas retomber sur un
+    // point déjà existant) est de choisir une abscisse strictement en
+    // dehors de la plage déjà occupée par les lettres visibles.
+    const valeursOccupees = [];
+    for(let i=0; i<nbPoints; i++){ valeursOccupees.push(vSmall + sensSign*(i - idxSmallFinal)); }
+    const vOccMin = Math.min.apply(null, valeursOccupees);
+    const vOccMax = Math.max.apply(null, valeursOccupees);
+    const bassinC = [];
+    for(let a = 0; a < vOccMin; a++){ if(a >= 0) bassinC.push(a); }        // à gauche de la zone occupée (encore naturel)
+    for(let a = vOccMax+1; a <= vOccMax+8; a++){ bassinC.push(a); }        // à droite de la zone occupée
+    const abscC = choixAleatoire(bassinC);
+    const idxO = idxSmallFinal - sensSign*vSmall; // peut être hors de la droite dessinée
+    const xO = idxO * Math.abs(unite);
+    const xC = xO + abscC * unite;
+    const nomC = choixAleatoire(LETTRES_POINTS.filter(function(l){ return !lettres.includes(l); }));
 
     const vuePoints = Object.keys(points).map(function(n){ return points[n]; });
     vuePoints.push(xC);
@@ -643,19 +737,18 @@
       etapes: [
         {
           type: "lecture",
-          titre: "Étape 1a — Déterminer l'abscisse de O",
-          consigne: "Sur cette droite, les graduations " + vSmall + " et " + vBig + " sont indiquées en bleu" + sensTexte + ". De combien d'unités faut-il reculer à partir de la graduation " + vSmall + " pour atteindre O (l'abscisse 0) ?",
-          indice: "La distance entre deux graduations consécutives représente 1 unité. " + ordreTicksTexte + ". Pour aller de " + vSmall + " jusqu'à 0, il faut reculer de " + vSmall + " unité(s) dans le sens opposé à la graduation.",
-          reponseAttendue: vSmall,
-          _xO: xO
+          titre: "Étape 1a — Lire l'abscisse de " + nomX,
+          consigne: "Sur cette droite, les graduations " + vSmall + " et " + vBig + " sont indiquées en bleu" + sensTexte + ". Quelle est l'abscisse du point " + nomX + " ?",
+          indice: "La distance entre deux graduations consécutives représente 1 unité. " + ordreTicksTexte + ". Repère combien d'unités séparent " + nomX + " de la graduation " + vSmall + ", et dans quel sens, pour en déduire son abscisse.",
+          reponseAttendue: choixX.valeur
         },
         {
           type: "construction",
           titre: "Étape 1b — Placer le point " + nomC + " (abscisse " + abscC + ")",
           consigne: "Place le point " + nomC + " dont l'abscisse est " + abscC + " dans ce repère" + sensTexte + ".",
-          indice: "À partir de O (que tu viens de localiser), compte " + abscC + " unité(s) dans le sens de la graduation. L'unité vaut la distance entre deux graduations consécutives.",
-          verifier: verifierPlacementAbscisse(xC, 0),
-          _xC: xC, _nomC: nomC, _abscC: abscC
+          indice: "L'unité vaut la distance entre deux graduations consécutives. Repère-toi à partir de " + nomX + " (abscisse " + choixX.valeur + ") ou d'une des deux graduations connues, et compte le bon nombre d'unités dans le bon sens.",
+          verifier: verifierPlacementAbscisse(xC, 0, unite),
+          cible: { x: xC, nom: nomC }
         }
       ]
     };
@@ -678,6 +771,8 @@
   let indexExerciceCourant = 0;
   let indexEtapeCourante = 0;
   let etatEtapes = [];
+  let tentativesEtape = 0;
+  const MAX_TENTATIVES = 2;
 
   const texteExplicationFinale =
     "L'abscisse d'un point sur une droite graduée dépend entièrement du repère choisi : le point " +
@@ -723,6 +818,9 @@
       if(etatEtapes[i] === "fait"){
         statutClasse = "fait";
         symbole = "✓";
+      } else if(etatEtapes[i] === "revele"){
+        statutClasse = "revele";
+        symbole = "!";
       } else if(i === indexEtapeCourante){
         statutClasse = "en-cours";
       }
@@ -737,6 +835,7 @@
     zoneRetour.style.display = "none";
     zoneRetour.textContent = "";
     detailsIndiceEl.open = false;
+    tentativesEtape = 0;
     rafraichirIndicateur();
 
     const etapes = etapesCourantes();
@@ -762,6 +861,7 @@
     if(etape.type === "lecture"){
       zoneSaisieEl.style.display = "block";
       inputReponseEl.value = "";
+      inputReponseEl.disabled = false;
       setTimeout(function(){ inputReponseEl.focus(); }, 0);
     } else {
       zoneSaisieEl.style.display = "none";
@@ -804,9 +904,49 @@
         afficherEtapeCourante();
       }, 1000);
     } else {
-      afficherRetour(false, "Ce n'est pas encore ça. Relis la consigne, regarde l'indice si besoin, et vérifie à nouveau.");
+      tentativesEtape++;
+      if(tentativesEtape >= MAX_TENTATIVES){
+        reveleEtapeCourante(etape);
+      } else {
+        const restantes = MAX_TENTATIVES - tentativesEtape;
+        afficherRetour(false, "Ce n'est pas encore ça. Relis la consigne, regarde l'indice si besoin, et vérifie à nouveau. Il te reste " + restantes + " essai" + (restantes > 1 ? "s" : "") + ".");
+      }
     }
   });
+
+  // Après 2 essais infructueux sur une étape : on montre la bonne réponse
+  // (valeur attendue pour une étape de lecture, point témoin orange placé
+  // au bon endroit pour une étape de construction) puis on passe à l'étape
+  // suivante automatiquement, sans compter l'étape comme "réussie".
+  function reveleEtapeCourante(etape){
+    if(etape.type === "lecture"){
+      inputReponseEl.value = String(etape.reponseAttendue);
+      inputReponseEl.disabled = true;
+      afficherRetour(null, "Tu as utilisé tes " + MAX_TENTATIVES + " essais : la bonne réponse était " + etape.reponseAttendue + ". Passage à l'étape suivante...");
+    } else {
+      try{
+        const a = api();
+        if(a.exists("pointReponse")) a.deleteObject("pointReponse");
+        a.evalCommand("pointReponse=(" + etape.cible.x + ",0)");
+        a.setColor("pointReponse", 180, 83, 9);
+        a.setPointStyle("pointReponse", 0);
+        a.setPointSize("pointReponse", 5);
+        a.setFixed("pointReponse", true);
+        a.setCaption("pointReponse", etape.cible.nom);
+        a.setLabelStyle("pointReponse", 3); // 3 = afficher la légende (caption)
+        a.setLabelVisible("pointReponse", true);
+      }catch(e){}
+      afficherRetour(null, "Tu as utilisé tes " + MAX_TENTATIVES + " essais : voici où se trouve le point " + etape.cible.nom + " (en orange). Passage à l'étape suivante...");
+    }
+    zoneRetour.className = "info";
+    etatEtapes[indexEtapeCourante] = "revele";
+    btnVerifier.disabled = true;
+    rafraichirListe();
+    setTimeout(function(){
+      indexEtapeCourante++;
+      afficherEtapeCourante();
+    }, 2400);
+  }
 
   inputReponseEl.addEventListener("keydown", function(e){
     if(e.key === "Enter"){
@@ -897,15 +1037,36 @@
     a.setAxesVisible(false, false);
     a.setGridVisible(false);
 
-    // La droite elle-même, dessinée comme un vecteur pour obtenir une
-    // flèche au bout (convention d'une droite graduée). L'objet est créé
+    // La droite elle-même : un Segment (et non un Vecteur). C'est
+    // important pour que l'outil "Point" de GeoGebra puisse s'y "accrocher"
+    // (un Vecteur n'est pas un objet sur lequel on peut construire un point,
+    // contrairement à un segment, une droite, un polygone, etc. — c'est ce
+    // qui empêchait de placer un point sur la droite). L'objet est créé
     // directement à partir de coordonnées littérales (pas de point libre
     // intermédiaire) puis fixé : il ne peut donc pas être déplacé.
-    a.evalCommand("ligneNombre=Vector((" + (ex.vue[0]+0.3) + ",0),(" + (ex.vue[1]-0.3) + ",0))");
+    const xGaucheLigne = ex.vue[0]+0.3, xDroiteLigne = ex.vue[1]-0.3;
+    a.evalCommand("ligneNombre=Segment((" + xGaucheLigne + ",0),(" + xDroiteLigne + ",0))");
     a.setColor("ligneNombre", 29, 53, 87);
     a.setLineThickness("ligneNombre", 3);
     a.setLabelVisible("ligneNombre", false);
     a.setFixed("ligneNombre", true);
+
+    // Petite flèche décorative (un Vecteur, cette fois volontairement non
+    // attachable) placée à l'extrémité qui correspond au sens des abscisses
+    // croissantes du repère de cet exercice — et non systématiquement à
+    // droite. Sans repère fixe (ex. "changement de repère"), on garde par
+    // défaut le sens naturel vers la droite.
+    let sensAbscisses = 1;
+    if(ex.graduation && ex.graduation.length >= 2){
+      sensAbscisses = (ex.graduation[1].x >= ex.graduation[0].x) ? 1 : -1;
+    }
+    const boutFleche = (sensAbscisses === 1) ? xDroiteLigne : xGaucheLigne;
+    const debutFleche = boutFleche - sensAbscisses*0.6;
+    a.evalCommand("flecheBout=Vector((" + debutFleche + ",0),(" + boutFleche + ",0))");
+    a.setColor("flecheBout", 29, 53, 87);
+    a.setLineThickness("flecheBout", 3);
+    a.setLabelVisible("flecheBout", false);
+    a.setFixed("flecheBout", true);
 
     // Décalage (en unités du repère graphique) permettant de centrer un
     // texte d'un seul caractère sous/au-dessus de sa graduation.
@@ -985,6 +1146,13 @@
       country: "FR",
       appletOnLoad: function(api){
         window.ggbApplet = api;
+        // Magnétisme : rappelé à chaque création de point (clic avec l'outil
+        // "Point") et à chaque déplacement (glisser un point existant),
+        // pour toute la durée de vie de l'applet (survit aux a.reset() /
+        // changements d'exercice, puisque ce sont des écouteurs JS et non
+        // des objets de la construction).
+        api.registerAddListener(function(nom){ magnetiserPoint(nom); });
+        api.registerUpdateListener(function(nom){ magnetiserPoint(nom); });
         demarrerExercice(0);
       }
     };
