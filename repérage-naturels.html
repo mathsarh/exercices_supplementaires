@@ -320,77 +320,84 @@
      d'instructions au-dessus de la figure, on laisse la page défiler
      normalement (au lieu d'un scroll interne imbriqué), et on réduit les
      tailles de texte/espacements pour rester lisible.
+
+     Ces deux modes (empilé / paysage compact) sont pilotés en JS plutôt
+     que par de simples @media : sur certains navigateurs/webviews mobiles,
+     la fonctionnalité CSS "orientation" et les dimensions déclarées par
+     @media peuvent ne pas correspondre exactement au viewport réellement
+     disponible juste après une rotation (valeurs encore transitoires), ce
+     qui provoquait un décalage entre "quelle disposition est appliquée" et
+     "à quelle taille GeoGebra est redimensionné" — la figure restait alors
+     coincée en tout petit après un flip en paysage. En pilotant les deux
+     avec la même mesure JS (window.innerWidth/innerHeight, relue à chaque
+     resize/rotation), les deux restent toujours cohérents entre eux.
      -------------------------------------------------------------------- */
-  @media (max-width: 760px) and (orientation: portrait){
-    html, body{ height:auto; }
-    #bandeau{
-      height:auto;
-      min-height:52px;
-      padding:10px 14px;
-      flex-wrap:wrap;
-      font-size:1.02rem;
-      row-gap:2px;
-    }
-    #bandeau .sous-titre{
-      margin-left:0;
-      font-size:0.75rem;
-      flex-basis:100%;
-    }
-    #conteneur{
-      display:block;
-      height:auto;
-    }
-    #colonne-gauche{
-      width:100%;
-      min-width:0;
-      max-width:none;
-      border-right:none;
-      border-bottom:1px solid var(--gris-clair);
-      overflow-y:visible;
-      padding:14px;
-    }
-    #colonne-droite{
-      width:100%;
-      height:62vh;
-      min-height:340px;
-    }
+  html.mode-empile{ height:auto; }
+  html.mode-empile body{ height:auto; }
+  html.mode-empile #bandeau{
+    height:auto;
+    min-height:52px;
+    padding:10px 14px;
+    flex-wrap:wrap;
+    font-size:1.02rem;
+    row-gap:2px;
+  }
+  html.mode-empile #bandeau .sous-titre{
+    margin-left:0;
+    font-size:0.75rem;
+    flex-basis:100%;
+  }
+  html.mode-empile #conteneur{
+    display:block;
+    height:auto;
+  }
+  html.mode-empile #colonne-gauche{
+    width:100%;
+    min-width:0;
+    max-width:none;
+    border-right:none;
+    border-bottom:1px solid var(--gris-clair);
+    overflow-y:visible;
+    padding:14px;
+  }
+  html.mode-empile #colonne-droite{
+    width:100%;
+    height:62vh;
+    min-height:340px;
   }
 
   /* --------------------------------------------------------------------
-     Mobile PAYSAGE (écran large mais très bas, typiquement <500px de
-     hauteur) : ici la largeur suffit pour garder panneau + figure côte à
-     côte comme sur ordinateur — le vrai problème est la hauteur, presque
-     entièrement mangée par le bandeau. On comprime donc le bandeau au
-     maximum (sous-titre masqué), on réduit le panneau latéral, et la
-     figure récupère toute la hauteur restante.
+     Mobile PAYSAGE (écran large mais bas) : ici la largeur suffit pour
+     garder panneau + figure côte à côte comme sur ordinateur — le vrai
+     problème est la hauteur, presque entièrement mangée par le bandeau.
+     On comprime donc le bandeau au maximum (sous-titre masqué), on réduit
+     le panneau latéral, et la figure récupère toute la hauteur restante.
      -------------------------------------------------------------------- */
-  @media (orientation: landscape) and (max-height: 500px){
-    #bandeau{
-      height:36px;
-      min-height:36px;
-      padding:0 14px;
-      font-size:0.85rem;
-    }
-    #bandeau .sous-titre{
-      display:none;
-    }
-    #conteneur{
-      height: calc(100vh - 36px);
-    }
-    #colonne-gauche{
-      width:230px;
-      min-width:230px;
-      padding:10px;
-      gap:8px;
-      font-size:0.85rem;
-    }
-    #carte-etape{
-      padding:10px;
-    }
-    #liste-etapes li{
-      padding:5px 8px;
-      font-size:0.8rem;
-    }
+  html.mode-paysage-compact #bandeau{
+    height:36px;
+    min-height:36px;
+    padding:0 14px;
+    font-size:0.85rem;
+  }
+  html.mode-paysage-compact #bandeau .sous-titre{
+    display:none;
+  }
+  html.mode-paysage-compact #conteneur{
+    height: calc(100vh - 36px);
+  }
+  html.mode-paysage-compact #colonne-gauche{
+    width:230px;
+    min-width:230px;
+    padding:10px;
+    gap:8px;
+    font-size:0.85rem;
+  }
+  html.mode-paysage-compact #carte-etape{
+    padding:10px;
+  }
+  html.mode-paysage-compact #liste-etapes li{
+    padding:5px 8px;
+    font-size:0.8rem;
   }
 
 </style>
@@ -1214,6 +1221,15 @@
 
     const conteneurGgb = document.getElementById("ggb-element");
 
+    // On calcule et applique le mode d'affichage (empilé / paysage
+    // compact / normal) AVANT de lire la taille du conteneur, sinon la
+    // toute première construction de l'applet se baserait sur l'ancienne
+    // disposition. (appliquerModeAffichage est déclarée plus bas dans ce
+    // même bloc, mais une déclaration de fonction est "hissée" en haut de
+    // sa portée en JavaScript : l'appeler ici avant sa définition textuelle
+    // est donc parfaitement valide.)
+    appliquerModeAffichage();
+
     const parametres = {
       appName: "classic",
       perspective: "G",
@@ -1235,6 +1251,15 @@
         api.registerAddListener(function(nom){ magnetiserPoint(nom); });
         api.registerUpdateListener(function(nom){ magnetiserPoint(nom); });
         demarrerExercice(0);
+        // Recale la taille juste après le chargement de l'applet : sur
+        // mobile, la taille passée à la construction (largeur/hauteur du
+        // conteneur lues au moment de l'événement "load" de la page) peut
+        // être encore transitoire — barre d'adresse pas encore stabilisée,
+        // media query pas encore complètement retombée, police pas encore
+        // chargée, etc. Sans ce rattrapage, l'appli restait bloquée à une
+        // taille trop petite tant qu'aucun vrai resize/rotation ne se
+        // produisait ensuite.
+        planifierAjustementTaille();
       }
     };
 
@@ -1242,14 +1267,30 @@
     applet.inject("ggb-element");
 
     // Ajustement de la taille de l'applet GeoGebra à la taille réelle de
-    // son conteneur. Un seul appel au moment de l'événement "resize" ne
-    // suffit pas sur mobile : lors d'un changement d'orientation (surtout
-    // sur iOS Safari), la barre d'adresse et la mise en page CSS se
-    // stabilisent avec un léger retard, donc le premier appel capture
-    // parfois une taille encore transitoire et la figure reste "coincée"
-    // en trop petit. On rappelle donc plusieurs fois, échelonné dans le
-    // temps, après chaque changement de taille/orientation.
+    // son conteneur, ET choix du mode d'affichage (empilé / paysage
+    // compact / normal), calculés ensemble à partir des MÊMES dimensions
+    // JS (window.innerWidth/innerHeight) pour qu'ils soient toujours
+    // cohérents entre eux — voir le commentaire CSS plus haut sur pourquoi
+    // les @media seuls ne suffisaient pas. On rappelle plusieurs fois,
+    // échelonné dans le temps, après chaque changement de taille/rotation
+    // (et juste après le chargement initial, voir appletOnLoad ci-dessus) :
+    // sur mobile, la barre d'adresse et la mise en page mettent parfois un
+    // instant à se stabiliser, donc le tout premier appel peut capturer
+    // des dimensions encore transitoires.
+    function appliquerModeAffichage(){
+      const racine = document.documentElement;
+      const l = window.innerWidth;
+      const h = window.innerHeight;
+      const paysage = l > h;
+      racine.classList.remove("mode-empile", "mode-paysage-compact");
+      if(!paysage && l <= 760){
+        racine.classList.add("mode-empile");
+      } else if(paysage && h <= 640){
+        racine.classList.add("mode-paysage-compact");
+      }
+    }
     function ajusterTailleGgb(){
+      appliquerModeAffichage();
       if(window.ggbApplet){
         window.ggbApplet.setSize(conteneurGgb.clientWidth, conteneurGgb.clientHeight);
       }
@@ -1259,6 +1300,7 @@
       setTimeout(ajusterTailleGgb, 60);
       setTimeout(ajusterTailleGgb, 300);
       setTimeout(ajusterTailleGgb, 700);
+      setTimeout(ajusterTailleGgb, 1500);
     }
     window.addEventListener("resize", planifierAjustementTaille);
     window.addEventListener("orientationchange", planifierAjustementTaille);
