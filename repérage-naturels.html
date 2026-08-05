@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Abscisses d'un point — série d'exercices</title>
+<title>Abscisse d'un point — série d'exercices</title>
 <!--
   IMPORTANT : cette page doit être ouverte via un serveur http:// ou https://
   (par exemple avec "Live Server", "python -m http.server", ou déposée sur un
@@ -417,7 +417,7 @@
 <body>
 
 <div id="bandeau">
-  Abscisses d'un point sur une droite graduée
+  Abscisse d'un point sur une droite graduée
   <span class="sous-titre">Série de 5 exercices — nombres entiers naturels</span>
 </div>
 
@@ -1233,39 +1233,47 @@
 
     const conteneurGgb = document.getElementById("ggb-element");
 
-    const parametres = {
-      appName: "classic",
-      perspective: "G",
-      width: conteneurGgb.clientWidth,
-      height: conteneurGgb.clientHeight,
-      showToolBar: true,
-      showAlgebraInput: false,
-      showMenuBar: false,
-      showResetIcon: false,
-      language: "fr",
-      country: "FR",
-      appletOnLoad: function(api){
-        window.ggbApplet = api;
-        // Magnétisme : rappelé à chaque création de point (clic avec l'outil
-        // "Point") et à chaque déplacement (glisser un point existant),
-        // pour toute la durée de vie de l'applet (survit aux a.reset() /
-        // changements d'exercice, puisque ce sont des écouteurs JS et non
-        // des objets de la construction).
-        api.registerAddListener(function(nom){ magnetiserPoint(nom); });
-        api.registerUpdateListener(function(nom){ magnetiserPoint(nom); });
-        demarrerExercice(0);
-        // Recale la taille juste après le chargement de l'applet : sur
-        // mobile, la taille passée à la construction (largeur/hauteur du
-        // conteneur lues au moment de l'événement "load" de la page) peut
-        // être encore transitoire — police pas encore chargée, etc. Sans ce
-        // rattrapage, l'appli pourrait rester bloquée à une taille trop
-        // petite tant qu'aucun vrai resize/rotation ne se produit ensuite.
-        planifierAjustementTaille();
-      }
-    };
+    // Construit et injecte un nouvel applet GeoGebra dans #ggb-element, à sa
+    // taille ACTUELLE. Regroupée dans une fonction plutôt qu'un simple bloc
+    // exécuté une fois au chargement, car on doit pouvoir la rappeler plus
+    // bas pour RECRÉER l'applet à la rotation (voir plus loin pourquoi un
+    // simple setSize() ne suffit pas). apresChargement(api) est appelé une
+    // fois l'applet prêt — c'est là qu'on (re)construit la figure.
+    function creerApplet(apresChargement){
+      const parametres = {
+        appName: "classic",
+        perspective: "G",
+        width: conteneurGgb.clientWidth,
+        height: conteneurGgb.clientHeight,
+        showToolBar: true,
+        showAlgebraInput: false,
+        showMenuBar: false,
+        showResetIcon: false,
+        language: "fr",
+        country: "FR",
+        appletOnLoad: function(api){
+          window.ggbApplet = api;
+          // Magnétisme : rappelé à chaque création de point (clic avec
+          // l'outil "Point") et à chaque déplacement (glisser un point
+          // existant). Réenregistré à chaque (re)création de l'applet,
+          // puisque ce sont des écouteurs propres à CETTE instance de
+          // l'applet et qu'ils ne survivent pas à une recréation complète
+          // (contrairement à un simple a.reset()).
+          api.registerAddListener(function(nom){ magnetiserPoint(nom); });
+          api.registerUpdateListener(function(nom){ magnetiserPoint(nom); });
+          apresChargement(api);
+          // Recale la taille juste après le chargement de l'applet : la
+          // taille passée à la construction (largeur/hauteur du conteneur
+          // lues au moment de l'appel) peut être encore transitoire —
+          // police pas encore chargée, etc.
+          planifierAjustementTaille();
+        }
+      };
+      const applet = new GGBApplet(parametres, true);
+      applet.inject("ggb-element");
+    }
 
-    const applet = new GGBApplet(parametres, true);
-    applet.inject("ggb-element");
+    creerApplet(function(){ demarrerExercice(0); });
 
     // Ajustement de la taille de l'applet GeoGebra à la taille réelle de
     // son conteneur. La disposition elle-même (empilé / paysage compact /
@@ -1318,6 +1326,73 @@
         }
       });
       observateurTaille.observe(colonneDroite);
+    }
+
+    // ---------------------------------------------------------------------
+    // Recréation complète de l'applet à la rotation.
+    //
+    // Ta capture d'écran en paysage montre que le conteneur, lui, occupe
+    // bien toute la largeur disponible — mais que GeoGebra continue à se
+    // dessiner (barre d'outils + droite graduée) tout petit dans le coin
+    // supérieur gauche, comme s'il ignorait sa nouvelle taille. Autrement
+    // dit : ggbApplet.setSize() met bien à jour la taille du CONTENEUR côté
+    // GeoGebra, mais ne force pas toujours un vrai nouveau calcul de mise
+    // en page interne (barre d'outils, vue graphique) sur tous les
+    // navigateurs — un comportement déjà signalé par d'autres utilisateurs
+    // de cette bibliothèque. Un simple redimensionnement n'y suffit donc
+    // pas de façon fiable.
+    //
+    // La solution robuste consiste à ne pas essayer de redimensionner
+    // l'applet existant, mais à le détruire et à en recréer un tout neuf,
+    // directement à la bonne taille : un GeoGebra fraîchement injecté ne
+    // peut pas être "coincé" sur une ancienne mise en page puisqu'il n'a
+    // jamais connu que la nouvelle. La figure de l'exercice en cours est
+    // ensuite redessinée (construireLigneGraduee) pour retrouver le même
+    // état qu'avant la rotation.
+    //
+    // Limite à connaître : comme pour le bouton "Régénérer la figure"
+    // existant, cette reconstruction repart des points de départ de
+    // l'exercice — un point que l'élève aurait commencé à placer
+    // lui-même sur une étape de construction, mais pas encore validé,
+    // serait donc perdu s'il tourne son téléphone à ce moment précis
+    // (sa progression globale — étapes déjà réussies, étape en cours —
+    // n'est elle jamais perdue). C'est un compromis nécessaire : sans
+    // recréer l'applet, c'est le cadre entier qui restait inutilisable.
+    //
+    // On détecte un vrai changement d'orientation via matchMedia plutôt
+    // qu'en comparant window.innerWidth/innerHeight : c'est le navigateur
+    // lui-même qui notifie le changement d'état de la media query, donc
+    // pas de risque de lire des dimensions encore transitoires juste
+    // après la rotation (la source du bug précédent).
+    const requeteOrientationPaysage = window.matchMedia("(orientation: landscape)");
+    function recreerAppletApresRotation(){
+      if(!window.ggbApplet) return; // applet initial pas encore prêt : rien à recréer
+      const etapeEnCours = indexEtapeCourante;
+      const etatsEnCours = etatEtapes;
+      window.ggbApplet = null;
+      conteneurGgb.innerHTML = "";
+      creerApplet(function(){
+        // On restaure la progression (ces variables sont modifiées par
+        // creerApplet -> apresChargement uniquement si on appelait
+        // demarrerExercice ; ici on ne le fait pas, donc elles n'ont pas
+        // bougé, mais on les réaffirme par sécurité) et on redessine
+        // uniquement la figure, sans recommencer l'exercice.
+        indexEtapeCourante = etapeEnCours;
+        etatEtapes = etatsEnCours;
+        construireLigneGraduee(indexExerciceCourant);
+      });
+    }
+    function gererChangementOrientation(){
+      // Petit délai pour laisser le temps au conteneur (piloté par les
+      // media queries CSS) de finir de se redimensionner avant de créer
+      // le nouvel applet à sa taille.
+      setTimeout(recreerAppletApresRotation, 200);
+    }
+    if(requeteOrientationPaysage.addEventListener){
+      requeteOrientationPaysage.addEventListener("change", gererChangementOrientation);
+    } else if(requeteOrientationPaysage.addListener){
+      // Anciens navigateurs (ex. Safari < 14).
+      requeteOrientationPaysage.addListener(gererChangementOrientation);
     }
   });
 
