@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Constructions de base — série d'exercices</title>
+<!--
+  IMPORTANT : cette page doit être ouverte via un serveur http:// ou https://
+  (par exemple avec "Live Server", "python -m http.server", ou déposée sur un
+  hébergement web). Si elle est ouverte en double-cliquant dessus (file://),
+  le mécanisme interne de communication de GeoGebra échoue silencieusement
+  et l'application n'apparaîtra pas.
+-->
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+<style>
+  :root{
+    --bleu-fonce: #1d3557;
+    --bleu: #457b9d;
+    --bleu-clair: #a8dadc;
+    --fond: #f1f4f8;
+    --vert: #2a9d5c;
+    --vert-fond: #e6f6ec;
+    --rouge: #d64545;
+    --rouge-fond: #fbe9e9;
+    --gris: #6b7280;
+    --gris-clair: #e2e6ec;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0; padding:0; height:100%;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--fond);
+    color:#1f2937;
+  }
+  #bandeau{
+    height:64px;
+    background: var(--bleu-fonce);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    padding: 0 24px;
+    font-size:1.25rem;
+    font-weight:600;
+    letter-spacing:0.3px;
+    flex-shrink:0;
+  }
+  #bandeau .sous-titre{
+    font-weight:400;
+    font-size:0.85rem;
+    color: var(--bleu-clair);
+    margin-left:14px;
+  }
+  #conteneur{
+    display:flex;
+    height: calc(100vh - 64px);
+    width:100%;
+  }
+  #colonne-gauche{
+    width:340px;
+    min-width:340px;
+    background:#fff;
+    border-right:1px solid var(--gris-clair);
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+    padding:18px;
+    gap:14px;
+  }
+  #colonne-droite{
+    flex:1;
+    display:flex;
+    position:relative;
+    background:#fff;
+  }
+  #ggb-element{
+    width:100%;
+    height:100%;
+  }
+  #indicateur-exercice{
+    font-size:0.78rem;
+    font-weight:700;
+    color: var(--bleu);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  #liste-etapes{
+    list-style:none;
+    margin:0; padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  #liste-etapes li{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:8px;
+    font-size:0.88rem;
+    color: var(--gris);
+  }
+  #liste-etapes li .puce{
+    width:22px; height:22px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.75rem;
+    font-weight:700;
+    flex-shrink:0;
+    background: var(--gris-clair);
+    color: var(--gris);
+  }
+  #liste-etapes li.en-cours{
+    background: #eef4fb;
+    color: var(--bleu-fonce);
+    font-weight:600;
+  }
+  #liste-etapes li.en-cours .puce{
+    background: var(--bleu);
+    color:#fff;
+  }
+  #liste-etapes li.fait{
+    color: var(--vert);
+  }
+  #liste-etapes li.fait .puce{
+    background: var(--vert);
+    color:#fff;
+  }
+  #carte-etape{
+    background: #f8fafc;
+    border:1px solid var(--gris-clair);
+    border-radius:10px;
+    padding:14px;
+  }
+  #carte-etape h3{
+    margin:0 0 8px 0;
+    font-size:1rem;
+    color: var(--bleu-fonce);
+  }
+  #carte-etape p{
+    margin:0 0 10px 0;
+    font-size:0.92rem;
+    line-height:1.4;
+  }
+  details.indice{
+    font-size:0.85rem;
+    color: var(--bleu);
+    margin-top:6px;
+  }
+  details.indice summary{
+    cursor:pointer;
+    font-weight:600;
+    outline:none;
+  }
+  details.indice[open] summary{
+    margin-bottom:6px;
+  }
+  details.indice .contenu-indice{
+    color:#374151;
+    background:#fff;
+    border:1px dashed var(--bleu-clair);
+    border-radius:6px;
+    padding:8px 10px;
+  }
+  #btn-verifier{
+    margin-top:12px;
+    width:100%;
+    padding:10px;
+    background: var(--bleu-fonce);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-size:0.92rem;
+    font-weight:600;
+    cursor:pointer;
+    transition: background 0.15s ease;
+  }
+  #btn-verifier:hover{
+    background: var(--bleu);
+  }
+  #btn-verifier:disabled{
+    background: var(--gris-clair);
+    color: var(--gris);
+    cursor:not-allowed;
+  }
+  #zone-retour{
+    display:none;
+    margin-top:12px;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:0.88rem;
+    line-height:1.4;
+  }
+  #zone-retour.succes{
+    display:block;
+    background: var(--vert-fond);
+    color: var(--vert);
+    border:1px solid #b7e3c6;
+  }
+  #zone-retour.erreur{
+    display:block;
+    background: var(--rouge-fond);
+    color: var(--rouge);
+    border:1px solid #f0bcbc;
+  }
+  #panneau-final{
+    display:none;
+    background: var(--vert-fond);
+    border:1px solid #b7e3c6;
+    border-radius:10px;
+    padding:16px;
+  }
+  #panneau-final h3{
+    margin:0 0 8px 0;
+    color: var(--vert);
+  }
+  #panneau-final p{
+    font-size:0.9rem;
+    line-height:1.5;
+    color:#1f2937;
+    margin:0 0 12px 0;
+  }
+  #panneau-final button{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    font-size:0.92rem;
+    font-weight:600;
+    cursor:pointer;
+    margin-bottom:8px;
+  }
+  #btn-suivant{
+    background: var(--vert);
+    color:#fff;
+  }
+  #btn-suivant:hover{ filter:brightness(0.95); }
+  #btn-recommencer-exercice{
+    background:#fff;
+    color: var(--gris);
+    border:1px solid var(--gris-clair) !important;
+  }
+  #btn-recommencer-exercice:hover{
+    background: var(--gris-clair);
+  }
+  #btn-recommencer-maintenant{
+    margin-top:8px;
+    width:100%;
+    padding:8px;
+    background:#fff;
+    color: var(--gris);
+    border:1px solid var(--gris-clair);
+    border-radius:8px;
+    font-size:0.85rem;
+    font-weight:600;
+    cursor:pointer;
+    transition: background 0.15s ease;
+  }
+  #btn-recommencer-maintenant:hover{
+    background: var(--gris-clair);
+  }
+  #message-erreur-chargement{
+    display:none;
+    margin:20px;
+    padding:16px;
+    background: var(--rouge-fond);
+    border:1px solid #f0bcbc;
+    color: var(--rouge);
+    border-radius:8px;
+    font-size:0.9rem;
+    max-width:500px;
+  }
+</style>
+</head>
+<body>
+
+<div id="bandeau">
+  Constructions de base : droites, segments, demi-droites
+  <span class="sous-titre">Série de 3 exercices — géométrie plane, dont une dictée de construction</span>
+</div>
+
+<div id="conteneur">
+
+  <div id="colonne-gauche">
+
+    <div id="indicateur-exercice"></div>
+
+    <ol id="liste-etapes"></ol>
+
+    <div id="carte-etape">
+      <h3 id="titre-etape"></h3>
+      <p id="consigne-etape"></p>
+      <details class="indice">
+        <summary>Afficher l'indice</summary>
+        <div class="contenu-indice" id="contenu-indice"></div>
+      </details>
+      <button id="btn-verifier">Vérifier cette étape</button>
+      <div id="zone-retour"></div>
+      <button id="btn-recommencer-maintenant">↺ Recommencer cet exercice depuis le début</button>
+    </div>
+
+    <div id="panneau-final">
+      <h3>🎉 Bravo, exercice terminé !</h3>
+      <p id="texte-final"></p>
+      <button id="btn-suivant"></button>
+      <button id="btn-recommencer-exercice">Recommencer cet exercice</button>
+    </div>
+
+  </div>
+
+  <div id="colonne-droite">
+    <div id="ggb-element"></div>
+    <div id="message-erreur-chargement">
+      L'application GeoGebra n'a pas pu se charger. Vérifie ta connexion
+      internet et désactive un éventuel bloqueur de publicités pour ce site,
+      puis recharge la page.
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  const TOL = 0.15; // tolérance numérique pour toutes les comparaisons géométriques
+
+  // Diagnostic : dernière raison précise d'échec, affichée à l'utilisateur
+  // à la place du message générique quand elle est disponible. Réinitialisée
+  // avant chaque clic sur "Vérifier".
+  let dernierMotifEchec = "";
+  function echec(motif){ dernierMotifEchec = motif; return false; }
+
+  // ---------------------------------------------------------------------
+  // Fonctions utilitaires géométriques (API GeoGebra)
+  // ---------------------------------------------------------------------
+  function api(){ return window.ggbApplet; }
+
+  function coordonneesPoint(nom){
+    return { x: api().getXcoord(nom), y: api().getYcoord(nom) };
+  }
+
+  function distanceEntrePoints(nomA, nomB){
+    const p1 = coordonneesPoint(nomA);
+    const p2 = coordonneesPoint(nomB);
+    return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+  }
+
+  // Piège GeoGebra : si un objet créé par l'élève reçoit automatiquement
+  // comme nom une lettre réservée à une constante ("i" pour l'unité
+  // imaginaire, "e" pour le nombre d'Euler), l'utiliser telle quelle dans
+  // une commande texte (Distance(C,i), StartPoint(i)...) est ambigu pour
+  // l'analyseur de GeoGebra et fait échouer silencieusement la commande,
+  // ce qui bloque la vérification alors que la construction de l'élève est
+  // pourtant correcte. On renomme temporairement l'objet concerné avant de
+  // l'utiliser dans une commande, puis on lui redonne son nom d'origine
+  // juste après, pour ne pas perturber l'algèbre affichée à l'élève.
+  const NOMS_RESERVES = ["i", "e", "pi"];
+
+  function nomUtilisable(nomObjet){
+    if(NOMS_RESERVES.indexOf(nomObjet) === -1){
+      return { usage: nomObjet, restaurer: function(){} };
+    }
+    const alias = "tmpAlias" + Math.floor(Math.random()*1000000);
+    api().renameObject(nomObjet, alias);
+    return {
+      usage: alias,
+      restaurer: function(){ api().renameObject(alias, nomObjet); }
+    };
+  }
+
+  function distanceVersObjet(nomPoint, nomObjet){
+    const securise = nomUtilisable(nomObjet);
+    const tmp = "tmpDist" + Math.floor(Math.random()*1000000);
+    api().evalCommand(tmp + "=Distance(" + nomPoint + "," + securise.usage + ")");
+    const valeur = api().getValue(tmp);
+    api().deleteObject(tmp);
+    securise.restaurer();
+    return valeur;
+  }
+
+  function origineDeLaDemiDroite(nomRayon){
+    const securise = nomUtilisable(nomRayon);
+    const tmp = "tmpOrigine" + Math.floor(Math.random()*1000000);
+    api().evalCommand(tmp + "=Point(" + securise.usage + ",0)");
+    const pt = coordonneesPoint(tmp);
+    api().deleteObject(tmp);
+    securise.restaurer();
+    return pt;
+  }
+
+  function objetsDuType(type){
+    return api().getAllObjectNames().filter(function(nom){
+      return api().exists(nom) && api().getObjectType(nom) === type;
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Fabriques génériques de fonctions de vérification (géométrie réelle,
+  // jamais le nom de l'outil utilisé par l'élève)
+  // ---------------------------------------------------------------------
+  function verifierDroite(p1, p2){
+    return function(){
+      const droites = objetsDuType("line");
+      for(let i=0;i<droites.length;i++){
+        const d = droites[i];
+        if(distanceVersObjet(p1, d) < TOL && distanceVersObjet(p2, d) < TOL) return true;
+      }
+      return false;
+    };
+  }
+
+  // Vérifie qu'un segment (objet réel, pas juste deux points) relie
+  // exactement p1 et p2 : ses deux extrémités doivent porter sur p1 et p2,
+  // et sa longueur doit correspondre à la distance p1-p2 (ce qui exclut un
+  // segment plus long qui passerait par p1 et p2 sans s'arrêter là).
+  function segmentEntreDeuxPoints(p1, p2){
+    const segments = objetsDuType("segment");
+    const longueurCible = distanceEntrePoints(p1, p2);
+    for(let i=0;i<segments.length;i++){
+      const s = segments[i];
+      if(distanceVersObjet(p1, s) < TOL && distanceVersObjet(p2, s) < TOL){
+        const longueur = api().getValue(s);
+        if(Math.abs(longueur - longueurCible) < TOL) return true;
+      }
+    }
+    return false;
+  }
+
+  function verifierSegment(p1, p2){
+    return function(){
+      return segmentEntreDeuxPoints(p1, p2);
+    };
+  }
+
+  function verifierDemiDroite(origine, cible){
+    return function(){
+      const rayons = objetsDuType("ray");
+      const o = coordonneesPoint(origine);
+      for(let i=0;i<rayons.length;i++){
+        const r = rayons[i];
+        const org = origineDeLaDemiDroite(r);
+        const origineOK = Math.hypot(org.x - o.x, org.y - o.y) < TOL;
+        const directionOK = distanceVersObjet(cible, r) < TOL;
+        if(origineOK && directionOK) return true;
+      }
+      return false;
+    };
+  }
+
+  function verifierMilieu(p1, p2, nomRequis){
+    return function(){
+      // Le segment [p1 p2] doit avoir été réellement construit (pas
+      // seulement les deux points) avant que son milieu ne soit validé.
+      if(!segmentEntreDeuxPoints(p1, p2)) return false;
+      // Le point doit exister sous le nom exact demandé (nomRequis), pas
+      // seulement se trouver au bon endroit sous un autre nom.
+      if(!api().exists(nomRequis)) return false;
+      if(api().getObjectType(nomRequis) !== "point") return false;
+      const a = coordonneesPoint(p1), b = coordonneesPoint(p2);
+      const milieu = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const c = coordonneesPoint(nomRequis);
+      return Math.hypot(c.x - milieu.x, c.y - milieu.y) < TOL;
+    };
+  }
+
+  function verifierIntersection(p1, p2, p3, p4, nomRequis){
+    return function(){
+      // Le point doit exister sous le nom exact demandé (nomRequis), pas
+      // seulement se trouver au bon endroit sous un autre nom.
+      if(!api().exists(nomRequis)) return false;
+      if(api().getObjectType(nomRequis) !== "point") return false;
+      const a = coordonneesPoint(p1), b = coordonneesPoint(p2);
+      const c = coordonneesPoint(p3), d = coordonneesPoint(p4);
+      const dirAB = { x: b.x - a.x, y: b.y - a.y };
+      const dirCD = { x: d.x - c.x, y: d.y - c.y };
+      const denom = dirAB.x * dirCD.y - dirAB.y * dirCD.x;
+      if(Math.abs(denom) < 1e-9) return false;
+      const t = ((c.x - a.x) * dirCD.y - (c.y - a.y) * dirCD.x) / denom;
+      const inter = { x: a.x + t * dirAB.x, y: a.y + t * dirAB.y };
+      const p = coordonneesPoint(nomRequis);
+      return Math.hypot(p.x - inter.x, p.y - inter.y) < TOL;
+    };
+  }
+
+  // Vérifie qu'un segment relie exactement p1 et p2 ET que sa longueur
+  // vaut la valeur imposée (utilisé pour les exercices type « dictée de
+  // construction »). On exige aussi qu'au moins un des deux points soit
+  // un point CONSTRUIT (ex. via l'outil « Segment de longueur donnée »),
+  // pas deux points libres placés à l'œil : sinon rien n'empêche l'élève
+  // de laisser un segment de longueur approximative, ou même de placer
+  // deux points sans jamais tracer le segment qui les relie.
+  function verifierSegmentDeLongueur(p1, p2, longueurCible){
+    return function(){
+      if(!api().exists(p1) || !api().exists(p2)) return false;
+      if(api().getObjectType(p1) !== "point" || api().getObjectType(p2) !== "point") return false;
+      if(!segmentEntreDeuxPoints(p1, p2)) return false;
+      if(Math.abs(distanceEntrePoints(p1, p2) - longueurCible) >= TOL) return false;
+      return estPointConstruit(p1) || estPointConstruit(p2);
+    };
+  }
+
+  // Vérifie qu'un point est un point CONSTRUIT (dépendant d'un cercle,
+  // d'une intersection, d'une droite...) et non un point libre déplacé
+  // "à la main". Indispensable en géométrie dynamique : un point libre
+  // ne recalcule pas sa position quand les points dont il devrait
+  // dépendre sont déplacés, alors qu'un point construit le fait
+  // automatiquement.
+  function estPointConstruit(nom){
+    if(!api().exists(nom)) return false;
+    const commande = api().getCommandString(nom);
+    return !!(commande && commande.trim().length > 0);
+  }
+
+  // Combine plusieurs fonctions de vérification : toutes doivent réussir.
+  function verifierEtTout(){
+    const fonctions = Array.prototype.slice.call(arguments);
+    return function(){
+      return fonctions.every(function(f){ return f(); });
+    };
+  }
+
+  // Vérifie qu'un point est CONSTRUIT (pas libre), qu'il se trouve SUR le
+  // segment [p1 p2] et à la distance imposée de p1. Utilisé pour un point
+  // qui doit être l'intersection d'un cercle et d'un segment (donc rester
+  // correct si p1 ou p2 sont déplacés par la suite).
+  function verifierPointConstruitSurSegmentADistance(nomPoint, p1, p2, distanceCible){
+    return function(){
+      if(!api().exists(nomPoint)) return echec("Le point " + nomPoint + " n'existe pas (encore).");
+      if(api().getObjectType(nomPoint) !== "point") return echec(nomPoint + " existe mais n'est pas un point.");
+      if(!estPointConstruit(nomPoint)){
+        return echec(nomPoint + " est un point LIBRE (getCommandString vide) : il doit être le résultat d'une vraie construction (cercle + intersection), pas un point placé ou renommé à partir de coordonnées tapées à la main. Si tu as tapé « " + nomPoint + "=(...) » dans le champ de saisie, cela crée un point libre : supprime-le et reprends l'outil « Intersection » entre le cercle et le segment, puis renomme le résultat en " + nomPoint + " (clic droit > Renommer).");
+      }
+      const d1 = distanceEntrePoints(p1, nomPoint);
+      const d2 = distanceEntrePoints(nomPoint, p2);
+      const d12 = distanceEntrePoints(p1, p2);
+      const surLeSegment = Math.abs((d1 + d2) - d12) < TOL;
+      if(!surLeSegment) return echec(nomPoint + " n'est pas sur le segment [" + p1 + p2 + "].");
+      if(Math.abs(d1 - distanceCible) >= TOL) return echec("La distance |" + p1 + nomPoint + "| vaut " + d1.toFixed(2) + ", au lieu de " + distanceCible + " attendu.");
+      return true;
+    };
+  }
+
+  // Vérifie qu'un cercle existe, centré exactement sur le point donné et
+  // de rayon donné.
+  function verifierCercleRayon(centre, rayonCible){
+    return function(){
+      const c = coordonneesPoint(centre);
+      const noms = api().getAllObjectNames();
+      let candidatsEssayes = 0;
+      for(let i=0;i<noms.length;i++){
+        const nom = noms[i];
+        if(!api().exists(nom)) continue;
+        if(nom === centre) continue; // pas la peine d'essayer Centre()/Rayon() sur le centre lui-même
+        const securise = nomUtilisable(nom);
+        const tmpC = "tmpCtr" + Math.floor(Math.random()*1000000);
+        const tmpR = "tmpRay" + Math.floor(Math.random()*1000000);
+        // On n'essaie pas de deviner le type GeoGebra exact d'un cercle (il varie
+        // selon les versions/outils : "conic", "circle"...) : on tente directement
+        // Centre(...)/Rayon(...) sur CHAQUE objet et on ignore ceux qui échouent
+        // (points, segments, droites...). Plus robuste qu'un filtre par type.
+        try{
+          api().evalCommand(tmpC + "=Centre(" + securise.usage + ")");
+          api().evalCommand(tmpR + "=Rayon(" + securise.usage + ")");
+          const centreCercle = coordonneesPoint(tmpC);
+          const rayon = api().getValue(tmpR);
+          api().deleteObject(tmpC);
+          api().deleteObject(tmpR);
+          securise.restaurer();
+          candidatsEssayes++;
+          const centreOK = Math.hypot(centreCercle.x - c.x, centreCercle.y - c.y) < TOL;
+          if(centreOK && Math.abs(rayon - rayonCible) < TOL) return true;
+        }catch(e){
+          try{ api().deleteObject(tmpC); }catch(e2){}
+          try{ api().deleteObject(tmpR); }catch(e2){}
+          securise.restaurer();
+        }
+      }
+      if(candidatsEssayes === 0) return echec("Aucun objet de type cercle n'a été détecté.");
+      return echec("Aucun cercle de centre " + centre + " et de rayon " + rayonCible + " n'a été trouvé.");
+    };
+  }
+
+  // Vérifie qu'un point nommé n'est PAS aligné avec p1 et p2 (assez
+  // nettement, pas juste au-dessus de la tolérance numérique). Contrairement
+  // à une distance imposée, "ne pas être aligné" est une contrainte ouverte
+  // (toute une région du plan convient) : un point libre, placé et ajusté
+  // à l'œil, est donc parfaitement légitime ici — pas besoin de le
+  // construire dynamiquement.
+  function verifierNonAlignement(p1, p2, nomPoint){
+    return function(){
+      if(!api().exists(nomPoint)) return false;
+      if(api().getObjectType(nomPoint) !== "point") return false;
+      const a = coordonneesPoint(p1), b = coordonneesPoint(p2), c = coordonneesPoint(nomPoint);
+      const aireDouble = Math.abs((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x));
+      return aireDouble > 0.3;
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Définition de la série d'exercices. Le nombre et la disposition des
+  // points de départ varient d'un exercice à l'autre (5 points dispersés,
+  // 4 points dont un manquant à reconstruire, ou même aucun point donné
+  // pour la dictée de construction) : "points" peut donc être un objet
+  // vide, ce que le moteur ci-dessous sait gérer.
+  // ---------------------------------------------------------------------
+  const exercices = [
+    {
+      // 5 points de départ, disposés de façon volontairement dispersée
+      // (aucun alignement en rectangle) plutôt que 4 points bien répartis.
+      points: { A:[-5,2], B:[3,6], C:[6,-3], D:[-6,-4], E:[0,-6] },
+      vue: [-8, 8, -8, 8],
+      etapes: [
+        { titre:"Étape 1 — Tracer la droite AC", consigne:"Trace la droite qui passe par les points A et C.", indice:"Utilise l'outil « Droite passant par deux points », puis clique successivement sur A et sur C.", verifier: verifierDroite("A","C") },
+        { titre:"Étape 2 — Tracer le segment [BE]", consigne:"Trace le segment d'extrémités B et E.", indice:"Utilise l'outil « Segment », puis clique sur B puis sur E.", verifier: verifierSegment("B","E") },
+        { titre:"Étape 3 — Tracer la demi-droite [DA", consigne:"Trace la demi-droite d'origine D qui passe par A.", indice:"Utilise l'outil « Demi-droite ». Clique d'abord sur D (l'origine), puis sur A.", verifier: verifierDemiDroite("D","A") },
+        { titre:"Étape 4 — Tracer la droite BD", consigne:"Trace la droite qui passe par les points B et D.", indice:"Utilise l'outil « Droite passant par deux points », puis clique successivement sur B et sur D.", verifier: verifierDroite("B","D") },
+        { titre:"Étape 5 — Placer le milieu du segment [CE]", consigne:"Trace d'abord le segment [CE], puis construis son point milieu. Il doit obligatoirement être renommé M.", indice:"Utilise l'outil « Segment » pour tracer [CE], puis l'outil « Milieu ou centre » en cliquant sur ce segment (ou sur C et E). Renomme ensuite ce point M (clic droit sur le point > Renommer).", verifier: verifierMilieu("C","E","M") },
+        { titre:"Étape 6 — Placer le point d'intersection", consigne:"Construis le point d'intersection des droites AC et BD. Il doit obligatoirement être renommé X.", indice:"Utilise l'outil « Intersection », puis clique sur la droite AC, puis sur la droite BD. Renomme ensuite ce point X (clic droit sur le point > Renommer).", verifier: verifierIntersection("A","C","B","D","X") }
+      ]
+    },
+    {
+      // Seulement 3 points sont donnés au départ (A, B, C) ; le point D
+      // n'existe pas encore : c'est à l'élève de le construire (comme
+      // intersection de deux droites). La figure finale forme une
+      // maison / un toit reconnaissable.
+      points: { A:[-4,-3], B:[4,-3], C:[-2,1], E:[2,1] },
+      vue: [-6, 6, -4, 7],
+      etapes: [
+        { titre:"Étape 1 — Tracer la demi-droite [AB", consigne:"Trace la demi-droite d'origine A qui passe par B.", indice:"Utilise l'outil « Demi-droite ». Clique d'abord sur A (l'origine), puis sur B.", verifier: verifierDemiDroite("A","B") },
+        { titre:"Étape 2 — Tracer la droite AC", consigne:"Trace la droite qui passe par les points A et C.", indice:"Utilise l'outil « Droite passant par deux points », puis clique successivement sur A et sur C.", verifier: verifierDroite("A","C") },
+        { titre:"Étape 3 — Tracer la droite BE", consigne:"Trace la droite qui passe par les points B et E.", indice:"Utilise l'outil « Droite passant par deux points », puis clique successivement sur B et sur E.", verifier: verifierDroite("B","E") },
+        { titre:"Étape 4 — Placer le point d'intersection", consigne:"Construis le point d'intersection des droites AC et BE. Il n'existait pas au départ : il doit obligatoirement être renommé D.", indice:"Utilise l'outil « Intersection », puis clique sur la droite AC, puis sur la droite BE. Renomme ensuite ce point D (clic droit sur le point > Renommer).", verifier: verifierIntersection("A","C","B","E","D") },
+        { titre:"Étape 5 — Tracer le segment [AE]", consigne:"Trace le segment d'extrémités A et E.", indice:"Utilise l'outil « Segment », puis clique sur A puis sur E.", verifier: verifierSegment("A","E") },
+        { titre:"Étape 6 — Tracer le segment [BC]", consigne:"Trace le segment d'extrémités B et C.", indice:"Utilise l'outil « Segment », puis clique sur B puis sur C.", verifier: verifierSegment("B","C") }
+      ]
+    },
+    {
+      // Aucun point n'est donné au départ : c'est une dictée de
+      // construction. R (contrainte de distance exacte) doit être obtenu
+      // par une vraie construction dynamique (cercle + intersection) et
+      // non déplacé à la main, afin de rester correct si P ou Q sont
+      // ensuite déplacés. S n'a qu'une contrainte ouverte (non-alignement)
+      // et reste donc un point libre. On n'utilise que des outils déjà
+      // connus à ce stade (point, segment, segment de longueur donnée,
+      // milieu, droite, demi-droite, cercle) — pas de médiatrice, pas de
+      // construction de point équidistant.
+      points: {},
+      vue: [-2, 10, -4, 8],
+      etapes: [
+        { titre:"Étape 1 — Placer P et Q distants de 7 cm", consigne:"Place un point P, puis utilise l'outil « Segment de longueur donnée » pour créer, à partir de P, un segment [PQ] de longueur exactement 7 (en cm).", indice:"Place d'abord un point avec l'outil « Point » et renomme-le P (clic droit > Renommer). Utilise ensuite l'outil « Segment de longueur donnée à partir d'un point », clique sur P, puis saisis 7 dans la boîte de dialogue : GeoGebra crée directement le second point ET le segment [PQ], de longueur exactement 7 — plus besoin d'ajuster à l'œil. Renomme ce nouveau point Q (clic droit > Renommer).", verifier: verifierSegmentDeLongueur("P","Q",7) },
+        { titre:"Étape 2 — Construire R à 2 cm de P", consigne:"Trace le cercle de centre P et de rayon 2, puis place R comme point d'intersection de ce cercle avec le segment [PQ].", indice:"Utilise l'outil « Cercle (centre-rayon) », clique sur P, puis indique 2 comme rayon. Utilise ensuite l'outil « Intersection » en cliquant sur ce cercle puis sur le segment [PQ], et renomme le point obtenu R. Ainsi R restera toujours à exactement 2 cm de P, même si tu déplaces ensuite P ou Q (ne place surtout pas R « à la main » : il ne resterait pas à la bonne distance).", verifier: verifierPointConstruitSurSegmentADistance("R","P","Q",2) },
+        { titre:"Étape 3 — Placer S", consigne:"Place un point S tel que P, Q et S ne soient pas alignés.", indice:"S doit être clairement en dehors de la droite (PQ), pas juste très légèrement décalé. Renomme-le S.", verifier: verifierNonAlignement("P","Q","S") },
+        { titre:"Étape 4 — Tracer la droite RS", consigne:"Trace la droite qui passe par les points R et S.", indice:"Utilise l'outil « Droite passant par deux points », puis clique successivement sur R et sur S.", verifier: verifierDroite("R","S") },
+        { titre:"Étape 5 — Tracer la demi-droite [SQ", consigne:"Trace la demi-droite d'origine S qui passe par Q.", indice:"Utilise l'outil « Demi-droite ». Clique d'abord sur S (l'origine), puis sur Q.", verifier: verifierDemiDroite("S","Q") }
+      ]
+    }
+  ];
+
+  let indexExerciceCourant = 0;
+  let indexEtapeCourante = 0;
+  let etatEtapes = [];
+
+  const texteExplicationFinale =
+    "Bravo, ta construction respecte toutes les propriétés demandées. Essaie de déplacer les points " +
+    "libres de la figure directement sur le graphique : toute la construction doit s'adapter " +
+    "automatiquement, preuve que les objets sont bien liés entre eux et non juste dessinés au hasard.";
+
+  // ---------------------------------------------------------------------
+  // Rendu de l'interface
+  // ---------------------------------------------------------------------
+  const indicateurExerciceEl = document.getElementById("indicateur-exercice");
+  const listeEtapesEl = document.getElementById("liste-etapes");
+  const titreEtapeEl = document.getElementById("titre-etape");
+  const consigneEtapeEl = document.getElementById("consigne-etape");
+  const contenuIndiceEl = document.getElementById("contenu-indice");
+  const detailsIndiceEl = document.querySelector("details.indice");
+  const btnVerifier = document.getElementById("btn-verifier");
+  const zoneRetour = document.getElementById("zone-retour");
+  const carteEtape = document.getElementById("carte-etape");
+  const panneauFinal = document.getElementById("panneau-final");
+  const texteFinalEl = document.getElementById("texte-final");
+  const btnSuivant = document.getElementById("btn-suivant");
+  const btnRecommencerExercice = document.getElementById("btn-recommencer-exercice");
+  const btnRecommencerMaintenant = document.getElementById("btn-recommencer-maintenant");
+
+  function etapesCourantes(){
+    return exercices[indexExerciceCourant].etapes;
+  }
+
+  function rafraichirIndicateur(){
+    indicateurExerciceEl.textContent = "Exercice " + (indexExerciceCourant+1) + " sur " + exercices.length;
+  }
+
+  function rafraichirListe(){
+    listeEtapesEl.innerHTML = "";
+    etapesCourantes().forEach(function(etape, i){
+      const li = document.createElement("li");
+      let statutClasse = "";
+      let symbole = String(i+1);
+      if(etatEtapes[i] === "fait"){
+        statutClasse = "fait";
+        symbole = "✓";
+      } else if(i === indexEtapeCourante){
+        statutClasse = "en-cours";
+      }
+      if(statutClasse) li.className = statutClasse;
+      li.innerHTML = '<span class="puce">'+symbole+'</span><span>'+etape.titre.replace(/^Étape \d+ — /,"")+'</span>';
+      listeEtapesEl.appendChild(li);
+    });
+  }
+
+  function afficherEtapeCourante(){
+    zoneRetour.className = "";
+    zoneRetour.style.display = "none";
+    zoneRetour.textContent = "";
+    detailsIndiceEl.open = false;
+    rafraichirIndicateur();
+
+    const etapes = etapesCourantes();
+
+    if(indexEtapeCourante >= etapes.length){
+      carteEtape.style.display = "none";
+      panneauFinal.style.display = "block";
+      texteFinalEl.textContent = exercices[indexExerciceCourant].texteFinal || texteExplicationFinale;
+      const dernierExercice = (indexExerciceCourant === exercices.length - 1);
+      if(dernierExercice){
+        btnSuivant.textContent = "Recommencer la série depuis le début";
+      } else {
+        btnSuivant.textContent = "Exercice suivant →";
+      }
+      return;
+    }
+    carteEtape.style.display = "block";
+    panneauFinal.style.display = "none";
+    const etape = etapes[indexEtapeCourante];
+    titreEtapeEl.textContent = etape.titre;
+    consigneEtapeEl.textContent = etape.consigne;
+    contenuIndiceEl.textContent = etape.indice;
+    btnVerifier.disabled = false;
+    rafraichirListe();
+  }
+
+  btnVerifier.addEventListener("click", function(){
+    if(typeof window.ggbApplet === "undefined" || !window.ggbApplet){
+      afficherRetour(false, "L'application GeoGebra n'est pas encore prête. Patiente un instant puis réessaie.");
+      return;
+    }
+    const etape = etapesCourantes()[indexEtapeCourante];
+    let resultat = false;
+    dernierMotifEchec = "";
+    try{
+      resultat = etape.verifier();
+    }catch(e){
+      resultat = false;
+      dernierMotifEchec = "Erreur interne pendant la vérification : " + e.message;
+      console.error("Erreur de vérification :", e);
+    }
+    if(resultat){
+      afficherRetour(true, "Bravo, c'est correct ! Passage à l'étape suivante...");
+      etatEtapes[indexEtapeCourante] = "fait";
+      btnVerifier.disabled = true;
+      setTimeout(function(){
+        indexEtapeCourante++;
+        afficherEtapeCourante();
+      }, 1000);
+    } else {
+      const base = "Ce n'est pas encore ça. Relis la consigne, regarde l'indice si besoin, et vérifie à nouveau.";
+      afficherRetour(false, dernierMotifEchec ? (base + " (" + dernierMotifEchec + ")") : base);
+    }
+  });
+
+  function afficherRetour(succes, texte){
+    zoneRetour.style.display = "block";
+    zoneRetour.className = succes ? "succes" : "erreur";
+    zoneRetour.textContent = texte;
+  }
+
+  function demarrerExercice(index){
+    indexExerciceCourant = index;
+    indexEtapeCourante = 0;
+    etatEtapes = etapesCourantes().map(function(){ return "a-faire"; });
+    construireConstructionInitiale(indexExerciceCourant);
+    afficherEtapeCourante();
+  }
+
+  btnSuivant.addEventListener("click", function(){
+    const dernierExercice = (indexExerciceCourant === exercices.length - 1);
+    if(dernierExercice){
+      demarrerExercice(0);
+    } else {
+      demarrerExercice(indexExerciceCourant + 1);
+    }
+  });
+
+  btnRecommencerExercice.addEventListener("click", function(){
+    demarrerExercice(indexExerciceCourant);
+  });
+
+  btnRecommencerMaintenant.addEventListener("click", function(){
+    const confirme = window.confirm("Toute la construction actuelle de cet exercice sera effacée et tu repartiras de l'étape 1. Continuer ?");
+    if(confirme){
+      demarrerExercice(indexExerciceCourant);
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Construction géométrique initiale (points A, B, C, D de l'exercice
+  // courant, fixés par les coordonnées définies dans "exercices")
+  // ---------------------------------------------------------------------
+  function construireConstructionInitiale(index){
+    const a = api();
+    const ex = exercices[index];
+    a.reset();
+    a.setCoordSystem(ex.vue[0], ex.vue[1], ex.vue[2], ex.vue[3]);
+    a.setGridVisible(false);
+    a.setAxesVisible(false, false);
+    Object.keys(ex.points).forEach(function(nom){
+      const coord = ex.points[nom];
+      a.evalCommand(nom + "=(" + coord[0] + "," + coord[1] + ")");
+      a.setColor(nom, 29, 53, 87);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Initialisation de l'applet GeoGebra
+  // ---------------------------------------------------------------------
+  window.addEventListener("load", function(){
+
+    if(typeof GGBApplet === "undefined"){
+      document.getElementById("message-erreur-chargement").style.display = "block";
+      return;
+    }
+
+    const conteneurGgb = document.getElementById("ggb-element");
+
+    const parametres = {
+      appName: "classic",
+      width: conteneurGgb.clientWidth,
+      height: conteneurGgb.clientHeight,
+      showToolBar: true,
+      showAlgebraInput: false,
+      showMenuBar: false,
+      showResetIcon: false,
+      showGrid: false,
+      showAxes: false,
+      language: "fr",
+      country: "FR",
+      appletOnLoad: function(api){
+        window.ggbApplet = api;
+        api.setAxesVisible(false, false);
+        api.setGridVisible(false);
+        demarrerExercice(0);
+      }
+    };
+
+    const applet = new GGBApplet(parametres, true);
+    applet.inject("ggb-element");
+
+    window.addEventListener("resize", function(){
+      if(window.ggbApplet){
+        window.ggbApplet.setSize(conteneurGgb.clientWidth, conteneurGgb.clientHeight);
+      }
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>

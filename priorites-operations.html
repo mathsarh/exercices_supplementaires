@@ -1,0 +1,2432 @@
+<!doctype html>
+<html lang="fr">
+ <head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260721-05-536556a"}');</script><script src="/_sdk/e358eac22bd01364.telemetry_sdk.js" integrity="sha512-KPxp3rw4K8Nu9ceWJc3gyM7srgaZxiFWOVbyu260EYzzAqdz10mfo5xyXrCx+wEKtGo77JbtmwXvFLbwrGzwvw=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Priorités des opérations</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/25045d9a217df38c.editing_sdk.js" integrity="sha512-P8YtOp9+8xclRi4/Fv8cdNbmryoIvT0A/M6Eaz/llWBrptNsVI19w8SO7I6hRSR55YnKh3INPLkF54kPEXuB5A=="></script>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #16a34a;
+      --success-soft: #ecfdf3;
+      --error: #dc2626;
+      --error-soft: #fff5f5;
+      --line: #dbe3f4;
+      --hint: #eef6ff;
+      --hint-line: #60a5fa;
+      --correction: #fff7e7;
+      --correction-line: #e3a227;
+      --card-radius: 17px;
+      --control-radius: 9px;
+      --progress-height: 11px;
+      --score-size: 68px;
+      --card-delay: 45ms;
+      --progress-duration: 350ms;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Source Sans Pro", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.48);
+      outline-offset: 3px;
+    }
+
+    .app-shell {
+      position: relative;
+      width: 100%;
+      min-height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 25rem),
+        linear-gradient(180deg, var(--slate) 0 17rem, var(--paper) 17rem 100%);
+    }
+
+    .main-width {
+      width: min(calc(100% - 2rem), 900px);
+      margin-inline: auto;
+    }
+
+    .hero {
+      padding: 2.7rem 0 2.4rem;
+      color: #fff;
+    }
+
+    .hero-title {
+      margin: 0;
+      font-size: clamp(1.9rem, 4vw, 2.75rem);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      font-weight: 800;
+    }
+
+    .hero-subtitle {
+      max-width: 47rem;
+      margin: 0.8rem 0 0;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      opacity: 0.92;
+    }
+
+    .hero-actions {
+      display: flex;
+      margin-top: 1.2rem;
+    }
+
+    .content { padding-bottom: 4rem; }
+
+    .restart-button,
+    .validate-button {
+      border: 0;
+      border-radius: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+    }
+
+    .restart-button:hover,
+    .validate-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .hero .restart-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.72rem 1.15rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.16);
+    }
+
+    .rule-panel {
+      margin-top: -0.8rem;
+      padding: 1.35rem;
+      border: 1px solid #cdd8f1;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    }
+
+    .rule-heading {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin: 0 0 0.85rem;
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .rule-list {
+      margin: 0;
+      padding-left: 1.35rem;
+      line-height: 1.65;
+    }
+
+    .rule-list li::marker {
+      color: var(--indigo);
+      font-weight: 800;
+    }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: minmax(200px, auto) 1fr;
+      align-items: center;
+      gap: 1.35rem;
+      margin-top: 1rem;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 12px 32px rgba(30, 42, 58, 0.09);
+    }
+
+    .score-values {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .score-line {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .score-line strong {
+      display: block;
+      color: var(--indigo);
+      font-size: 1.55rem;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .score-percent {
+      display: grid;
+      place-items: center;
+      width: var(--score-size);
+      height: var(--score-size);
+      flex: none;
+      border: 5px solid #dfe5ff;
+      border-radius: 50%;
+      color: var(--indigo-dark);
+      background: #f8f9ff;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+    }
+
+    .score-label {
+      margin: 0 0 0.25rem;
+      font-weight: 700;
+    }
+
+    .exercise-position {
+      margin: 0 0 0.6rem;
+      color: var(--indigo-dark);
+      font-size: 1.08rem;
+      font-weight: 800;
+    }
+
+    .score-detail {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .progress-track {
+      height: var(--progress-height);
+      overflow: hidden;
+      border-radius: 99px;
+      background: #e5eaf6;
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #4f6ef7, #7890ff);
+      transition: width var(--progress-duration) ease;
+    }
+
+    .completion-panel {
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1.15rem 1.25rem;
+      border: 1px solid #86d9a4;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(22, 163, 74, 0.12);
+    }
+
+    .completion-panel.is-visible {
+      display: flex;
+      animation: success-pop 500ms ease both;
+    }
+
+    .completion-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      flex: none;
+      border-radius: 14px;
+      color: var(--success);
+      background: #dcfce7;
+    }
+
+    .completion-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .completion-text { margin: 0.15rem 0 0; }
+
+    .final-score {
+      margin: 0.3rem 0 0;
+      color: #166534;
+      font-family: "Space Mono", monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .section-block { margin-top: 2.4rem; }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-number {
+      display: grid;
+      place-items: center;
+      width: 2.15rem;
+      height: 2.15rem;
+      flex: none;
+      border-radius: 10px;
+      font-weight: 800;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+
+    .section-instructions {
+      margin: 0 0 1.1rem 3.15rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .exercise-list {
+      display: grid;
+      gap: 1.15rem;
+    }
+
+    .exercise-card {
+      padding: 1.35rem 1.4rem;
+      border: 2px solid transparent;
+      border-radius: var(--card-radius);
+      background: #fff;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      animation: card-in 350ms both;
+    }
+
+    .exercise-card:focus-within {
+      box-shadow: 0 12px 30px rgba(63, 87, 217, 0.13);
+    }
+
+    .exercise-card.is-correct {
+      border-color: var(--success);
+      animation: correct-pulse 500ms ease;
+    }
+
+    .exercise-card.is-incorrect { border-color: var(--error); }
+    .exercise-card.is-shaking { animation: gentle-shake 260ms ease; }
+
+    .item-label {
+      margin: 0 0 0.45rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .prompt {
+      margin: 0 0 0.75rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .expression {
+      margin: 0 0 0.95rem;
+      padding: 0.78rem 0.95rem;
+      overflow-x: auto;
+      border-radius: 10px;
+      background: #f4f6fd;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+    }
+
+    .input-label {
+      display: block;
+      margin-bottom: 0.38rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .answer-input,
+    .answer-select,
+    .line-input {
+      min-height: 44px;
+      padding: 0.56rem 0.72rem;
+      border: 1px solid #ccd6ee;
+      border-radius: var(--control-radius);
+      color: var(--ink);
+      background: #fff;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+    }
+
+    .answer-input { width: min(100%, 560px); }
+    .answer-select { width: min(100%, 280px); }
+    .line-input { width: min(100%, 540px); }
+
+    .answer-input:disabled,
+    .answer-select:disabled,
+    .line-input:disabled {
+      background: #f4f6fd;
+      opacity: 0.86;
+    }
+
+    .steps-panel {
+      display: grid;
+      gap: 0.72rem;
+      margin-top: 0.3rem;
+      padding: 0.95rem;
+      border: 1px solid #dce4f4;
+      border-radius: 12px;
+      background: #fafbff;
+    }
+
+    .step-row {
+      display: grid;
+      grid-template-columns: 1.8rem 1fr;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .step-number {
+      display: grid;
+      place-items: center;
+      width: 1.72rem;
+      height: 1.72rem;
+      border-radius: 50%;
+      color: var(--indigo-dark);
+      background: #e7ebff;
+      font-weight: 800;
+    }
+
+    .step-text {
+      min-width: 0;
+      overflow-x: auto;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .answer-group {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 0.48rem;
+    }
+
+    .step-equals {
+      flex: none;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .step-row.is-step-error .line-input {
+      border-color: var(--error);
+      background: var(--error-soft);
+    }
+
+    .step-row.is-step-correct .line-input {
+      border-color: var(--success);
+      background: var(--success-soft);
+    }
+
+    .step-row.is-step-revealed .line-input {
+      border-color: var(--correction-line);
+      background: var(--correction);
+    }
+
+    .step-status {
+      display: none;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .step-row.is-step-error .step-status,
+    .step-row.is-step-correct .step-status,
+    .step-row.is-step-revealed .step-status {
+      display: flex;
+    }
+
+    .step-row.is-step-error .step-status {
+      color: var(--error);
+      background: var(--error-soft);
+    }
+
+    .step-row.is-step-correct .step-status {
+      color: var(--success);
+      background: var(--success-soft);
+    }
+
+    .step-row.is-step-revealed .step-status {
+      color: var(--correction-line);
+      background: var(--correction);
+    }
+
+    .step-hint {
+      display: none;
+      grid-column: 2;
+      margin: -0.15rem 0 0;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .step-row.is-step-error .step-hint {
+      display: block;
+      color: var(--error);
+    }
+
+    .step-row.is-step-revealed .step-hint {
+      display: block;
+      color: var(--correction-line);
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .feedback {
+      flex: 1;
+      min-width: 210px;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .feedback.correct { color: var(--success); }
+    .feedback.incorrect { color: var(--error); }
+
+    .validate-button {
+      min-height: 41px;
+      padding: 0.6rem 1.05rem;
+      color: #fff;
+      background: var(--indigo);
+    }
+
+    .validate-button:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    .hint-panel,
+    .correction {
+      display: none;
+      margin-top: 0.95rem;
+      padding: 0.9rem;
+      border-radius: 10px;
+      line-height: 1.6;
+    }
+
+    .hint-panel {
+      border-left: 4px solid var(--hint-line);
+      color: #174675;
+      background: var(--hint);
+    }
+
+    .correction {
+      border-left: 4px solid var(--correction-line);
+      color: #7a4900;
+      background: var(--correction);
+    }
+
+    .hint-panel.is-visible,
+    .correction.is-visible {
+      display: block;
+      animation: reveal-panel 240ms ease both;
+    }
+
+    .hint-panel strong,
+    .correction strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .answer-review {
+      display: grid;
+      gap: 0.45rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .answer-review p { margin: 0; }
+    .student-answer { color: #991b1b; }
+    .correct-answer { color: #166534; }
+
+    .correction-lines {
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+    }
+
+    .footer-actions {
+      margin-top: 2.5rem;
+      text-align: center;
+    }
+
+    .footer-actions .restart-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border: 1px solid var(--line);
+    }
+
+    .confetti-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -1.5rem;
+      width: 8px;
+      height: 13px;
+      border-radius: 2px;
+      animation: confetti-fall var(--duration) cubic-bezier(.2,.7,.35,1) forwards;
+      animation-delay: var(--delay);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes correct-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.012); box-shadow: 0 14px 34px rgba(22, 163, 74, 0.18); }
+    }
+
+    @keyframes success-pop {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes reveal-panel {
+      from { opacity: 0; transform: translateY(-3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes gentle-shake {
+      0%, 100% { transform: translateX(0); }
+      33% { transform: translateX(-2px); }
+      66% { transform: translateX(2px); }
+    }
+
+    @keyframes confetti-fall {
+      from { transform: translate3d(0, -2rem, 0) rotate(0); opacity: 1; }
+      to {
+        transform: translate3d(var(--drift), calc(105 * min(var(--vh, 1vh), 1vh)), 0) rotate(var(--spin));
+        opacity: 0.85;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .section-instructions { margin-left: 0; }
+      .score-values { justify-content: space-between; }
+      .step-row { grid-template-columns: 1.8rem 1fr; }
+      .answer-group { grid-column: 2; }
+
+      .card-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .validate-button,
+      .answer-input,
+      .answer-select,
+      .line-input {
+        width: 100%;
+      }
+
+      .completion-panel { align-items: flex-start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+      }
+
+      .confetti-layer { display: none; }
+    }
+  </style>
+  <script src="/_sdk/935a53bc2e11fb8d.data_sdk.js" type="text/javascript" integrity="sha512-qr2oyPnEys1WebcOABaRh6hG77r5PWpqeWW6JTKbRJqly/INsfBi31CVNlTmHqjgeLpkVmmHZJUdxSx/32tOFQ=="></script>
+  <script src="/_sdk/7831c9b82769a23f.resizing_sdk.js" type="text/javascript" integrity="sha512-8T/qhF3yB5dtqHof6yvY2492zFsme1nYV1+FuXfYvPz63uo2L30fnKiOabmH0Sl3qhplMLgxjytDR8IvycRwKQ=="></script>
+ </head>
+ <body data-template-id="__page-root">
+  <div class="app-shell">
+   <header data-template-id="hero-section" class="canva-header hero">
+    <div class="main-width">
+     <h1 data-template-id="page-title" class="canva-text hero-title">Priorités des opérations</h1>
+     <p data-template-id="page-subtitle" class="canva-text hero-subtitle">Parenthèses, multiplications, divisions, additions et soustractions : effectue chaque calcul dans le bon ordre et utilise les indices pour progresser.</p>
+     <div class="hero-actions">
+      <button id="new-exercises-button" data-template-id="new-exercises-button" class="canva-button restart-button" type="button"> <i data-lucide="refresh-cw" aria-hidden="true"></i> <span data-template-id="new-exercises-label" class="canva-text">Nouveaux exercices</span> </button>
+     </div>
+    </div>
+   </header>
+   <main class="main-width content">
+    <section data-template-id="rule-panel" class="canva-panel rule-panel" aria-labelledby="rule-title">
+     <h2 id="rule-title" data-template-id="rule-title" class="canva-text rule-heading"><i data-lucide="lightbulb" aria-hidden="true"></i> Rappel des priorités</h2>
+     <ol class="rule-list">
+      <li data-template-id="rule-parentheses" class="canva-text">On effectue d’abord les opérations entre parenthèses.</li>
+      <li data-template-id="rule-products" class="canva-text">On effectue ensuite les multiplications et les divisions, dans l’ordre où elles se présentent.</li>
+      <li data-template-id="rule-sums" class="canva-text">On termine par les additions et les soustractions, dans l’ordre où elles se présentent.</li>
+     </ol>
+    </section>
+    <section data-template-id="score-panel" class="canva-panel score-panel" aria-labelledby="progress-label">
+     <div class="score-values" aria-live="polite">
+      <div class="score-line">
+       <strong id="score-value">0 / 17</strong> <span data-template-id="score-caption" class="canva-text">exercices terminés</span>
+      </div>
+      <div id="score-percent" class="score-percent" aria-label="Score : 0 pour cent">
+       0 %
+      </div>
+     </div>
+     <div>
+      <p id="progress-label" data-template-id="progress-label" class="canva-text score-label">Progression et score de la fiche</p>
+      <p id="exercise-position" class="exercise-position">Exercice suivant : 1 sur 17</p>
+      <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression des exercices terminés" aria-valuemin="0" aria-valuemax="17" aria-valuenow="0">
+       <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <p id="score-detail" class="score-detail">0 exercice terminé · 0 réussi</p>
+     </div>
+    </section>
+    <section id="completion-panel" data-template-id="completion-panel" class="canva-banner completion-panel" aria-labelledby="completion-title">
+     <div class="completion-icon" aria-hidden="true">
+      <i data-lucide="trophy"></i>
+     </div>
+     <div>
+      <h2 id="completion-title" data-template-id="completion-title" class="canva-text completion-title">Fiche terminée !</h2>
+      <p data-template-id="completion-message" class="canva-text completion-text">Bravo, tu as terminé les 15 exercices.</p>
+      <p id="final-score" class="final-score" aria-live="polite"></p>
+     </div>
+    </section>
+    <div id="sections-root"></div>
+    <div class="footer-actions">
+     <button id="restart-button" data-template-id="restart-button" class="canva-button restart-button" type="button"> <i data-lucide="shuffle" aria-hidden="true"></i> <span data-template-id="restart-label" class="canva-text">Recommencer la fiche</span> </button>
+    </div>
+   </main>
+   <template id="section-template">
+    <section class="section-block">
+     <div class="section-heading">
+      <span class="section-number"></span>
+      <h2 class="section-title"></h2>
+     </div>
+     <p class="section-instructions"></p>
+     <div class="exercise-list"></div>
+    </section>
+   </template>
+   <template id="card-template">
+    <article data-template-id="exercise-card" class="canva-card exercise-card">
+     <p data-template-id="exercise-item-label" class="canva-text item-label"></p>
+     <p data-template-id="exercise-prompt" class="canva-text prompt"></p>
+     <p data-template-id="exercise-expression" class="canva-text expression"></p>
+     <div class="exercise-controls"></div>
+     <div class="card-actions">
+      <p data-template-id="exercise-feedback" class="canva-text feedback" aria-live="assertive"></p><button data-template-id="validate-button" class="canva-button validate-button" type="button">Vérifier</button>
+     </div>
+     <div data-template-id="hint-panel" class="canva-panel hint-panel" aria-hidden="true">
+      <strong data-template-id="hint-heading" class="canva-text">Indice :</strong> <span class="hint-content"></span>
+     </div>
+     <div data-template-id="correction-panel" class="canva-panel correction" aria-hidden="true">
+      <div class="answer-review">
+       <p class="student-answer"><strong data-template-id="student-answer-label" class="canva-text">Ta réponse :</strong> <span class="student-answer-value"></span></p>
+       <p class="correct-answer"><strong data-template-id="correct-answer-label" class="canva-text">Réponse attendue :</strong> <span class="correct-answer-value"></span></p>
+      </div><strong data-template-id="correction-heading" class="canva-text">Correction :</strong>
+      <div class="correction-lines"></div>
+     </div>
+    </article>
+   </template>
+   <div class="sr-only" aria-hidden="true"><span data-template-id="section1-title"></span> <span data-template-id="section1-number"></span> <span data-template-id="section1-instructions"></span> <span data-template-id="section2-title"></span> <span data-template-id="section2-number"></span> <span data-template-id="section2-instructions"></span> <span data-template-id="section3-title"></span> <span data-template-id="section3-number"></span> <span data-template-id="section3-instructions"></span>
+   </div>
+   <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+   <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+  <script>
+    "use strict";
+
+    const SETTINGS = Object.freeze({
+      SECTION_ITEM_COUNTS: [5, 10, 2],
+      TOTAL_EXERCISES: 17,
+      MAX_ATTEMPTS: 3,
+      EPSILON: 1e-9,
+      CARD_ANIMATION_DELAY: 45,
+      FOCUS_DELAY: 300,
+      ANNOUNCE_DELAY: 30,
+      CONFETTI_DURATION: 3900,
+      CONFETTI_MILESTONES: [1, 5, 15, 17]
+    });
+
+    const state = {
+      completed: 0,
+      correct: 0,
+      completionShown: false,
+      celebratedMilestones: new Set()
+    };
+
+    const elements = {
+      sections: document.getElementById("sections-root"),
+      score: document.getElementById("score-value"),
+      percent: document.getElementById("score-percent"),
+      detail: document.getElementById("score-detail"),
+      position: document.getElementById("exercise-position"),
+      progress: document.getElementById("progress-track"),
+      fill: document.getElementById("progress-fill"),
+      completion: document.getElementById("completion-panel"),
+      finalScore: document.getElementById("final-score"),
+      live: document.getElementById("live-region"),
+      confetti: document.getElementById("confetti-layer")
+    };
+
+    const randInt = (min, max) =>
+      Math.floor(Math.random() * (max - min + 1)) + min;
+
+    const choice = items => items[randInt(0, items.length - 1)];
+
+    const shuffle = items => {
+      const result = [...items];
+      for (let index = result.length - 1; index > 0; index -= 1) {
+        const target = Math.floor(Math.random() * (index + 1));
+        [result[index], result[target]] = [result[target], result[index]];
+      }
+      return result;
+    };
+
+    const nearlyEqual = (a, b) =>
+      Number.isFinite(a) &&
+      Number.isFinite(b) &&
+      Math.abs(a - b) <= SETTINGS.EPSILON;
+
+    const displayExpression = value =>
+      String(value).replace(/\*/g, " · ").replace(/\//g, " ÷ ");
+
+    const normalizeExpression = value => {
+      let source = String(value)
+        .trim()
+        .replace(/\u2212/g, "-")
+        .replace(/\[/g, "(")
+        .replace(/\]/g, ")")
+        .replace(/[×·xX]/g, "*")
+        .replace(/[÷:]/g, "/")
+        .replace(/,/g, ".");
+
+      // Les exercices n'utilisent jamais de nombres décimaux : un point entre deux facteurs est toujours une multiplication. On traite explicitement les écritures compactes comme 5.9, avec ou sans espaces.
+      source = source.replace(/(\d|\))\s*\.\s*(?=\d|\()/g, "$1*");
+      source = source.replace(/(\d|\))\.(?=\d|\()/g, "$1*");
+      return source.replace(/\s+/g, "");
+    };
+
+    const stripLinePrefix = value =>
+      String(value).replace(/^\s*(?:[a-eA-E]\s*[.)]\s*)?/, "").trim();
+
+    // Vérifie que la ligne saisie est un nombre seul, déjà réduit (pas de
+    // calcul restant du type "63+70"). Utilisé pour imposer que la toute
+    // dernière ligne d'un calcul soit le résultat final et non une étape
+    // intermédiaire qui aurait la même valeur numérique.
+    const isBareNumber = rawValue => {
+      const trimmed = stripLinePrefix(rawValue);
+      const equalsIndex = trimmed.lastIndexOf("=");
+      const target = equalsIndex >= 0 ? trimmed.slice(equalsIndex + 1) : trimmed;
+      // On repasse par normalizeExpression pour que "14.10" (compris partout
+      // ailleurs comme 14 × 10) soit bien traité comme une multiplication et
+      // non comme le nombre décimal 14,10 — ces exercices n'utilisent jamais
+      // de vrais nombres décimaux, un point/une virgule entre deux chiffres
+      // est toujours une multiplication.
+      const normalized = normalizeExpression(target);
+      return /^-?\d+$/.test(normalized);
+    };
+
+    const announce = message => {
+      elements.live.textContent = "";
+      window.setTimeout(() => {
+        elements.live.textContent = message;
+      }, SETTINGS.ANNOUNCE_DELAY);
+    };
+
+    class Parser {
+      constructor(tokens) {
+        this.tokens = tokens;
+        this.position = 0;
+      }
+
+      current() {
+        return this.tokens[this.position];
+      }
+
+      peek(type) {
+        return this.current()?.type === type;
+      }
+
+      consume(type) {
+        if (!this.peek(type)) throw new Error("Jeton inattendu");
+        return this.tokens[this.position++];
+      }
+
+      parsePrimary() {
+        if (this.peek("+")) {
+          this.consume("+");
+          return this.parsePrimary();
+        }
+
+        if (this.peek("-")) {
+          this.consume("-");
+          return -this.parsePrimary();
+        }
+
+        if (this.peek("number")) return this.consume("number").value;
+
+        if (this.peek("(")) {
+          this.consume("(");
+          if (this.peek(")")) throw new Error("Parenthèses vides");
+          const value = this.parseSum();
+          this.consume(")");
+          return value;
+        }
+
+        throw new Error("Valeur attendue");
+      }
+
+      parseProduct() {
+        let value = this.parsePrimary();
+
+        while (this.peek("*") || this.peek("/")) {
+          const operator = this.current().type;
+          this.position += 1;
+          const right = this.parsePrimary();
+
+          if (operator === "/" && nearlyEqual(right, 0)) {
+            throw new Error("Division par zéro");
+          }
+
+          value = operator === "*" ? value * right : value / right;
+        }
+
+        return value;
+      }
+
+      parseSum() {
+        let value = this.parseProduct();
+
+        while (this.peek("+") || this.peek("-")) {
+          const operator = this.current().type;
+          this.position += 1;
+          const right = this.parseProduct();
+          value = operator === "+" ? value + right : value - right;
+        }
+
+        return value;
+      }
+
+      evaluate() {
+        const value = this.parseSum();
+        if (this.position !== this.tokens.length || !Number.isFinite(value)) {
+          throw new Error("Expression incomplète");
+        }
+        return value;
+      }
+    }
+
+    const tokenize = source => {
+      const expression = normalizeExpression(source);
+
+      if (!expression || !/^[0-9+\-*/().]+$/.test(expression)) {
+        throw new Error("Expression non reconnue");
+      }
+
+      if (/\d\(/.test(expression) || /\)\d/.test(expression) || /\)\(/.test(expression)) {
+        throw new Error("Multiplication implicite non autorisée");
+      }
+
+      const tokens = [];
+      let index = 0;
+
+      while (index < expression.length) {
+        const character = expression[index];
+
+        if ("+-*/()".includes(character)) {
+          tokens.push({ type: character, value: character });
+          index += 1;
+          continue;
+        }
+
+        if (/\d|\./.test(character)) {
+          const start = index;
+          let decimalPoints = 0;
+
+          while (index < expression.length && /[\d.]/.test(expression[index])) {
+            if (expression[index] === ".") decimalPoints += 1;
+            index += 1;
+          }
+
+          const raw = expression.slice(start, index);
+          if (decimalPoints > 1 || raw === ".") throw new Error("Nombre incorrect");
+
+          const value = Number(raw);
+          if (!Number.isFinite(value)) throw new Error("Nombre incorrect");
+          tokens.push({ type: "number", value });
+          continue;
+        }
+
+        throw new Error("Caractère incorrect");
+      }
+
+      return tokens;
+    };
+
+    const safeEvaluate = source => {
+      try {
+        return new Parser(tokenize(source)).evaluate();
+      } catch {
+        return NaN;
+      }
+    };
+
+    // Évalue une expression de gauche à droite, sans tenir compte des priorités
+    // entre + - et * / (mais en respectant les parenthèses). Sert à détecter
+    // l'erreur classique consistant à calculer dans l'ordre d'écriture.
+    const evaluateLeftToRight = source => {
+      try {
+        const tokens = tokenize(source);
+        let position = 0;
+
+        const parsePrimary = () => {
+          const token = tokens[position];
+          if (!token) throw new Error("Fin inattendue");
+
+          if (token.type === "+") { position += 1; return parsePrimary(); }
+          if (token.type === "-") { position += 1; return -parsePrimary(); }
+          if (token.type === "number") { position += 1; return token.value; }
+
+          if (token.type === "(") {
+            position += 1;
+            const value = parseChain();
+            if (tokens[position]?.type !== ")") throw new Error("Parenthèse manquante");
+            position += 1;
+            return value;
+          }
+
+          throw new Error("Jeton inattendu");
+        };
+
+        const parseChain = () => {
+          let value = parsePrimary();
+          while (position < tokens.length && "+-*/".includes(tokens[position]?.type)) {
+            const operator = tokens[position].type;
+            position += 1;
+            const right = parsePrimary();
+            if (operator === "+") value += right;
+            else if (operator === "-") value -= right;
+            else if (operator === "*") value *= right;
+            else value = nearlyEqual(right, 0) ? NaN : value / right;
+          }
+          return value;
+        };
+
+        const result = parseChain();
+        if (position !== tokens.length || !Number.isFinite(result)) {
+          throw new Error("Expression incomplète");
+        }
+        return result;
+      } catch {
+        return NaN;
+      }
+    };
+
+    // Repère les groupes de parenthèses de premier niveau (pas de parenthèses
+    // imbriquées dans ces exercices) et renvoie leur position + contenu.
+    const findParenGroups = expr => {
+      const groups = [];
+      let depth = 0;
+      let start = -1;
+
+      for (let index = 0; index < expr.length; index += 1) {
+        const character = expr[index];
+        if (character === "(") {
+          if (depth === 0) start = index;
+          depth += 1;
+        } else if (character === ")") {
+          depth -= 1;
+          if (depth === 0 && start >= 0) {
+            groups.push({ start, end: index, content: expr.slice(start + 1, index) });
+            start = -1;
+          }
+        }
+      }
+
+      return groups;
+    };
+
+    const isInsideAnyGroup = (index, groups) =>
+      groups.some(group => index > group.start && index < group.end);
+
+    // Repère, à partir d'une position donnée, soit un groupe parenthésé
+    // équilibré, soit un simple nombre (avec signe éventuel). Renvoie la
+    // position de fin et le contenu, ou null si rien de valide ne commence là.
+    const matchNumberOrGroup = (source, from) => {
+      if (source[from] === "(") {
+        let depth = 0;
+        for (let i = from; i < source.length; i += 1) {
+          if (source[i] === "(") depth += 1;
+          else if (source[i] === ")") {
+            depth -= 1;
+            if (depth === 0) return { end: i + 1, isParen: true, content: source.slice(from + 1, i) };
+          }
+        }
+        return null;
+      }
+      const match = /^-?\d+(?:\.\d+)?/.exec(source.slice(from));
+      if (!match) return null;
+      return { end: from + match[0].length, isParen: false, content: match[0] };
+    };
+
+    // Vérifie que chaque parenthèse de previousExpression reste un « îlot »
+    // autonome dans la ligne suivante : le texte AUTOUR de chaque parenthèse
+    // doit rester identique, et son contenu (encore entre parenthèses, ou
+    // réduit à un simple nombre) doit garder EXACTEMENT la même valeur.
+    // Cela autorise une réduction progressive à l'intérieur (une opération à
+    // la fois) mais refuse toute distribution/développement qui ferait
+    // disparaître la parenthèse en la combinant avec ce qu'il y a autour.
+    const isParenIslandPreserved = (previousExpression, studentRawLine) => {
+      const prev = normalizeExpression(previousExpression);
+      const groups = findParenGroups(prev);
+      if (groups.length === 0) return true;
+
+      const student = normalizeExpression(studentRawLine);
+      let prevPos = 0;
+      let studentPos = 0;
+
+      for (const group of groups) {
+        const segment = prev.slice(prevPos, group.start);
+        if (!student.startsWith(segment, studentPos)) return false;
+        studentPos += segment.length;
+
+        const token = matchNumberOrGroup(student, studentPos);
+        if (!token) return false;
+
+        const tokenValue = token.isParen ? safeEvaluate(token.content) : Number(token.content);
+        const originalValue = safeEvaluate(group.content);
+        if (!nearlyEqual(tokenValue, originalValue)) return false;
+
+        studentPos = token.end;
+        prevPos = group.end + 1;
+      }
+
+      return student.slice(studentPos) === prev.slice(prevPos);
+    };
+
+    // Découpe l'expression en « termes » séparés par les + et - de premier
+    // niveau (hors parenthèses). Chaque terme conserve son signe éventuel.
+    const splitTopLevelTerms = expr => {
+      const groups = findParenGroups(expr);
+      const positions = [0];
+
+      for (let index = 0; index < expr.length; index += 1) {
+        const character = expr[index];
+        if ((character === "+" || character === "-") && index > 0 && !isInsideAnyGroup(index, groups)) {
+          positions.push(index);
+        }
+      }
+      positions.push(expr.length);
+
+      const terms = [];
+      for (let k = 0; k < positions.length - 1; k += 1) {
+        terms.push(expr.slice(positions[k], positions[k + 1]));
+      }
+      return terms;
+    };
+
+    // Génère des variantes de l'expression où un opérateur a été remplacé par
+    // son « opposé » (+/- ou */÷), pour détecter une opération confondue avec
+    // une autre plutôt qu'une simple erreur de calcul.
+    const generateOperatorSwapVariants = expr => {
+      const groups = findParenGroups(expr);
+      const variants = [];
+
+      for (let index = 0; index < expr.length; index += 1) {
+        const character = expr[index];
+        if (index === 0 || !"+-*/".includes(character)) continue;
+        // On évite de confondre un signe négatif de tête avec un opérateur.
+        if ((character === "+" || character === "-") && "+-*/(".includes(expr[index - 1])) continue;
+
+        let swapped = null;
+        let kind = null;
+        if (character === "+") { swapped = "-"; kind = "additive"; }
+        else if (character === "-") { swapped = "+"; kind = "additive"; }
+        else if (character === "*") { swapped = "/"; kind = "multiplicative"; }
+        else if (character === "/") { swapped = "*"; kind = "multiplicative"; }
+
+        if (swapped) {
+          const variantExpr = expr.slice(0, index) + swapped + expr.slice(index + 1);
+          variants.push({ expr: variantExpr, kind });
+        }
+      }
+
+      return variants;
+    };
+
+    // Compare la valeur saisie par l'élève à quelques erreurs classiques pour
+    // cette étape de calcul, et renvoie un message ciblé si l'une d'elles
+    // correspond. Renvoie null si aucune erreur connue n'est reconnue (dans ce
+    // cas, un feedback descriptif générique prend le relais). Les checks sont
+    // ordonnés du plus spécifique au plus général ; le premier qui correspond
+    // l'emporte.
+    const diagnoseStepMistake = (previousExpression, target, studentValue) => {
+      if (!Number.isFinite(studentValue)) {
+        return "Ce que tu as écrit ne se calcule pas : vérifie que la ligne ne contient que des nombres et des opérations (+, −, ×, ÷).";
+      }
+      if (nearlyEqual(studentValue, target)) return null;
+
+      const parenGroups = findParenGroups(previousExpression);
+
+      // 1) L'élève a calculé la parenthèse... mais s'est arrêté là, sans
+      // combiner ce résultat avec le reste du calcul.
+      for (const group of parenGroups) {
+        const innerValue = safeEvaluate(group.content);
+        if (nearlyEqual(studentValue, innerValue) && !nearlyEqual(innerValue, target)) {
+          return "Tu as calculé la parenthèse, mais il faut maintenant combiner ce résultat avec le reste du calcul : ne t’arrête pas là.";
+        }
+      }
+
+      // 2) Les parenthèses ont été purement ignorées (calcul « à plat »).
+      if (parenGroups.length > 0) {
+        const withoutParens = safeEvaluate(previousExpression.replace(/[()]/g, ""));
+        if (nearlyEqual(studentValue, withoutParens) && !nearlyEqual(withoutParens, target)) {
+          return "Il semble que tu aies ignoré les parenthèses. Calcule d’abord ce qu’il y a entre parenthèses avant de continuer.";
+        }
+      }
+
+      // 3) Le calcul a été fait de gauche à droite (sans respecter la
+      // priorité multiplication/division avant addition/soustraction) soit
+      // à l'intérieur d'une parenthèse, soit en dehors, soit les deux. On
+      // teste toutes les combinaisons (chaque parenthèse calculée
+      // correctement ou « naïvement », puis le reste calculé correctement
+      // ou « naïvement ») pour donner le message le plus juste possible :
+      // sinon on risquerait d'accuser à tort le calcul extérieur alors que
+      // l'erreur vient d'une parenthèse elle-même (ou l'inverse).
+      if (parenGroups.length > 0 && parenGroups.length <= 3) {
+        const groupCount = parenGroups.length;
+        let matchedInnerWrong = false;
+        let matchedOuterOnly = false;
+
+        for (let mask = 0; mask < (1 << groupCount); mask += 1) {
+          // Bit i à 1 : la parenthèse i est calculée « naïvement » (de
+          // gauche à droite, priorités ignorées). Bit à 0 : calculée
+          // correctement.
+          let flat = previousExpression;
+          for (let i = groupCount - 1; i >= 0; i -= 1) {
+            const group = parenGroups[i];
+            const value = (mask & (1 << i))
+              ? evaluateLeftToRight(group.content)
+              : safeEvaluate(group.content);
+            flat = flat.slice(0, group.start) + value + flat.slice(group.end + 1);
+          }
+
+          const anyParenWrong = mask !== 0;
+
+          for (const outerValue of [safeEvaluate(flat), evaluateLeftToRight(flat)]) {
+            if (mask === 0 && nearlyEqual(outerValue, target)) continue;
+            if (!nearlyEqual(studentValue, outerValue) || nearlyEqual(outerValue, target)) continue;
+            if (anyParenWrong) matchedInnerWrong = true;
+            else matchedOuterOnly = true;
+          }
+        }
+
+        // Si les deux hypothèses (erreur dans la parenthèse / erreur en
+        // dehors) mènent numériquement à la même valeur saisie, on ne peut
+        // pas trancher avec certitude laquelle s'est réellement produite :
+        // mieux vaut le dire franchement que de désigner un endroit au
+        // hasard.
+        if (matchedInnerWrong && matchedOuterOnly) {
+          return "Ce n’est pas encore ça : vérifie les priorités à la fois à l’intérieur de la parenthèse et dans le reste du calcul.";
+        }
+        if (matchedInnerWrong) {
+          return "À l’intérieur de la parenthèse aussi, la multiplication et la division doivent passer avant l’addition et la soustraction : recalcule d’abord son contenu en respectant les priorités.";
+        }
+        if (matchedOuterOnly) {
+          return "Les parenthèses semblent correctement calculées, mais en dehors, la multiplication et la division doivent passer avant l’addition et la soustraction.";
+        }
+      } else if (parenGroups.length === 0) {
+        const leftToRight = evaluateLeftToRight(previousExpression);
+        if (nearlyEqual(studentValue, leftToRight) && !nearlyEqual(leftToRight, target)) {
+          return "As-tu respecté les priorités ? La multiplication et la division doivent être effectuées avant l’addition et la soustraction.";
+        }
+      }
+
+      // 4) Une opération a été confondue avec son opposée (+ / - ou * / ÷)
+      // à un endroit précis du calcul.
+      for (const variant of generateOperatorSwapVariants(previousExpression)) {
+        const variantValue = safeEvaluate(variant.expr);
+        if (nearlyEqual(studentValue, variantValue) && !nearlyEqual(variantValue, target)) {
+          return variant.kind === "additive"
+            ? "Regarde bien le signe entre deux termes : une addition et une soustraction semblent avoir été confondues quelque part."
+            : "Rappel : lorsqu’il n’y a que des multiplications et des divisions, on les effectue dans l’ordre où elles se présentent, de gauche à droite.";
+        }
+      }
+
+      // 5) Un terme entier (nombre ou groupe) a été oublié en cours de route.
+      const terms = splitTopLevelTerms(previousExpression);
+      if (terms.length > 1) {
+        for (let index = 0; index < terms.length; index += 1) {
+          const remaining = terms.filter((_, termIndex) => termIndex !== index).join("").replace(/^\+/, "");
+          if (!remaining) continue;
+          const droppedValue = safeEvaluate(remaining);
+          if (nearlyEqual(studentValue, droppedValue) && !nearlyEqual(droppedValue, target)) {
+            return "Il semble qu’un terme du calcul (un nombre ou une opération) ait été oublié en route : relis bien l’expression complète.";
+          }
+        }
+      }
+
+      // 5bis) Deux nombres adjacents ont été additionnés/soustraits « en
+      // lisant à travers » une multiplication ou une division pas encore
+      // terminée, sans respecter qu'ils appartiennent à des termes
+      // différents (ex. dans « 6 * 6 + 10 / 5 », combiner le second 6 et le
+      // 10 pour obtenir « 6 * 16 / 5 » au lieu de finir chaque terme d'abord).
+      {
+        const normalizedPrev = normalizeExpression(previousExpression);
+        const pattern = /(\d+(?:\.\d+)?)([+-])(\d+(?:\.\d+)?)/g;
+        let match;
+        while ((match = pattern.exec(normalizedPrev))) {
+          const left = Number(match[1]);
+          const right = Number(match[3]);
+          const combined = match[2] === "+" ? left + right : left - right;
+          const collapsed =
+            normalizedPrev.slice(0, match.index) + combined + normalizedPrev.slice(match.index + match[0].length);
+          const collapsedValue = safeEvaluate(collapsed);
+          if (nearlyEqual(studentValue, collapsedValue) && !nearlyEqual(collapsedValue, target)) {
+            return "Il semble que deux nombres aient été additionnés (ou soustraits) directement alors qu’ils n’appartiennent pas au même terme : termine d’abord chaque multiplication/division avant de faire les additions et soustractions.";
+          }
+        }
+      }
+
+      // 6) Erreur de signe sur le résultat final de l'étape.
+      if (nearlyEqual(studentValue, -target) && !nearlyEqual(target, 0)) {
+        return "Vérifie le signe de ton résultat : il semble inversé.";
+      }
+
+      // 7) Aucune erreur structurée reconnue (l'élève ne s'est pas trompé
+      // sur l'ordre des priorités, ni ignoré/mal combiné une parenthèse, ni
+      // interverti une opération). Il s'agit très probablement d'une simple
+      // erreur de calcul (ex. une multiplication mal effectuée) : on ne dit
+      // donc pas que les priorités sont en cause, ce serait faux ici.
+      return "La démarche semble correcte, mais le résultat obtenu n’est pas bon : une opération a dû être mal calculée quelque part. Recalcule cette ligne pas à pas, une opération à la fois.";
+    };
+
+    const validParentheses = source => {
+      const expression = normalizeExpression(source);
+      let depth = 0;
+
+      for (const character of expression) {
+        if (character === "(") depth += 1;
+        if (character === ")") depth -= 1;
+        if (depth < 0) return false;
+      }
+
+      return depth === 0 && !expression.includes("()");
+    };
+
+    const tokenSignature = source => {
+      try {
+        return tokenize(source)
+          .filter(token => token.type === "number" || "+-*/".includes(token.type))
+          .map(token => token.type === "number" ? `n:${token.value}` : `o:${token.type}`);
+      } catch {
+        return [];
+      }
+    };
+
+    const sameTokenSequence = (first, second) => {
+      const a = tokenSignature(first);
+      const b = tokenSignature(second);
+      return a.length > 0 && a.length === b.length &&
+        a.every((token, index) => token === b[index]);
+    };
+
+    const parseEquality = rawValue => {
+      const parts = stripLinePrefix(rawValue).split("=");
+
+      if (parts.length === 1) {
+        return { hasEquality: false, expression: parts[0].trim() };
+      }
+
+      if (parts.length !== 2 || parts.some(part => !part.trim())) return null;
+
+      return {
+        hasEquality: true,
+        left: parts[0].trim(),
+        right: parts[1].trim()
+      };
+    };
+
+    const createInput = (id, label, className = "answer-input") => {
+      const input = document.createElement("input");
+      input.id = id;
+      input.type = "text";
+      input.className = className;
+      input.setAttribute("aria-label", label);
+      input.autocomplete = "off";
+      input.spellcheck = false;
+      input.inputMode = "text";
+      return input;
+    };
+
+    const createLabeledControl = (labelText, control) => {
+      const fragment = document.createDocumentFragment();
+      const label = document.createElement("label");
+      label.className = "input-label";
+      label.htmlFor = control.id;
+      label.textContent = labelText;
+      fragment.append(label, control);
+      return fragment;
+    };
+
+    const setLines = (container, lines) => {
+      container.replaceChildren();
+      lines.forEach((line, index) => {
+        if (index) container.appendChild(document.createElement("br"));
+        container.appendChild(document.createTextNode(line));
+      });
+    };
+
+    const readStudentAnswer = controls =>
+      controls.map(control => control.value || "—").join(" ; ");
+
+    const focusNextExercise = card => {
+      const current = Number(card.dataset.exerciseIndex);
+      const next = [...document.querySelectorAll(".exercise-card")].find(candidate =>
+        Number(candidate.dataset.exerciseIndex) > current &&
+        candidate.dataset.resolved !== "true"
+      );
+
+      const target = next?.querySelector("input:not(:disabled), select:not(:disabled)");
+      if (!target) return;
+
+      window.setTimeout(() => {
+        target.focus({ preventScroll: true });
+        next.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, SETTINGS.FOCUS_DELAY);
+    };
+
+    const launchConfetti = count => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      const colors = ["#4f6ef7", "#16a34a", "#f59e0b", "#ef4444", "#38bdf8"];
+      const fragment = document.createDocumentFragment();
+
+      for (let index = 0; index < count; index += 1) {
+        const piece = document.createElement("span");
+        piece.className = "confetti-piece";
+        piece.style.left = `${randInt(3, 97)}%`;
+        piece.style.background = choice(colors);
+        piece.style.setProperty("--duration", `${randInt(1900, 3000)}ms`);
+        piece.style.setProperty("--delay", `${randInt(0, 350)}ms`);
+        piece.style.setProperty("--drift", `${randInt(-90, 90)}px`);
+        piece.style.setProperty("--spin", `${randInt(300, 850)}deg`);
+        fragment.appendChild(piece);
+      }
+
+      elements.confetti.replaceChildren(fragment);
+      window.setTimeout(
+        () => elements.confetti.replaceChildren(),
+        SETTINGS.CONFETTI_DURATION
+      );
+    };
+
+    const celebrateMilestone = () => {
+      const milestone = SETTINGS.CONFETTI_MILESTONES.find(value =>
+        value === state.correct && !state.celebratedMilestones.has(value)
+      );
+
+      if (!milestone) return;
+      state.celebratedMilestones.add(milestone);
+      launchConfetti(milestone === SETTINGS.TOTAL_EXERCISES ? 55 : 20);
+    };
+
+    const updateScore = () => {
+      const scorePercentage = Math.round(
+        (state.correct / SETTINGS.TOTAL_EXERCISES) * 100
+      );
+      const completionPercentage = Math.round(
+        (state.completed / SETTINGS.TOTAL_EXERCISES) * 100
+      );
+      const nextExercise = Math.min(state.completed + 1, SETTINGS.TOTAL_EXERCISES);
+
+      elements.score.textContent = `${state.completed} / ${SETTINGS.TOTAL_EXERCISES}`;
+      elements.percent.textContent = `${scorePercentage} %`;
+      elements.percent.setAttribute(
+        "aria-label",
+        `Score : ${scorePercentage} pour cent`
+      );
+
+      elements.position.textContent = state.completed === SETTINGS.TOTAL_EXERCISES
+        ? `Les ${SETTINGS.TOTAL_EXERCISES} exercices sont terminés`
+        : `Exercice suivant : ${nextExercise} sur ${SETTINGS.TOTAL_EXERCISES}`;
+
+      elements.detail.textContent =
+        `${state.completed} exercice${state.completed > 1 ? "s" : ""} terminé${state.completed > 1 ? "s" : ""} · ` +
+        `${state.correct} réussi${state.correct > 1 ? "s" : ""} · ${completionPercentage} % de la fiche`;
+
+      elements.fill.style.width = `${completionPercentage}%`;
+      elements.progress.setAttribute("aria-valuenow", String(state.completed));
+
+      if (state.completed === SETTINGS.TOTAL_EXERCISES && !state.completionShown) {
+        state.completionShown = true;
+        elements.finalScore.textContent =
+          `Score : ${state.correct}/${SETTINGS.TOTAL_EXERCISES} (${scorePercentage} %)`;
+        elements.completion.classList.add("is-visible");
+        announce(
+          `Fiche terminée avec ${state.correct} réponses correctes sur ${SETTINGS.TOTAL_EXERCISES}.`
+        );
+        elements.completion.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+
+    const resolveCard = (card, correct) => {
+      if (card.dataset.resolved === "true") return;
+      card.dataset.resolved = "true";
+      state.completed += 1;
+      if (correct) {
+        state.correct += 1;
+        celebrateMilestone();
+      }
+      updateScore();
+    };
+
+    const createExerciseCard = ({
+      globalIndex,
+      localIndex,
+      prompt,
+      expression,
+      buildControls,
+      checker,
+      hints,
+      correctionLines,
+      correctAnswer,
+      onChecked,
+      customFlow = false,
+      onCardBuilt
+    }) => {
+      const fragment = document.getElementById("card-template").content.cloneNode(true);
+      const card = fragment.querySelector(".exercise-card");
+      const controlsRoot = fragment.querySelector(".exercise-controls");
+      const feedback = fragment.querySelector(".feedback");
+      const button = fragment.querySelector(".validate-button");
+      const hintPanel = fragment.querySelector(".hint-panel");
+      const hintContent = fragment.querySelector(".hint-content");
+      const correction = fragment.querySelector(".correction");
+      const studentAnswerValue = fragment.querySelector(".student-answer-value");
+      const correctAnswerValue = fragment.querySelector(".correct-answer-value");
+      const correctionLinesContainer = fragment.querySelector(".correction-lines");
+
+      card.dataset.exerciseIndex = String(globalIndex);
+      card.dataset.resolved = "false";
+      card.style.animationDelay = `${localIndex * SETTINGS.CARD_ANIMATION_DELAY}ms`;
+
+      fragment.querySelector(".item-label").textContent =
+        `${String.fromCharCode(97 + localIndex)}) Exercice ${globalIndex + 1}`;
+      fragment.querySelector(".prompt").textContent = prompt;
+      fragment.querySelector(".expression").textContent = displayExpression(expression);
+
+      const controls = buildControls(controlsRoot);
+
+      // Mode « flux personnalisé » : pas de bouton de vérification global.
+      // L'appelant (ex. buildCalculationCards) pilote lui-même la validation,
+      // ligne par ligne, via onCardBuilt.
+      if (customFlow) {
+        button.remove();
+
+        if (onCardBuilt) {
+          onCardBuilt({
+            card,
+            feedback,
+            hintPanel,
+            hintContent,
+            correction,
+            studentAnswerValue,
+            correctAnswerValue,
+            correctionLinesContainer,
+            controls,
+            resolve: correct => resolveCard(card, correct)
+          });
+        }
+
+        return fragment;
+      }
+
+      let attempts = 0;
+
+      button.addEventListener("click", () => {
+        if (card.dataset.resolved === "true") return;
+
+        controls.forEach(control => {
+          control.value = control.value.trim();
+        });
+
+        const empty = controls.find(control => !control.value);
+        if (empty) {
+          feedback.className = "feedback incorrect";
+          feedback.textContent = "Complète toutes les réponses avant de vérifier.";
+          announce(feedback.textContent);
+          empty.focus();
+          return;
+        }
+
+        attempts += 1;
+        const result = checker(controls);
+        if (onChecked) onChecked(result, controls);
+
+        if (result.correct) {
+          resolveCard(card, true);
+          card.classList.remove("is-incorrect", "is-shaking");
+          void card.offsetWidth;
+          card.classList.add("is-correct");
+          feedback.className = "feedback correct";
+          feedback.textContent = "✅ Bravo, ta réponse est correcte.";
+          controls.forEach(control => { control.disabled = true; });
+          button.disabled = true;
+          hintPanel.classList.remove("is-visible");
+          hintPanel.setAttribute("aria-hidden", "true");
+          announce(`Exercice ${globalIndex + 1} réussi.`);
+          focusNextExercise(card);
+          return;
+        }
+
+        if (attempts < SETTINGS.MAX_ATTEMPTS) {
+          const hintIndex = attempts - 1;
+          hintContent.textContent = hints[hintIndex];
+          hintPanel.classList.add("is-visible");
+          hintPanel.setAttribute("aria-hidden", "false");
+
+          feedback.className = "feedback incorrect";
+          feedback.textContent =
+            attempts === 1
+              ? "Ce n’est pas encore correct. Lis le premier indice."
+              : "Essaie encore en utilisant le deuxième indice.";
+
+          card.classList.remove("is-shaking");
+          void card.offsetWidth;
+          card.classList.add("is-shaking");
+          announce(`${feedback.textContent} ${hints[hintIndex]}`);
+          return;
+        }
+
+        resolveCard(card, false);
+        card.classList.add("is-incorrect");
+        feedback.className = "feedback incorrect";
+        feedback.textContent = "Trois essais utilisés. Étudie la correction complète.";
+
+        studentAnswerValue.textContent =
+          readStudentAnswer(controls);
+        correctAnswerValue.textContent =
+          displayExpression(correctAnswer);
+        setLines(
+          correctionLinesContainer,
+          correctionLines.map(displayExpression)
+        );
+
+        correction.classList.add("is-visible");
+        correction.setAttribute("aria-hidden", "false");
+        controls.forEach(control => { control.disabled = true; });
+        button.disabled = true;
+        announce("Trois essais utilisés. La correction complète est affichée.");
+        focusNextExercise(card);
+      });
+
+      return fragment;
+    };
+
+    const makeMatchingItem = type => {
+      if (type === 0) {
+        const a = randInt(3, 9), b = randInt(2, 9), c = randInt(2, 9), d = randInt(2, 9);
+        const sum = b + c;
+        const product = a * sum;
+        return {
+          expr: `${a} * (${b} + ${c}) + ${d}`,
+          answer: product + d,
+          steps: [
+            `${a} * (${b} + ${c}) + ${d}`,
+            `${a} * ${sum} + ${d}`,
+            `${product} + ${d}`,
+            `${product + d}`
+          ]
+        };
+      }
+
+      if (type === 1) {
+        const a = randInt(3, 9), b = randInt(2, 9), c = randInt(3, 9), d = randInt(2, 9);
+        const ab = a * b, cd = c * d;
+        return {
+          expr: `${a} * ${b} + ${c} * ${d}`,
+          answer: ab + cd,
+          steps: [
+            `${a} * ${b} + ${c} * ${d}`,
+            `${ab} + ${cd}`,
+            `${ab + cd}`
+          ]
+        };
+      }
+
+      if (type === 2) {
+        const a = randInt(3, 9), b = randInt(2, 9), c = randInt(3, 9), d = randInt(2, 9);
+        const first = a + b, second = c + d;
+        return {
+          expr: `(${a} + ${b}) * (${c} + ${d})`,
+          answer: first * second,
+          steps: [
+            `(${a} + ${b}) * (${c} + ${d})`,
+            `${first} * ${second}`,
+            `${first * second}`
+          ]
+        };
+      }
+
+      if (type === 3) {
+        const divisor = randInt(2, 7), quotient = randInt(4, 14), multiplier = randInt(3, 9);
+        return {
+          expr: `${divisor * quotient} / ${divisor} * ${multiplier}`,
+          answer: quotient * multiplier,
+          steps: [
+            `${divisor * quotient} / ${divisor} * ${multiplier}`,
+            `${quotient} * ${multiplier}`,
+            `${quotient * multiplier}`
+          ]
+        };
+      }
+
+      const a = randInt(18, 30), b = randInt(3, 9), c = randInt(3, 9), d = randInt(2, 9);
+      const cd = c * d;
+      return {
+        expr: `${a} - ${b} + ${c} * ${d}`,
+        answer: a - b + cd,
+        steps: [
+          `${a} - ${b} + ${c} * ${d}`,
+          `${a} - ${b} + ${cd}`,
+          `${a - b + cd}`
+        ]
+      };
+    };
+
+    const CALCULATION_TEMPLATES = [
+      // a) 4 · (3 + 8)
+      () => {
+        const a = randInt(2, 9), b = randInt(2, 9), c = randInt(2, 9);
+        const sum = b + c;
+        return {
+          expr: `${a} * (${b} + ${c})`,
+          answer: a * sum,
+          hint: "Calcule d’abord la parenthèse, puis multiplie.",
+          steps: [`${a} * (${b} + ${c})`, `${a} * ${sum}`, `${a * sum}`]
+        };
+      },
+      // b) (17 + 3) · (5 + 3)
+      () => {
+        const a = randInt(10, 20), b = randInt(2, 8), c = randInt(2, 8), d = randInt(2, 8);
+        const first = a + b, second = c + d;
+        return {
+          expr: `(${a} + ${b}) * (${c} + ${d})`,
+          answer: first * second,
+          hint: "Calcule chaque parenthèse séparément avant de multiplier.",
+          steps: [`(${a} + ${b}) * (${c} + ${d})`, `${first} * ${second}`, `${first * second}`]
+        };
+      },
+      // c) (9 + 2) · 3 + 5
+      () => {
+        const a = randInt(3, 9), b = randInt(2, 8), c = randInt(2, 9), d = randInt(2, 9);
+        const sum = a + b, product = sum * c;
+        return {
+          expr: `(${a} + ${b}) * ${c} + ${d}`,
+          answer: product + d,
+          hint: "La parenthèse d’abord, puis la multiplication, puis l’addition.",
+          steps: [`(${a} + ${b}) * ${c} + ${d}`, `${sum} * ${c} + ${d}`, `${product} + ${d}`, `${product + d}`]
+        };
+      },
+      // d) (2 + 3) · (5 + 7)
+      () => {
+        const a = randInt(2, 8), b = randInt(2, 8), c = randInt(2, 9), d = randInt(2, 9);
+        const first = a + b, second = c + d;
+        return {
+          expr: `(${a} + ${b}) * (${c} + ${d})`,
+          answer: first * second,
+          hint: "Calcule chaque parenthèse séparément avant de multiplier.",
+          steps: [`(${a} + ${b}) * (${c} + ${d})`, `${first} * ${second}`, `${first * second}`]
+        };
+      },
+      // e) 2 + 3 · (5 + 7)
+      () => {
+        const a = randInt(2, 9), b = randInt(2, 9), c = randInt(2, 8), d = randInt(2, 8);
+        const sum = c + d, product = b * sum;
+        return {
+          expr: `${a} + ${b} * (${c} + ${d})`,
+          answer: a + product,
+          hint: "La parenthèse et la multiplication passent avant l’addition.",
+          steps: [`${a} + ${b} * (${c} + ${d})`, `${a} + ${b} * ${sum}`, `${a} + ${product}`, `${a + product}`]
+        };
+      },
+      // f) (3 + 5) · 2 + 3 · (2 + 1)
+      () => {
+        const a = randInt(2, 8), b = randInt(2, 8), c = randInt(2, 9), d = randInt(2, 9), e = randInt(2, 7), f = randInt(2, 7);
+        const first = a + b, second = e + f;
+        const product1 = first * c, product2 = d * second;
+        return {
+          expr: `(${a} + ${b}) * ${c} + ${d} * (${e} + ${f})`,
+          answer: product1 + product2,
+          hint: "Traite les deux produits séparément avant de les additionner.",
+          steps: [
+            `(${a} + ${b}) * ${c} + ${d} * (${e} + ${f})`,
+            `${first} * ${c} + ${d} * ${second}`,
+            `${product1} + ${product2}`,
+            `${product1 + product2}`
+          ]
+        };
+      },
+      // g) 5 · (2 · 5 + 7)
+      () => {
+        const a = randInt(2, 9), b = randInt(2, 9), c = randInt(2, 9), d = randInt(2, 9);
+        const product = b * c, innerSum = product + d;
+        return {
+          expr: `${a} * (${b} * ${c} + ${d})`,
+          answer: a * innerSum,
+          hint: "Dans la parenthèse, fais d’abord la multiplication, puis l’addition.",
+          steps: [
+            `${a} * (${b} * ${c} + ${d})`,
+            `${a} * (${product} + ${d})`,
+            `${a} * ${innerSum}`,
+            `${a * innerSum}`
+          ]
+        };
+      },
+      // h) 75 : (1 + 3 · 8) + 25 : 5
+      () => {
+        const b = randInt(2, 6), c = randInt(2, 6), d = randInt(2, 6);
+        const denom1 = b + c * d;
+        const quotient1 = randInt(3, 9);
+        const a = denom1 * quotient1;
+        const f = randInt(2, 6);
+        const quotient2 = randInt(3, 9);
+        const e = f * quotient2;
+        return {
+          expr: `${a} / (${b} + ${c} * ${d}) + ${e} / ${f}`,
+          answer: quotient1 + quotient2,
+          hint: "Calcule chaque division séparément avant d’additionner.",
+          steps: [
+            `${a} / (${b} + ${c} * ${d}) + ${e} / ${f}`,
+            `${a} / ${denom1} + ${e} / ${f}`,
+            `${quotient1} + ${quotient2}`,
+            `${quotient1 + quotient2}`
+          ]
+        };
+      },
+      // i) (5 + 2 · 3) · 2 + 7
+      () => {
+        const a = randInt(2, 9), b = randInt(2, 8), c = randInt(2, 8), d = randInt(2, 9), e = randInt(2, 9);
+        const product = b * c, innerSum = a + product, product2 = innerSum * d;
+        return {
+          expr: `(${a} + ${b} * ${c}) * ${d} + ${e}`,
+          answer: product2 + e,
+          hint: "Dans la parenthèse, fais la multiplication avant l’addition.",
+          steps: [
+            `(${a} + ${b} * ${c}) * ${d} + ${e}`,
+            `(${a} + ${product}) * ${d} + ${e}`,
+            `${innerSum} * ${d} + ${e}`,
+            `${product2} + ${e}`,
+            `${product2 + e}`
+          ]
+        };
+      },
+      // j) (18 - 2 · 7) · 2 + 18 : (15 - 3 · 4)
+      () => {
+        const b = randInt(2, 6), c = randInt(2, 6);
+        const product1 = b * c;
+        const a = product1 + randInt(3, 10);
+        const g = randInt(2, 5), h = randInt(2, 5);
+        const product2 = g * h;
+        const denomExtra = randInt(2, 8);
+        const f = product2 + denomExtra;
+        const quotient2 = randInt(2, 9);
+        const e = denomExtra * quotient2;
+        const d = randInt(2, 7);
+        const diff1 = a - product1, term1 = diff1 * d;
+        return {
+          expr: `(${a} - ${b} * ${c}) * ${d} + ${e} / (${f} - ${g} * ${h})`,
+          answer: term1 + quotient2,
+          hint: "Résous d’abord les deux parenthèses (dont celle avec division).",
+          steps: [
+            `(${a} - ${b} * ${c}) * ${d} + ${e} / (${f} - ${g} * ${h})`,
+            `(${a} - ${product1}) * ${d} + ${e} / (${f} - ${product2})`,
+            `${diff1} * ${d} + ${e} / ${denomExtra}`,
+            `${term1} + ${quotient2}`,
+            `${term1 + quotient2}`
+          ]
+        };
+      },
+      // k) 18 : 3 . 2
+      () => {
+        const divisor = randInt(2, 9), quotient = randInt(3, 12), multiplier = randInt(2, 9);
+        return {
+          expr: `${divisor * quotient} / ${divisor} * ${multiplier}`,
+          answer: quotient * multiplier,
+          hint: "Division et multiplication ont la même priorité : de gauche à droite.",
+          steps: [
+            `${divisor * quotient} / ${divisor} * ${multiplier}`,
+            `${quotient} * ${multiplier}`,
+            `${quotient * multiplier}`
+          ]
+        };
+      }
+    ];
+
+    const makeCalculationItem = templateIndex => {
+      const template = CALCULATION_TEMPLATES[templateIndex];
+      const item = template();
+      return {
+        expr: item.expr,
+        answer: item.answer,
+        steps: item.steps,
+        hints: [
+          item.hint,
+          `Le résultat final est ${item.answer}.`
+        ]
+      };
+    };
+
+    const buildRaw = (terms, ops) =>
+      terms.map((term, index) => (index === 0 ? `${term}` : `${ops[index - 1]} ${term}`)).join(" ");
+
+    const buildAnswer = (terms, ops, groups) => {
+      const openAt = new Set(groups.map(group => group[0]));
+      const closeAt = new Set(groups.map(group => group[1]));
+      const parts = [];
+
+      terms.forEach((term, index) => {
+        if (index > 0) parts.push(ops[index - 1]);
+        if (openAt.has(index)) parts.push("(");
+        parts.push(String(term));
+        if (closeAt.has(index)) parts.push(")");
+      });
+
+      // Recompose so parentheses hug their numbers, e.g. "( 4 + 5 )" -> "(4 + 5)"
+      return parts.join(" ").replace(/\(\s+/g, "(").replace(/\s+\)/g, ")");
+    };
+
+    const makeParenTemplate = (termRanges, ops, groups, hint) => () => {
+      const terms = termRanges.map(([min, max]) => randInt(min, max));
+      const raw = buildRaw(terms, ops);
+      const answer = buildAnswer(terms, ops, groups);
+      const target = safeEvaluate(answer);
+      return { raw, answer, target, hint };
+    };
+
+    const PARENTHESES_TEMPLATES = [
+      makeParenTemplate([[4, 9], [3, 9], [3, 9], [2, 9]], ["+", "*", "+"], [[0, 1], [2, 3]], "Deux sommes doivent devenir prioritaires."),
+      makeParenTemplate([[4, 9], [3, 9], [3, 9], [2, 9]], ["+", "*", "+"], [[0, 1]], "La première addition doit être effectuée avant la multiplication."),
+      makeParenTemplate([[4, 9], [3, 9], [3, 9], [2, 9]], ["+", "*", "+"], [[2, 3]], "La deuxième addition doit être effectuée avant la multiplication."),
+      makeParenTemplate([[4, 9], [3, 9], [3, 9], [2, 9]], ["*", "+", "+"], [[1, 2]], "Regroupe les deux nombres du milieu."),
+      makeParenTemplate([[4, 9], [3, 9], [3, 9], [2, 9]], ["+", "+", "*"], [[0, 2]], "La somme des trois premiers nombres doit être prioritaire."),
+      makeParenTemplate([[3, 8], [2, 7], [3, 8], [2, 7]], ["*", "+", "*"], [[1, 2]], "Regroupe l’addition centrale entre les deux multiplications."),
+      makeParenTemplate([[3, 8], [2, 7], [3, 8], [2, 7]], ["+", "*", "-"], [[0, 1]], "Regroupe la première somme avant la multiplication."),
+      makeParenTemplate([[10, 20], [2, 8], [2, 8], [2, 8]], ["-", "+", "*"], [[1, 2]], "Regroupe la soustraction et l’addition avant de multiplier."),
+      makeParenTemplate([[10, 20], [2, 8], [2, 8], [2, 8]], ["-", "*", "+"], [[0, 1]], "La soustraction doit passer avant la multiplication."),
+      makeParenTemplate([[2, 8], [2, 8], [3, 9], [2, 8], [2, 8]], ["+", "*", "+", "*"], [[0, 1], [3, 4]], "Regroupe les deux additions situées près des multiplications."),
+      makeParenTemplate([[2, 8], [2, 8], [3, 9], [2, 8], [2, 8]], ["*", "+", "*", "+"], [[1, 2]], "Regroupe la somme centrale avant la deuxième multiplication."),
+      makeParenTemplate([[2, 9], [2, 8], [2, 9], [2, 8]], ["+", "-", "*"], [[1, 2]], "Regroupe l’addition et la soustraction avant de multiplier."),
+      makeParenTemplate([[2, 9], [2, 8], [2, 9], [2, 8]], ["*", "-", "+"], [[1, 2]], "Le produit et la soustraction doivent être groupés en premier."),
+      makeParenTemplate([[15, 25], [2, 7], [2, 6], [2, 8]], ["-", "*", "+"], [[0, 1]], "Regroupe la soustraction avant d’effectuer la multiplication."),
+      makeParenTemplate([[3, 9], [2, 8], [3, 9], [2, 8]], ["+", "*", "*"], [[0, 1]], "Force l’addition à s’effectuer avant les deux multiplications."),
+      makeParenTemplate([[3, 9], [2, 8], [3, 9], [2, 8]], ["*", "*", "+"], [[2, 3]], "Regroupe l’addition avec le dernier facteur avant de multiplier."),
+      makeParenTemplate([[4, 9], [2, 7], [2, 7], [3, 9]], ["+", "+", "*"], [[1, 2]], "Regroupe seulement les deux nombres centraux."),
+      makeParenTemplate([[4, 9], [2, 7], [2, 7], [3, 9]], ["*", "+", "+"], [[1, 2]], "Regroupe l’addition centrale avant de multiplier."),
+      makeParenTemplate([[2, 8], [2, 8], [2, 8], [2, 8]], ["+", "*", "-"], [[2, 3]], "Regroupe la dernière soustraction avant la multiplication."),
+      makeParenTemplate([[2, 8], [2, 8], [2, 8], [2, 8]], ["-", "+", "*"], [[0, 2]], "Regroupe les trois premiers nombres avant de multiplier.")
+    ];
+
+    const buildMatchingCards = startIndex => {
+      const count = SETTINGS.SECTION_ITEM_COUNTS[0];
+      let items;
+
+      do {
+        items = Array.from({ length: count }, (_, index) => makeMatchingItem(index % 5));
+      } while (new Set(items.map(item => item.answer)).size !== count);
+
+      const options = shuffle(items.map(item => item.answer));
+
+      return items.map((item, localIndex) =>
+        createExerciseCard({
+          globalIndex: startIndex + localIndex,
+          localIndex,
+          prompt: "Choisis le résultat correspondant.",
+          expression: item.expr,
+          hints: [
+            "Repère d’abord les parenthèses, puis les multiplications ou divisions.",
+            "Réécris mentalement le calcul après chaque opération prioritaire."
+          ],
+          correctAnswer: String(item.answer),
+          correctionLines: item.steps,
+          buildControls(root) {
+            const select = document.createElement("select");
+            select.id = `matching-${localIndex}`;
+            select.className = "answer-select";
+            select.setAttribute("aria-label", `Résultat de ${displayExpression(item.expr)}`);
+
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = "— Choisis un résultat —";
+            select.appendChild(placeholder);
+
+            options.forEach(answer => {
+              const option = document.createElement("option");
+              option.value = String(answer);
+              option.textContent = String(answer);
+              select.appendChild(option);
+            });
+
+            root.appendChild(createLabeledControl("Résultat", select));
+            return [select];
+          },
+          checker: controls => ({
+            correct: Number(controls[0].value) === item.answer
+          })
+        })
+      );
+    };
+
+    const evaluateLineValue = rawValue => {
+      const trimmed = stripLinePrefix(rawValue);
+      const equalsIndex = trimmed.lastIndexOf("=");
+      const target = equalsIndex >= 0 ? trimmed.slice(equalsIndex + 1) : trimmed;
+      return safeEvaluate(target);
+    };
+
+    // Filet de sécurité, normalement jamais atteint puisque diagnoseStepMistake
+    // renvoie désormais toujours un message ciblé (il ne présume plus d'une
+    // erreur de priorités quand il ne peut pas la confirmer).
+    const GENERIC_STEP_HINTS = [
+      "Ce n’est pas encore ça. Revérifie ta ligne, chiffre par chiffre.",
+      "Toujours pas. Reprends la ligne précédente et recalcule une seule opération à la fois."
+    ];
+
+    const buildCalculationCards = startIndex => {
+      const count = SETTINGS.SECTION_ITEM_COUNTS[1];
+      const templateOrder = shuffle(CALCULATION_TEMPLATES.map((_, index) => index));
+      const chosenTemplates = templateOrder.slice(0, Math.min(count, CALCULATION_TEMPLATES.length));
+
+      while (chosenTemplates.length < count) {
+        chosenTemplates.push(choice(templateOrder));
+      }
+
+      return chosenTemplates.map((templateIndex, localIndex) => {
+        const item = makeCalculationItem(templateIndex);
+        // La toute première étape est l'expression déjà donnée : une ligne est prévue pour chacune des suivantes.
+        const targetValues = item.steps.slice(1).map(safeEvaluate);
+        const rows = [];
+
+        return createExerciseCard({
+          globalIndex: startIndex + localIndex,
+          localIndex,
+          prompt: "Calcule en respectant les priorités des opérations, ligne par ligne.",
+          expression: item.expr,
+          customFlow: true,
+          buildControls(root) {
+            const panel = document.createElement("div");
+            panel.className = "steps-panel";
+            const controls = [];
+
+            targetValues.forEach((target, stepIndex) => {
+              const row = document.createElement("div");
+              row.className = "step-row";
+
+              const number = document.createElement("span");
+              number.className = "step-number";
+              number.textContent = String(stepIndex + 1);
+              number.setAttribute("aria-hidden", "true");
+
+              const group = document.createElement("div");
+              group.className = "answer-group";
+
+              const equals = document.createElement("span");
+              equals.className = "step-equals";
+              equals.textContent = "=";
+              equals.setAttribute("aria-hidden", "true");
+
+              const input = createInput(
+                `calculation-${localIndex}-${stepIndex}`,
+                `Étape ${stepIndex + 1} du calcul de ${displayExpression(item.expr)}`,
+                "line-input"
+              );
+              if (stepIndex > 0) input.disabled = true;
+
+              const status = document.createElement("span");
+              status.className = "step-status";
+
+              const stepHint = document.createElement("p");
+              stepHint.className = "step-hint";
+
+              group.append(equals, input, status);
+              row.append(number, group, stepHint);
+              panel.appendChild(row);
+              controls.push(input);
+              rows.push({ row, input, status, stepHint, attempts: 0, state: "pending" });
+            });
+
+            root.appendChild(panel);
+            return controls;
+          },
+          onCardBuilt({ card, feedback, correction, studentAnswerValue, correctAnswerValue, correctionLinesContainer, resolve }) {
+            let cardHadReveal = false;
+
+            const showCorrectionPanel = () => {
+              studentAnswerValue.textContent = rows
+                .map(entry => entry.input.value || "—")
+                .join(" ; ");
+              correctAnswerValue.textContent = String(item.answer);
+              setLines(correctionLinesContainer, item.steps.map(displayExpression));
+              correction.classList.add("is-visible");
+              correction.setAttribute("aria-hidden", "false");
+            };
+
+            const finishCard = () => {
+              if (cardHadReveal) {
+                resolve(false);
+                card.classList.add("is-incorrect");
+                feedback.className = "feedback incorrect";
+                feedback.textContent =
+                  "Certaines étapes ont été révélées. Regarde la correction complète ci-dessous.";
+                showCorrectionPanel();
+                announce(feedback.textContent);
+              } else {
+                resolve(true);
+                card.classList.add("is-correct");
+                feedback.className = "feedback correct";
+                feedback.textContent = "✅ Bravo, tout le calcul est correct.";
+                announce(`Exercice ${startIndex + localIndex + 1} réussi.`);
+              }
+              focusNextExercise(card);
+            };
+
+            const unlockRow = index => {
+              if (index >= rows.length) {
+                finishCard();
+                return;
+              }
+              const next = rows[index];
+              next.input.disabled = false;
+              window.setTimeout(() => {
+                next.input.focus({ preventScroll: true });
+              }, SETTINGS.FOCUS_DELAY);
+            };
+
+            const revealRow = (entry, index) => {
+              cardHadReveal = true;
+              entry.state = "revealed";
+              entry.input.value = displayExpression(item.steps[index + 1]);
+              entry.input.disabled = true;
+              entry.row.classList.remove("is-step-error");
+              entry.row.classList.add("is-step-revealed");
+              entry.status.textContent = "!";
+              entry.status.setAttribute("aria-label", `Étape ${index + 1} révélée`);
+              entry.stepHint.textContent = "Solution révélée pour débloquer la suite.";
+              announce(`Étape ${index + 1} révélée : ${displayExpression(item.steps[index + 1])}.`);
+              unlockRow(index + 1);
+            };
+
+            const validateRow = index => {
+              const entry = rows[index];
+              if (entry.state !== "pending") return;
+              if (!entry.input.value.trim()) return;
+
+              const studentValue = evaluateLineValue(entry.input.value);
+              const isLastStep = index === rows.length - 1;
+              const isProperlyReduced = !isLastStep || isBareNumber(entry.input.value);
+
+              // On se base sur ce que l'élève a réellement écrit à la ligne
+              // précédente (et non la ligne « officielle » du script) : s'il
+              // a pris un chemin équivalent mais différent, comparer à une
+              // ligne qu'il n'a jamais écrite serait incohérent.
+              const previousExpression = index === 0
+                ? item.steps[0]
+                : normalizeExpression(rows[index - 1].input.value);
+
+              // Si la ligne précédente contient encore une ou des
+              // parenthèses, chaque parenthèse doit rester un « îlot »
+              // autonome : son contenu peut être réduit progressivement,
+              // une opération à la fois (ex. terminer d'abord la
+              // multiplication qu'elle contient), tant que sa VALEUR ne
+              // change pas et que le texte autour d'elle reste identique.
+              // Ce qui est refusé, c'est de faire disparaître la parenthèse
+              // en distribuant/développant (ex. distribuer 8 sur (8+2) pour
+              // obtenir 8×8+2×8 au lieu de calculer 8+2=10 puis 10×8), ou de
+              // sauter directement à un résultat qui combine déjà la
+              // parenthèse avec le reste du calcul.
+              const parensProperlyResolved = isParenIslandPreserved(previousExpression, entry.input.value);
+
+              if (nearlyEqual(studentValue, targetValues[index]) && isProperlyReduced && parensProperlyResolved) {
+                entry.state = "correct";
+                entry.row.classList.remove("is-step-error");
+                entry.row.classList.add("is-step-correct");
+                entry.status.textContent = "✓";
+                entry.status.setAttribute("aria-label", `Étape ${index + 1} correcte`);
+                entry.stepHint.textContent = "";
+                entry.input.disabled = true;
+                unlockRow(index + 1);
+                return;
+              }
+
+              entry.attempts += 1;
+              entry.row.classList.remove("is-step-error");
+              void entry.row.offsetWidth;
+              entry.row.classList.add("is-step-error");
+              entry.status.textContent = "✗";
+              entry.status.setAttribute("aria-label", `Étape ${index + 1} à revoir`);
+
+              if (entry.attempts >= SETTINGS.MAX_ATTEMPTS) {
+                revealRow(entry, index);
+                return;
+              }
+
+              // Cas particulier : la valeur est numériquement correcte mais
+              // la dernière ligne contient encore un calcul (ex. "63+70")
+              // au lieu du résultat final réduit (ex. "133"). On le signale
+              // explicitement plutôt que de renvoyer un indice générique,
+              // pour que ce ne soit pas perçu comme une erreur arbitraire.
+              if (isLastStep && nearlyEqual(studentValue, targetValues[index]) && !isProperlyReduced) {
+                entry.stepHint.textContent =
+                  "Ta valeur est juste, mais cette dernière ligne doit contenir uniquement le résultat final, sous la forme d’un seul nombre (pas un calcul encore à faire).";
+                announce(entry.stepHint.textContent);
+                return;
+              }
+
+              // Cas particulier : la valeur est numériquement correcte mais
+              // la parenthèse n'a pas été réduite à un seul nombre (elle a
+              // été distribuée/développée, ou une autre étape a été faite en
+              // même temps). On l'explique clairement plutôt que de laisser
+              // croire à une simple erreur de calcul.
+              if (nearlyEqual(studentValue, targetValues[index]) && isProperlyReduced && !parensProperlyResolved) {
+                entry.stepHint.textContent =
+                  "Attention, tu ne dois pas distribuer mais respecter les priorités des opérations. As-tu bien effectué le(s) calcul(s) entre parenthèse(s) ?";
+                announce(entry.stepHint.textContent);
+                return;
+              }
+
+              const diagnosis = diagnoseStepMistake(previousExpression, targetValues[index], studentValue);
+              entry.stepHint.textContent = diagnosis || GENERIC_STEP_HINTS[entry.attempts - 1] || GENERIC_STEP_HINTS[GENERIC_STEP_HINTS.length - 1];
+              announce(entry.stepHint.textContent);
+            };
+
+            rows.forEach((entry, index) => {
+              entry.input.addEventListener("blur", () => validateRow(index));
+              entry.input.addEventListener("keydown", event => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  entry.input.blur();
+                }
+              });
+            });
+          }
+        });
+      });
+    };
+
+    const buildParenthesesCards = startIndex => {
+      const count = SETTINGS.SECTION_ITEM_COUNTS[2];
+      const templateOrder = shuffle(PARENTHESES_TEMPLATES.map((_, index) => index));
+      const chosenIndices = templateOrder.slice(0, Math.min(count, PARENTHESES_TEMPLATES.length));
+
+      while (chosenIndices.length < count) {
+        chosenIndices.push(choice(templateOrder));
+      }
+
+      return chosenIndices.map((templateIndex, localIndex) => {
+        let item = PARENTHESES_TEMPLATES[templateIndex]();
+        let attempts = 0;
+
+        // Si les parenthèses ne changent rien au résultat (cas dégénéré), on retire une nouvelle fois les nombres.
+        while (nearlyEqual(item.target, safeEvaluate(item.raw)) && attempts < 10) {
+          item = PARENTHESES_TEMPLATES[templateIndex]();
+          attempts += 1;
+        }
+
+        return createExerciseCard({
+          globalIndex: startIndex + localIndex,
+          localIndex,
+          prompt: `Ajoute uniquement des parenthèses pour obtenir ${item.target}.`,
+          expression: `${item.raw} = ${item.target}`,
+          hints: [
+            item.hint,
+            `Essaie de former l’écriture : ${displayExpression(item.answer)}`
+          ],
+          correctAnswer: `${item.answer} = ${item.target}`,
+          correctionLines: [`${item.answer} = ${item.target}`],
+          buildControls(root) {
+            const input = createInput(
+              `parentheses-${localIndex}`,
+              `Calcul donnant ${item.target}`
+            );
+            root.appendChild(createLabeledControl("Réécris le calcul", input));
+            return [input];
+          },
+          checker(controls) {
+            const parsed = parseEquality(controls[0].value);
+            if (!parsed) return { correct: false };
+
+            const expression = parsed.hasEquality ? parsed.left : parsed.expression;
+            const statedResultValid =
+              !parsed.hasEquality ||
+              nearlyEqual(safeEvaluate(parsed.right), item.target);
+
+            return {
+              correct:
+                sameTokenSequence(expression, item.raw) &&
+                normalizeExpression(expression).includes("(") &&
+                validParentheses(expression) &&
+                nearlyEqual(safeEvaluate(expression), item.target) &&
+                statedResultValid
+            };
+          }
+        });
+      });
+    };
+
+    const sectionDefinitions = [
+      {
+        titleId: "section1-title",
+        numberId: "section1-number",
+        instructionsId: "section1-instructions",
+        number: "1",
+        title: "Choisis le bon résultat",
+        instructions: "Calcule chaque expression en respectant les priorités, puis sélectionne le résultat correspondant.",
+        build: buildMatchingCards
+      },
+      {
+        titleId: "section2-title",
+        numberId: "section2-number",
+        instructionsId: "section2-instructions",
+        number: "2",
+        title: "Calcule",
+        instructions: "Calcule en respectant les priorités des opérations.",
+        build: buildCalculationCards
+      },
+      {
+        titleId: "section3-title",
+        numberId: "section3-number",
+        instructionsId: "section3-instructions",
+        number: "3",
+        title: "Place les parenthèses",
+        instructions: "Ajoute uniquement des parenthèses (sans changer les nombres ni les opérations) pour obtenir le résultat indiqué.",
+        build: buildParenthesesCards
+      }
+    ];
+
+    const configureTemplateElement = (element, templateId, className, text) => {
+      element.dataset.templateId = templateId;
+      if (className) element.classList.add(className);
+      if (text !== undefined) element.textContent = text;
+    };
+
+    const buildAll = () => {
+      elements.sections.replaceChildren();
+      elements.confetti.replaceChildren();
+      elements.completion.classList.remove("is-visible");
+      elements.finalScore.textContent = "";
+
+      state.completed = 0;
+      state.correct = 0;
+      state.completionShown = false;
+      state.celebratedMilestones.clear();
+      updateScore();
+
+      let startIndex = 0;
+
+      sectionDefinitions.forEach((definition, sectionIndex) => {
+        const fragment = document.getElementById("section-template").content.cloneNode(true);
+        const section = fragment.querySelector("section");
+        const number = fragment.querySelector(".section-number");
+        const title = fragment.querySelector(".section-title");
+        const instructions = fragment.querySelector(".section-instructions");
+        const list = fragment.querySelector(".exercise-list");
+        const headingId = `generated-section-${sectionIndex + 1}-title`;
+
+        configureTemplateElement(number, definition.numberId, "canva-tag", definition.number);
+        configureTemplateElement(title, definition.titleId, "canva-text", definition.title);
+        configureTemplateElement(instructions, definition.instructionsId, "canva-text", definition.instructions);
+
+        title.id = headingId;
+        section.setAttribute("aria-labelledby", headingId);
+
+        definition.build(startIndex).forEach(card => list.appendChild(card));
+        elements.sections.appendChild(fragment);
+        startIndex += SETTINGS.SECTION_ITEM_COUNTS[sectionIndex];
+      });
+
+      lucide.createIcons();
+    };
+
+    const regenerate = scrollToTop => {
+      buildAll();
+
+      if (scrollToTop) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      announce("Une nouvelle fiche de quinze exercices a été générée.");
+
+      window.setTimeout(() => {
+        document.querySelector(".exercise-card select, .exercise-card input")?.focus();
+      }, SETTINGS.FOCUS_DELAY);
+    };
+
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Enter") return;
+      if (!["INPUT", "SELECT"].includes(event.target.tagName)) return;
+
+      const button = event.target
+        .closest(".exercise-card")
+        ?.querySelector(".validate-button:not(:disabled)");
+
+      if (button) {
+        event.preventDefault();
+        button.click();
+      }
+    });
+
+    document.getElementById("new-exercises-button")
+      .addEventListener("click", () => regenerate(false));
+
+    document.getElementById("restart-button")
+      .addEventListener("click", () => regenerate(true));
+
+    document.addEventListener("DOMContentLoaded", buildAll);
+  </script>
+ </body>
+</html>

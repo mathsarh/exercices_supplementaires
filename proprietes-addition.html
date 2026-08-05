@@ -1,0 +1,1150 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propriétés de l'addition</title>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #22c55e;
+      --error: #ef4444;
+      --amber: #f59e0b;
+      --line: #dbe3f4;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+    }
+    button, select, input { font: inherit; }
+    button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.4);
+      outline-offset: 3px;
+    }
+    .app-shell {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.14), transparent 24rem),
+        linear-gradient(180deg, var(--slate) 0 15rem, var(--paper) 15rem 100%);
+    }
+    .main-width { width: min(100% - 2rem, 840px); margin-inline: auto; }
+    .hero { padding: 2.6rem 0 2rem; color: white; }
+    .hero-title { margin: 0; letter-spacing: -0.03em; font-weight: 800; font-size: clamp(1.7rem, 4.6vw, 2.3rem); }
+    .hero-subtitle { max-width: 40rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+    .content { padding-bottom: 4rem; }
+
+    .score-panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: -0.6rem;
+      padding: 1.25rem;
+    }
+    .score-values { min-width: 150px; }
+    .score-line { font-size: 0.88rem; color: var(--muted); }
+    .score-line strong { display: block; font-weight: 800; font-size: 1.5rem; color: var(--indigo); }
+    .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+    .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+    .section-block { margin-top: 2.4rem; }
+    .section-heading { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+    .section-number {
+      flex: none;
+      width: 2.1rem; height: 2.1rem;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+    }
+    .section-title { margin: 0; font-size: 1.15rem; font-weight: 800; }
+    .section-instructions { margin: 0 0 1.1rem 3.1rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+    .exercise-list { display: grid; gap: 1rem; }
+    .exercise-card {
+      background: white;
+      padding: 1.25rem 1.3rem;
+      border: 2px solid transparent;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      transition: border-color 180ms ease;
+    }
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-incorrect { border-color: var(--error); }
+    .exercise-card.is-shaking { animation: shake 340ms ease; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+    }
+
+    .item-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 0 0 0.5rem; }
+    .equality {
+      font-family: "Courier New", monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #192238;
+      background: #f4f6fd;
+      padding: 0.7rem 0.9rem;
+      border-radius: 10px;
+      margin: 0 0 0.9rem;
+      overflow-x: auto;
+    }
+
+    .options-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.9rem; }
+    .option-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.85rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 999px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+      transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+    .option-chip input { accent-color: var(--indigo); }
+    .option-chip.is-selected { border-color: var(--indigo); background: #eef2ff; color: var(--indigo-dark); font-weight: 700; }
+    .option-chip.is-disabled { cursor: default; opacity: 0.75; }
+
+    .method-list { display: grid; gap: 0.5rem; margin-bottom: 0.9rem; }
+    .method-option {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: "Courier New", monospace;
+      font-size: 0.93rem;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+    .method-option.is-selected { border-color: var(--indigo); background: #eef2ff; }
+    .method-option.is-disabled { cursor: default; opacity: 0.85; }
+    .method-tag {
+      flex: none;
+      width: 1.6rem; height: 1.6rem;
+      border-radius: 50%;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+      font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .numeric-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+    .numeric-row .equality-part { font-family: "Courier New", monospace; font-weight: 700; }
+    .numeric-input {
+      width: 100px;
+      min-height: 40px;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 8px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      text-align: center;
+    }
+    .numeric-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+    .blank-steps { display: grid; gap: 0.55rem; margin-bottom: 0.9rem; }
+    .blank-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 2.1;
+    }
+    .blank-line .fixed { white-space: pre; }
+    .blank-input {
+      width: 4.5em;
+      min-width: 64px;
+      min-height: 34px;
+      padding: 0.2rem 0.25rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 7px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .blank-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .feedback { margin: 0; font-size: 0.9rem; font-weight: 650; flex: 1; min-width: 200px; }
+    .feedback.correct { color: var(--success); }
+    .feedback.incorrect { color: var(--error); }
+
+    .validate-button {
+      min-height: 40px;
+      padding: 0.6rem 1rem;
+      border: 0;
+      border-radius: 10px;
+      background: var(--indigo);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .validate-button:disabled { cursor: default; opacity: 0.5; }
+    .steps-toggle {
+      min-height: 40px;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .correction {
+      display: none;
+      margin-top: 0.9rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      background: #fff7e7;
+      color: #8a5200;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+    .correction.is-visible { display: block; }
+    .correction strong { display: block; margin-bottom: 0.25rem; }
+
+    .footer-actions { margin-top: 2.6rem; text-align: center; }
+    .restart-button {
+      min-height: 46px;
+      padding: 0.75rem 1.3rem;
+      border: 0;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    @media (max-width: 620px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .card-actions { flex-direction: column; align-items: stretch; }
+      .validate-button, .steps-toggle { width: 100%; }
+      .section-instructions { margin-left: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="main-width">
+        <h1 class="hero-title">Propriétés de l'addition des nombres naturels</h1>
+        <p class="hero-subtitle">Commutativité, associativité et élément neutre : identifie les propriétés utilisées, choisis la méthode de calcul la plus rapide, puis calcule en t'appuyant sur ces propriétés.</p>
+        <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;background:#4f6ef7;color:white;border:0;">Nouveaux exercices</button>
+      </div>
+    </header>
+    <main class="main-width content">
+      <section class="score-panel" aria-labelledby="score-caption">
+        <div class="score-values" aria-live="polite">
+          <div class="score-line"><strong id="resolved-score">0 / 16</strong>corrigés</div>
+        </div>
+        <div>
+          <p id="score-caption" class="score-label">Progression</p>
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="16" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 1 -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">1</span>
+          <h2 class="section-title">Indique la (ou les) propriété(s) utilisée(s)</h2>
+        </div>
+        <p class="section-instructions">Pour chaque égalité, coche la ou les propriétés de l'addition qui expliquent le passage de gauche à droite.</p>
+        <div id="section1-list" class="exercise-list"></div>
+      </section>
+
+      <!-- SECTION 2 -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">2</span>
+          <h2 class="section-title">Choisis la méthode la plus rapide</h2>
+        </div>
+        <p class="section-instructions">Pour chaque calcul, sélectionne la méthode (a), (b) ou (c) qui permet de calculer le plus rapidement, en regroupant les nombres qui donnent des « nombres ronds ».</p>
+        <div id="section2-list" class="exercise-list"></div>
+      </section>
+
+      <!-- SECTION 3 -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">3</span>
+          <h2 class="section-title">Calcule en utilisant les propriétés de l'addition</h2>
+        </div>
+        <p class="section-instructions">Regroupe astucieusement les termes (commutativité, associativité, élément neutre) avant de donner le résultat final. Tu as 3 essais avant que la correction ne s'affiche.</p>
+        <div id="section3-list" class="exercise-list"></div>
+      </section>
+
+      <!-- SECTION 4 -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">4</span>
+          <h2 class="section-title">Calcule en utilisant les propriétés de l'addition</h2>
+        </div>
+        <p class="section-instructions">La difficulté augmente d'item en item : les étapes (parenthèses, sommes, résultat) restent toujours affichées, mais de moins en moins de nombres sont donnés. Tu as 3 essais avant que la correction ne s'affiche.</p>
+        <div id="section4-list" class="exercise-list"></div>
+      </section>
+
+      <div class="footer-actions">
+        <button id="restart-button" class="restart-button" type="button">Générer d'autres exercices</button>
+      </div>
+    </main>
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script>
+    const state = { resolved: 0, total: 0 };
+    const liveRegion = document.getElementById("live-region");
+    const resolvedScore = document.getElementById("resolved-score");
+    const progressTrack = document.getElementById("progress-track");
+    const progressFill = document.getElementById("progress-fill");
+
+    function announce(message) {
+      liveRegion.textContent = "";
+      window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+    }
+
+    function updateGlobalScore() {
+      resolvedScore.textContent = `${state.resolved} / ${state.total}`;
+      const pct = state.total ? (state.resolved / state.total) * 100 : 0;
+      progressFill.style.width = `${pct}%`;
+      progressTrack.setAttribute("aria-valuemax", String(state.total));
+      progressTrack.setAttribute("aria-valuenow", String(state.resolved));
+    }
+
+    function markResolved() {
+      state.resolved += 1;
+      updateGlobalScore();
+    }
+
+    function sameSet(a, b) {
+      if (a.length !== b.length) return false;
+      const sa = [...a].sort();
+      const sb = [...b].sort();
+      return sa.every((v, i) => v === sb[i]);
+    }
+
+    // Toutes les permutations d'un tableau d'indices (utilisé pour accepter les groupes
+    // de parenthèses dans n'importe quel ordre lors de la correction)
+    function permutations(arr) {
+      if (arr.length <= 1) return [arr];
+      const result = [];
+      arr.forEach((item, idx) => {
+        const rest = arr.slice(0, idx).concat(arr.slice(idx + 1));
+        permutations(rest).forEach((p) => result.push([item, ...p]));
+      });
+      return result;
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function pickRandom(bank, count) {
+      return shuffle(bank).slice(0, count);
+    }
+
+    function pickOne(bank) {
+      return bank[Math.floor(Math.random() * bank.length)];
+    }
+
+    function letterLabel(index) {
+      return `${String.fromCharCode(97 + index)})`;
+    }
+
+    function makeBlankInput(ariaLabel) {
+      const input = document.createElement("input");
+      input.className = "blank-input";
+      input.type = "number";
+      input.setAttribute("aria-label", ariaLabel);
+      return input;
+    }
+
+    function fixedSpan(text) {
+      const span = document.createElement("span");
+      span.className = "fixed";
+      span.textContent = text;
+      return span;
+    }
+
+    // ---------- SECTION 1 : propriétés ----------
+    const propertyLabels = {
+      commutativite: "Commutativité",
+      associativite: "Associativité",
+      neutre: "Élément neutre"
+    };
+
+    const section1Bank = [
+      { equality: "34 + 21 + 15 = 34 + 15 + 21", correct: ["commutativite"] },
+      { equality: "( 12 + 9 ) + 4 = 12 + ( 9 + 4 )", correct: ["associativite"] },
+      { equality: "245 + 0 + 18 = 245 + 18", correct: ["neutre"] },
+      { equality: "( 6 + 2 ) + ( 11 + 9 ) = ( 11 + 9 ) + ( 6 + 2 )", correct: ["commutativite"] },
+      { equality: "18 + 22 + 35 + 45 = 40 + 80", correct: ["commutativite", "associativite"] },
+      { equality: "57 + 0 + 33 = 57 + 33", correct: ["neutre"] },
+      { equality: "( 14 + 6 ) + 25 = 14 + ( 6 + 25 )", correct: ["associativite"] },
+      { equality: "72 + 19 + 8 = 72 + 8 + 19", correct: ["commutativite"] }
+    ];
+    const SECTION1_COUNT = 5;
+
+    function buildSection1() {
+      const container = document.getElementById("section1-list");
+      const items = pickRandom(section1Bank, SECTION1_COUNT);
+
+      items.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "exercise-card";
+
+        const itemLabel = document.createElement("p");
+        itemLabel.className = "item-label";
+        itemLabel.textContent = letterLabel(index);
+        card.appendChild(itemLabel);
+
+        const equality = document.createElement("p");
+        equality.className = "equality";
+        equality.textContent = item.equality;
+        card.appendChild(equality);
+
+        const optionsRow = document.createElement("div");
+        optionsRow.className = "options-row";
+        const selected = new Set();
+
+        Object.entries(propertyLabels).forEach(([key, text]) => {
+          const chip = document.createElement("label");
+          chip.className = "option-chip";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = key;
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) selected.add(key); else selected.delete(key);
+            chip.classList.toggle("is-selected", checkbox.checked);
+          });
+          chip.appendChild(checkbox);
+          chip.appendChild(document.createTextNode(text));
+          optionsRow.appendChild(chip);
+        });
+        card.appendChild(optionsRow);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        const validateBtn = document.createElement("button");
+        validateBtn.className = "validate-button";
+        validateBtn.type = "button";
+        validateBtn.textContent = "Vérifier";
+        actions.appendChild(feedback);
+        actions.appendChild(validateBtn);
+        card.appendChild(actions);
+
+        const correction = document.createElement("div");
+        correction.className = "correction";
+        correction.innerHTML = `<strong>Réponse attendue :</strong> ${item.correct.map((k) => propertyLabels[k]).join(", ")}`;
+        card.appendChild(correction);
+
+        let resolved = false;
+        validateBtn.addEventListener("click", () => {
+          if (resolved) return;
+          if (selected.size === 0) {
+            feedback.textContent = "Coche au moins une propriété avant de vérifier.";
+            feedback.className = "feedback";
+            return;
+          }
+          resolved = true;
+          markResolved();
+          optionsRow.querySelectorAll("input").forEach((cb) => { cb.disabled = true; });
+          optionsRow.querySelectorAll(".option-chip").forEach((c) => c.classList.add("is-disabled"));
+          validateBtn.disabled = true;
+
+          const isCorrect = sameSet([...selected], item.correct);
+          card.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+          feedback.className = `feedback ${isCorrect ? "correct" : "incorrect"}`;
+          feedback.textContent = isCorrect ? "Bonne réponse !" : "Ce n'est pas tout à fait ça, regarde la correction.";
+          if (!isCorrect) correction.classList.add("is-visible");
+          announce(isCorrect ? "Bonne réponse." : "Réponse incorrecte, correction affichée.");
+        });
+
+        container.appendChild(card);
+      });
+
+      return items.length;
+    }
+
+    // ---------- SECTION 2 : méthode la plus rapide ----------
+    // Pour 4 nombres n1,n2,n3,n4, les 3 regroupements possibles sont toujours :
+    // (a) (n1+n2)+(n3+n4)  (b) (n1+n3)+(n2+n4)  (c) (n1+n4)+(n2+n3)
+    // Chaque item ci-dessous a été vérifié : un seul regroupement donne deux nombres ronds.
+    const section2Bank = [
+      { nums: [48, 25, 52, 15], correct: "b" },
+      { nums: [65, 58, 42, 35], correct: "c" },
+      { nums: [36, 64, 19, 11], correct: "a" },
+      { nums: [55, 45, 23, 77], correct: "a" },
+      { nums: [29, 44, 71, 56], correct: "b" },
+      { nums: [27, 52, 88, 63], correct: "c" }
+    ];
+    const SECTION2_COUNT = 3;
+
+    function buildMethodOptions(n1, n2, n3, n4) {
+      return [
+        { tag: "a", text: `= (${n1} + ${n2}) + (${n3} + ${n4})`, sum: [n1 + n2, n3 + n4] },
+        { tag: "b", text: `= (${n1} + ${n3}) + (${n2} + ${n4})`, sum: [n1 + n3, n2 + n4] },
+        { tag: "c", text: `= (${n1} + ${n4}) + (${n2} + ${n3})`, sum: [n1 + n4, n2 + n3] }
+      ];
+    }
+
+    function buildSection2() {
+      const container = document.getElementById("section2-list");
+      const items = pickRandom(section2Bank, SECTION2_COUNT);
+
+      items.forEach((item) => {
+        const [n1, n2, n3, n4] = item.nums;
+        const methods = buildMethodOptions(n1, n2, n3, n4);
+        const correctMethod = methods.find((m) => m.tag === item.correct);
+
+        const card = document.createElement("article");
+        card.className = "exercise-card";
+
+        const equality = document.createElement("p");
+        equality.className = "equality";
+        equality.textContent = `${n1} + ${n2} + ${n3} + ${n4}`;
+        card.appendChild(equality);
+
+        const methodList = document.createElement("div");
+        methodList.className = "method-list";
+        let selectedTag = null;
+        const optionEls = [];
+
+        methods.forEach((method) => {
+          const option = document.createElement("div");
+          option.className = "method-option";
+          option.setAttribute("role", "radio");
+          option.setAttribute("tabindex", "0");
+          option.setAttribute("aria-checked", "false");
+
+          const tag = document.createElement("span");
+          tag.className = "method-tag";
+          tag.textContent = `(${method.tag})`;
+          option.appendChild(tag);
+          option.appendChild(document.createTextNode(method.text));
+
+          function select() {
+            selectedTag = method.tag;
+            optionEls.forEach((el) => {
+              el.classList.toggle("is-selected", el === option);
+              el.setAttribute("aria-checked", String(el === option));
+            });
+          }
+          option.addEventListener("click", select);
+          option.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(); }
+          });
+
+          optionEls.push(option);
+          methodList.appendChild(option);
+        });
+        card.appendChild(methodList);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        const validateBtn = document.createElement("button");
+        validateBtn.className = "validate-button";
+        validateBtn.type = "button";
+        validateBtn.textContent = "Vérifier";
+        actions.appendChild(feedback);
+        actions.appendChild(validateBtn);
+        card.appendChild(actions);
+
+        const correction = document.createElement("div");
+        correction.className = "correction";
+        correction.innerHTML = `<strong>Méthode la plus rapide : (${item.correct})</strong>${correctMethod.text} = ${correctMethod.sum[0]} + ${correctMethod.sum[1]} : deux nombres ronds apparaissent immédiatement.`;
+        card.appendChild(correction);
+
+        let resolved = false;
+        validateBtn.addEventListener("click", () => {
+          if (resolved) return;
+          if (!selectedTag) {
+            feedback.textContent = "Choisis une méthode avant de vérifier.";
+            feedback.className = "feedback";
+            return;
+          }
+          resolved = true;
+          markResolved();
+          optionEls.forEach((el) => { el.classList.add("is-disabled"); el.removeAttribute("tabindex"); });
+          validateBtn.disabled = true;
+
+          const isCorrect = selectedTag === item.correct;
+          card.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+          feedback.className = `feedback ${isCorrect ? "correct" : "incorrect"}`;
+          feedback.textContent = isCorrect ? "Bonne réponse !" : "Ce n'était pas la méthode la plus rapide.";
+          correction.classList.add("is-visible");
+          announce(isCorrect ? "Bonne réponse." : "Réponse incorrecte, correction affichée.");
+        });
+
+        container.appendChild(card);
+      });
+
+      return items.length;
+    }
+
+    // ---------- SECTION 3 : calcule (résultat final) ----------
+    const section3Bank = [
+      { expr: "32 + 68 + 47", answer: 147, steps: "32 + 68 + 47 = (32 + 68) + 47 = 100 + 47 = 147" },
+      { expr: "126 + 0 + 74", answer: 200, steps: "126 + 0 + 74 = 126 + 74 = 200 (élément neutre)" },
+      { expr: "58 + 219 + 42", answer: 319, steps: "58 + 219 + 42 = 58 + 42 + 219 = (58 + 42) + 219 = 100 + 219 = 319" },
+      { expr: "14 + 26 + 35 + 65", answer: 140, steps: "14 + 26 + 35 + 65 = (14 + 26) + (35 + 65) = 40 + 100 = 140" },
+      { expr: "310 + 190 + 25", answer: 525, steps: "310 + 190 + 25 = (310 + 190) + 25 = 500 + 25 = 525" },
+      { expr: "0 + 88 + 12", answer: 100, steps: "0 + 88 + 12 = 88 + 12 = 100 (élément neutre)" },
+      { expr: "45 + 12 + 55", answer: 112, steps: "45 + 12 + 55 = 45 + 55 + 12 = (45 + 55) + 12 = 100 + 12 = 112" },
+      { expr: "220 + 138 + 80", answer: 438, steps: "220 + 138 + 80 = 220 + 80 + 138 = (220 + 80) + 138 = 300 + 138 = 438" },
+      { expr: "275 + 0 + 25", answer: 300, steps: "275 + 0 + 25 = 275 + 25 = 300 (élément neutre)" },
+      { expr: "19 + 27 + 81 + 73", answer: 200, steps: "19 + 27 + 81 + 73 = (19 + 81) + (27 + 73) = 100 + 100 = 200" }
+    ];
+    const SECTION3_COUNT = 6;
+
+    function buildSection3() {
+      const container = document.getElementById("section3-list");
+      const items = pickRandom(section3Bank, SECTION3_COUNT);
+
+      items.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "exercise-card";
+
+        const itemLabel = document.createElement("p");
+        itemLabel.className = "item-label";
+        itemLabel.textContent = letterLabel(index);
+        card.appendChild(itemLabel);
+
+        const row = document.createElement("div");
+        row.className = "numeric-row";
+        const exprSpan = document.createElement("span");
+        exprSpan.className = "equality-part";
+        exprSpan.textContent = `${item.expr} =`;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.className = "numeric-input";
+        input.setAttribute("aria-label", `Résultat de ${item.expr}`);
+        row.appendChild(exprSpan);
+        row.appendChild(input);
+        card.appendChild(row);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        const validateBtn = document.createElement("button");
+        validateBtn.className = "validate-button";
+        validateBtn.type = "button";
+        validateBtn.textContent = "Vérifier";
+        actions.appendChild(feedback);
+        actions.appendChild(validateBtn);
+        card.appendChild(actions);
+
+        const correction = document.createElement("div");
+        correction.className = "correction";
+        correction.innerHTML = `<strong>Étapes possibles :</strong>${item.steps}`;
+        card.appendChild(correction);
+
+        const resolvedRef = { done: false };
+        const validate = finalizeCard(card, resolvedRef, [input], feedback, validateBtn, correction, () => {
+          return Number(input.value) === item.answer;
+        });
+        validateBtn.addEventListener("click", validate);
+
+        container.appendChild(card);
+      });
+
+      return items.length;
+    }
+
+    // ---------- SECTION 4 : difficulté croissante, indices décroissants ----------
+    // Niveau 1 : structure ET une partie des nombres donnés (le plus guidé)
+    const level1Bank = [
+      { expr: "142 + 94 + 58 + 27 + 56 + 33", g1a: 142, g1b: 58, g2fixed: 94, g2blank: 56, g3set: [27, 33], s1: 200, s2: 150, s3: 60, final: 410 },
+      { expr: "215 + 48 + 85 + 12 + 152 + 38", g1a: 215, g1b: 85, g2fixed: 48, g2blank: 12, g3set: [152, 38], s1: 300, s2: 60, s3: 190, final: 550 },
+      { expr: "63 + 137 + 29 + 71 + 84 + 16", g1a: 63, g1b: 137, g2fixed: 29, g2blank: 71, g3set: [84, 16], s1: 200, s2: 100, s3: 100, final: 400 },
+      { expr: "76 + 24 + 88 + 12 + 45 + 55", g1a: 76, g1b: 24, g2fixed: 88, g2blank: 12, g3set: [45, 55], s1: 100, s2: 100, s3: 100, final: 300 }
+    ];
+
+    // Niveau 2 : structure donnée, moins de nombres pré-remplis (5 termes)
+    // Piège : une des deux sommes partielles est ronde (multiple de 100), l'autre non (ex. 290, 470, 580)
+    const level2Bank = [
+      { expr: "247 + 518 + 53 + 804 + 62", num1: 247, blank1: 53, num3: 518, blank2: 62, single: 804, s1: 300, s2: 580, final: 1684 },
+      { expr: "326 + 356 + 74 + 500 + 114", num1: 326, blank1: 74, num3: 356, blank2: 114, single: 500, s1: 400, s2: 470, final: 1370 },
+      { expr: "185 + 326 + 215 + 200 + 144", num1: 185, blank1: 215, num3: 326, blank2: 144, single: 200, s1: 400, s2: 470, final: 1070 }
+    ];
+
+    // Niveau 3 : la structure (parenthèses) est donnée mais aucun nombre n'est pré-rempli
+    const level3Bank = [
+      { expr: "125 + 64 + 175 + 58 + 36 + 42", pairs: [[125, 175], [64, 36], [58, 42]], s: [300, 100, 100], final: 500 },
+      { expr: "84 + 45 + 116 + 27 + 55 + 73", pairs: [[84, 116], [45, 55], [27, 73]], s: [200, 100, 100], final: 400 },
+      { expr: "162 + 91 + 38 + 205 + 9 + 95", pairs: [[162, 38], [91, 9], [205, 95]], s: [200, 100, 300], final: 600 }
+    ];
+
+    // Niveau 4 : même structure que le niveau 3 (parenthèses, sommes, résultat), mais 7 termes
+    // (3 paires + 1 terme isolé donné) : plus de termes à suivre, toujours aucun nombre pré-rempli dans les paires
+    // Piège : une des trois sommes partielles ne tombe pas rond à la centaine (ex. 290, 470)
+    const level4Bank = [
+      { expr: "247 + 76 + 43 + 48 + 24 + 300 + 52", pairs: [[247, 43], [76, 24], [48, 52]], single: 300, s: [290, 100, 100], final: 790 },
+      { expr: "162 + 356 + 38 + 77 + 114 + 400 + 23", pairs: [[162, 38], [356, 114], [77, 23]], single: 400, s: [200, 470, 100], final: 1170 },
+      { expr: "64 + 215 + 36 + 89 + 85 + 150 + 201", pairs: [[64, 36], [215, 85], [89, 201]], single: 150, s: [100, 300, 290], final: 840 }
+    ];
+
+    // Niveau 5 : même structure encore (parenthèses, sommes, résultat), mais 8 termes en 4 paires
+    // (le plus de termes à regrouper soi-même, toujours aucun nombre pré-rempli)
+    const level5Bank = [
+      { expr: "64 + 128 + 36 + 255 + 72 + 89 + 145 + 11", pairs: [[64, 36], [128, 72], [255, 145], [89, 11]], s: [100, 200, 400, 100], final: 800 },
+      { expr: "145 + 174 + 55 + 219 + 88 + 326 + 12 + 81", pairs: [[145, 55], [88, 12], [174, 326], [219, 81]], s: [200, 100, 500, 300], final: 1100 },
+      { expr: "36 + 158 + 64 + 275 + 42 + 88 + 25 + 12", pairs: [[36, 64], [158, 42], [275, 25], [88, 12]], s: [100, 200, 300, 100], final: 700 }
+    ];
+
+    function baseCard(label, expr) {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+      const itemLabel = document.createElement("p");
+      itemLabel.className = "item-label";
+      itemLabel.textContent = label;
+      card.appendChild(itemLabel);
+      const equality = document.createElement("p");
+      equality.className = "equality";
+      equality.textContent = expr;
+      card.appendChild(equality);
+      return card;
+    }
+
+    function cardActions() {
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      const validateBtn = document.createElement("button");
+      validateBtn.className = "validate-button";
+      validateBtn.type = "button";
+      validateBtn.textContent = "Vérifier";
+      actions.appendChild(feedback);
+      actions.appendChild(validateBtn);
+      return { actions, feedback, validateBtn };
+    }
+
+    function finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, isCorrectFn, maxAttempts = 3) {
+      let attempts = 0;
+      const validate = () => {
+        if (resolvedRef.done) return;
+        if (allInputs.some((el) => el.value === "")) {
+          feedback.textContent = "Complète toutes les cases avant de vérifier.";
+          feedback.className = "feedback";
+          return;
+        }
+
+        attempts += 1;
+        const isCorrect = isCorrectFn();
+
+        if (isCorrect) {
+          resolvedRef.done = true;
+          markResolved();
+          allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+          validateBtn.disabled = true;
+          card.classList.add("is-correct");
+          feedback.className = "feedback correct";
+          feedback.textContent = "Bonne réponse !";
+          announce("Bonne réponse.");
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          resolvedRef.done = true;
+          markResolved();
+          allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+          validateBtn.disabled = true;
+          card.classList.add("is-incorrect");
+          feedback.className = "feedback incorrect";
+          feedback.textContent = "Ce n'est pas tout à fait ça, regarde la correction.";
+          correction.classList.add("is-visible");
+          announce("Réponse incorrecte, correction affichée.");
+          return;
+        }
+
+        const remaining = maxAttempts - attempts;
+        feedback.className = "feedback incorrect";
+        feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+        card.classList.remove("is-shaking");
+        void card.offsetWidth;
+        card.classList.add("is-shaking");
+        announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+      };
+      return validate;
+    }
+
+    // ----- Niveau 1 : six termes, structure + une partie des nombres donnés -----
+    function buildLevel1Card(container, config, label) {
+      const card = baseCard(label, config.expr);
+      const steps = document.createElement("div");
+      steps.className = "blank-steps";
+
+      const b1 = makeBlankInput("nombre à regrouper");
+      const b2 = makeBlankInput("premier nombre du dernier groupe");
+      const b3 = makeBlankInput("second nombre du dernier groupe");
+
+      const line1 = document.createElement("div");
+      line1.className = "blank-line";
+      line1.appendChild(fixedSpan(`= (${config.g1a} + ${config.g1b}) + (${config.g2fixed} + `));
+      line1.appendChild(b1);
+      line1.appendChild(fixedSpan(") + ("));
+      line1.appendChild(b2);
+      line1.appendChild(fixedSpan(" + "));
+      line1.appendChild(b3);
+      line1.appendChild(fixedSpan(")"));
+      steps.appendChild(line1);
+
+      const s1 = makeBlankInput("première somme partielle");
+      const s2 = makeBlankInput("deuxième somme partielle");
+      const s3 = makeBlankInput("troisième somme partielle");
+      const line2 = document.createElement("div");
+      line2.className = "blank-line";
+      line2.appendChild(fixedSpan("= "));
+      line2.appendChild(s1);
+      line2.appendChild(fixedSpan(" + "));
+      line2.appendChild(s2);
+      line2.appendChild(fixedSpan(" + "));
+      line2.appendChild(s3);
+      steps.appendChild(line2);
+
+      const finalInput = makeBlankInput("résultat final");
+      const line3 = document.createElement("div");
+      line3.className = "blank-line";
+      line3.appendChild(fixedSpan("= "));
+      line3.appendChild(finalInput);
+      steps.appendChild(line3);
+
+      card.appendChild(steps);
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong>= (${config.g1a} + ${config.g1b}) + (${config.g2fixed} + ${config.g2blank}) + (${config.g3set[0]} + ${config.g3set[1]})<br>= ${config.s1} + ${config.s2} + ${config.s3}<br>= ${config.final}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const allInputs = [b1, b2, b3, s1, s2, s3, finalInput];
+      const validate = finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, () => {
+        const group3Ok = sameSet([Number(b2.value), Number(b3.value)], config.g3set);
+        return Number(b1.value) === config.g2blank && group3Ok &&
+          Number(s1.value) === config.s1 && Number(s2.value) === config.s2 && Number(s3.value) === config.s3 &&
+          Number(finalInput.value) === config.final;
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    }
+
+    // ----- Niveau 2 : cinq termes, structure + un peu moins de nombres donnés -----
+    function buildLevel2Card(container, config, label) {
+      const card = baseCard(label, config.expr);
+      const steps = document.createElement("div");
+      steps.className = "blank-steps";
+
+      const c1 = makeBlankInput("nombre à regrouper avec le premier terme");
+      const c2 = makeBlankInput("nombre à regrouper avec le troisième terme");
+      const line1 = document.createElement("div");
+      line1.className = "blank-line";
+      line1.appendChild(fixedSpan(`= (${config.num1} + `));
+      line1.appendChild(c1);
+      line1.appendChild(fixedSpan(`) + (${config.num3} + `));
+      line1.appendChild(c2);
+      line1.appendChild(fixedSpan(`) + ${config.single}`));
+      steps.appendChild(line1);
+
+      const d1 = makeBlankInput("première somme partielle");
+      const d2 = makeBlankInput("deuxième somme partielle");
+      const line2 = document.createElement("div");
+      line2.className = "blank-line";
+      line2.appendChild(fixedSpan("= "));
+      line2.appendChild(d1);
+      line2.appendChild(fixedSpan(" + "));
+      line2.appendChild(d2);
+      line2.appendChild(fixedSpan(` + ${config.single}`));
+      steps.appendChild(line2);
+
+      const finalInput = makeBlankInput("résultat final");
+      const line3 = document.createElement("div");
+      line3.className = "blank-line";
+      line3.appendChild(fixedSpan("= "));
+      line3.appendChild(finalInput);
+      steps.appendChild(line3);
+
+      card.appendChild(steps);
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong>= (${config.num1} + ${config.blank1}) + (${config.num3} + ${config.blank2}) + ${config.single}<br>= ${config.s1} + ${config.s2} + ${config.single}<br>= ${config.final}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const allInputs = [c1, c2, d1, d2, finalInput];
+      const validate = finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, () => {
+        return Number(c1.value) === config.blank1 && Number(c2.value) === config.blank2 &&
+          Number(d1.value) === config.s1 && Number(d2.value) === config.s2 &&
+          Number(finalInput.value) === config.final;
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    }
+
+    // ----- Niveau 3 : structure (parenthèses) donnée, mais aucun nombre pré-rempli -----
+    function buildLevel3Card(container, config, label) {
+      const card = baseCard(label, config.expr);
+      const steps = document.createElement("div");
+      steps.className = "blank-steps";
+
+      const groupBlanks = config.pairs.map(() => [
+        makeBlankInput("premier nombre du groupe"),
+        makeBlankInput("second nombre du groupe")
+      ]);
+
+      const line1 = document.createElement("div");
+      line1.className = "blank-line";
+      line1.appendChild(fixedSpan("= ("));
+      groupBlanks.forEach((pair, i) => {
+        line1.appendChild(pair[0]);
+        line1.appendChild(fixedSpan(" + "));
+        line1.appendChild(pair[1]);
+        line1.appendChild(fixedSpan(i < groupBlanks.length - 1 ? ") + (" : ")"));
+      });
+      steps.appendChild(line1);
+
+      const sumBlanks = config.pairs.map((p, i) => makeBlankInput(`somme partielle ${i + 1}`));
+      const line2 = document.createElement("div");
+      line2.className = "blank-line";
+      line2.appendChild(fixedSpan("= "));
+      sumBlanks.forEach((b, i) => {
+        line2.appendChild(b);
+        if (i < sumBlanks.length - 1) line2.appendChild(fixedSpan(" + "));
+      });
+      steps.appendChild(line2);
+
+      const finalInput = makeBlankInput("résultat final");
+      const line3 = document.createElement("div");
+      line3.className = "blank-line";
+      line3.appendChild(fixedSpan("= "));
+      line3.appendChild(finalInput);
+      steps.appendChild(line3);
+
+      card.appendChild(steps);
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      const groupsText = config.pairs.map((p) => `(${p[0]} + ${p[1]})`).join(" + ");
+      const sumsText = config.s.join(" + ");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong>= ${groupsText}<br>= ${sumsText}<br>= ${config.final}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const allInputs = [...groupBlanks.flat(), ...sumBlanks, finalInput];
+      const validate = finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, () => {
+        // L'élève peut légitimement écrire les groupes dans n'importe quel ordre
+        // (l'ordre des parenthèses n'a pas d'importance) : on accepte donc toute
+        // permutation tant que chaque groupe garde sa propre somme partielle.
+        const n = groupBlanks.length;
+        const perms = permutations(Array.from({ length: n }, (_, i) => i));
+        const matchesSomePermutation = perms.some((perm) => {
+          const groupsOk = groupBlanks.every((pair, i) =>
+            sameSet([Number(pair[0].value), Number(pair[1].value)], config.pairs[perm[i]])
+          );
+          const sumsOk = sumBlanks.every((b, i) => Number(b.value) === config.s[perm[i]]);
+          return groupsOk && sumsOk;
+        });
+        return matchesSomePermutation && Number(finalInput.value) === config.final;
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    }
+
+    // ----- Niveau 4 : comme le niveau 3, mais avec un terme isolé en plus (7 termes) -----
+    function buildLevel4Card(container, config, label) {
+      const card = baseCard(label, config.expr);
+      const steps = document.createElement("div");
+      steps.className = "blank-steps";
+
+      const groupBlanks = config.pairs.map(() => [
+        makeBlankInput("premier nombre du groupe"),
+        makeBlankInput("second nombre du groupe")
+      ]);
+
+      const line1 = document.createElement("div");
+      line1.className = "blank-line";
+      line1.appendChild(fixedSpan("= ("));
+      groupBlanks.forEach((pair, i) => {
+        line1.appendChild(pair[0]);
+        line1.appendChild(fixedSpan(" + "));
+        line1.appendChild(pair[1]);
+        line1.appendChild(fixedSpan(i < groupBlanks.length - 1 ? ") + (" : ")"));
+      });
+      const singleInput1 = makeBlankInput("terme isolé");
+      line1.appendChild(fixedSpan(" + "));
+      line1.appendChild(singleInput1);
+      steps.appendChild(line1);
+
+      const sumBlanks = config.pairs.map((p, i) => makeBlankInput(`somme partielle ${i + 1}`));
+      const line2 = document.createElement("div");
+      line2.className = "blank-line";
+      line2.appendChild(fixedSpan("= "));
+      sumBlanks.forEach((b, i) => {
+        line2.appendChild(b);
+        line2.appendChild(fixedSpan(" + "));
+      });
+      const singleInput2 = makeBlankInput("terme isolé (repris)");
+      line2.appendChild(singleInput2);
+      steps.appendChild(line2);
+
+      const finalInput = makeBlankInput("résultat final");
+      const line3 = document.createElement("div");
+      line3.className = "blank-line";
+      line3.appendChild(fixedSpan("= "));
+      line3.appendChild(finalInput);
+      steps.appendChild(line3);
+
+      card.appendChild(steps);
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      const groupsText = config.pairs.map((p) => `(${p[0]} + ${p[1]})`).join(" + ");
+      const sumsText = `${config.s.join(" + ")} + ${config.single}`;
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong>= ${groupsText} + ${config.single}<br>= ${sumsText}<br>= ${config.final}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const allInputs = [...groupBlanks.flat(), singleInput1, ...sumBlanks, singleInput2, finalInput];
+      const validate = finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, () => {
+        const n = groupBlanks.length;
+        const perms = permutations(Array.from({ length: n }, (_, i) => i));
+        const matchesSomePermutation = perms.some((perm) => {
+          const groupsOk = groupBlanks.every((pair, i) =>
+            sameSet([Number(pair[0].value), Number(pair[1].value)], config.pairs[perm[i]])
+          );
+          const sumsOk = sumBlanks.every((b, i) => Number(b.value) === config.s[perm[i]]);
+          return groupsOk && sumsOk;
+        });
+        const singleOk = Number(singleInput1.value) === config.single && Number(singleInput2.value) === config.single;
+        return matchesSomePermutation && singleOk && Number(finalInput.value) === config.final;
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    }
+
+    // ----- Niveau 5 : même gabarit que le niveau 3, généralisé à 4 paires (8 termes, le plus difficile) -----
+    function buildLevel5Card(container, config, label) {
+      buildLevel3Card(container, config, label);
+    }
+
+    function buildSection4() {
+      const container = document.getElementById("section4-list");
+      const levels = [
+        { build: buildLevel1Card, config: pickOne(level1Bank) },
+        { build: buildLevel2Card, config: pickOne(level2Bank) },
+        { build: buildLevel3Card, config: pickOne(level3Bank) },
+        { build: buildLevel4Card, config: pickOne(level4Bank) },
+        { build: buildLevel5Card, config: pickOne(level5Bank) }
+      ];
+
+      levels.forEach((level, index) => {
+        level.build(container, level.config, letterLabel(index));
+      });
+
+      return levels.length;
+    }
+
+    function buildAll() {
+      document.getElementById("section1-list").replaceChildren();
+      document.getElementById("section2-list").replaceChildren();
+      document.getElementById("section3-list").replaceChildren();
+      document.getElementById("section4-list").replaceChildren();
+      state.resolved = 0;
+
+      const n1 = buildSection1();
+      const n2 = buildSection2();
+      const n3 = buildSection3();
+      const n4 = buildSection4();
+
+      state.total = n1 + n2 + n3 + n4;
+      updateGlobalScore();
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const active = document.activeElement;
+      if (!active || active.tagName !== "INPUT" || active.type === "checkbox") return;
+      const card = active.closest(".exercise-card");
+      if (!card) return;
+      const validateBtn = card.querySelector(".validate-button");
+      if (validateBtn && !validateBtn.disabled) {
+        event.preventDefault();
+        validateBtn.click();
+      }
+    });
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.getElementById("new-exercises-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+    });
+
+    buildAll();
+  </script>
+</body>
+</html>
