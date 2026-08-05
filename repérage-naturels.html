@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Abscisses d'un point — série d'exercices</title>
+<!--
+  IMPORTANT : cette page doit être ouverte via un serveur http:// ou https://
+  (par exemple avec "Live Server", "python -m http.server", ou déposée sur un
+  hébergement web). Si elle est ouverte en double-cliquant dessus (file://),
+  le mécanisme interne de communication de GeoGebra échoue silencieusement
+  et l'application n'apparaîtra pas.
+-->
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+<style>
+  :root{
+    --bleu-fonce: #1d3557;
+    --bleu: #457b9d;
+    --bleu-clair: #a8dadc;
+    --fond: #f1f4f8;
+    --vert: #2a9d5c;
+    --vert-fond: #e6f6ec;
+    --rouge: #d64545;
+    --rouge-fond: #fbe9e9;
+    --gris: #6b7280;
+    --gris-clair: #e2e6ec;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0; padding:0; height:100%;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--fond);
+    color:#1f2937;
+  }
+  #bandeau{
+    height:64px;
+    background: var(--bleu-fonce);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    padding: 0 24px;
+    font-size:1.25rem;
+    font-weight:600;
+    letter-spacing:0.3px;
+    flex-shrink:0;
+  }
+  #bandeau .sous-titre{
+    font-weight:400;
+    font-size:0.85rem;
+    color: var(--bleu-clair);
+    margin-left:14px;
+  }
+  #conteneur{
+    display:flex;
+    height: calc(100vh - 64px);
+    width:100%;
+  }
+  #colonne-gauche{
+    width:340px;
+    min-width:340px;
+    background:#fff;
+    border-right:1px solid var(--gris-clair);
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+    padding:18px;
+    gap:14px;
+  }
+  #colonne-droite{
+    flex:1;
+    display:flex;
+    position:relative;
+    background:#fff;
+  }
+  #ggb-element{
+    width:100%;
+    height:100%;
+  }
+  #indicateur-exercice{
+    font-size:0.78rem;
+    font-weight:700;
+    color: var(--bleu);
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  #liste-etapes{
+    list-style:none;
+    margin:0; padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  #liste-etapes li{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:8px;
+    font-size:0.88rem;
+    color: var(--gris);
+  }
+  #liste-etapes li .puce{
+    width:22px; height:22px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.75rem;
+    font-weight:700;
+    flex-shrink:0;
+    background: var(--gris-clair);
+    color: var(--gris);
+  }
+  #liste-etapes li.en-cours{
+    background: #eef4fb;
+    color: var(--bleu-fonce);
+    font-weight:600;
+  }
+  #liste-etapes li.en-cours .puce{
+    background: var(--bleu);
+    color:#fff;
+  }
+  #liste-etapes li.fait{
+    color: var(--vert);
+  }
+  #liste-etapes li.fait .puce{
+    background: var(--vert);
+    color:#fff;
+  }
+  #carte-etape{
+    background: #f8fafc;
+    border:1px solid var(--gris-clair);
+    border-radius:10px;
+    padding:14px;
+  }
+  #carte-etape h3{
+    margin:0 0 8px 0;
+    font-size:1rem;
+    color: var(--bleu-fonce);
+  }
+  #carte-etape p{
+    margin:0 0 10px 0;
+    font-size:0.92rem;
+    line-height:1.4;
+  }
+  details.indice{
+    font-size:0.85rem;
+    color: var(--bleu);
+    margin-top:6px;
+  }
+  details.indice summary{
+    cursor:pointer;
+    font-weight:600;
+    outline:none;
+  }
+  details.indice[open] summary{
+    margin-bottom:6px;
+  }
+  details.indice .contenu-indice{
+    color:#374151;
+    background:#fff;
+    border:1px dashed var(--bleu-clair);
+    border-radius:6px;
+    padding:8px 10px;
+  }
+  #zone-saisie{
+    display:none;
+    margin-top:12px;
+  }
+  #zone-saisie label{
+    display:block;
+    font-size:0.82rem;
+    color: var(--gris);
+    margin-bottom:4px;
+  }
+  #input-reponse{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--gris-clair);
+    border-radius:6px;
+    font-size:1rem;
+    font-family: inherit;
+  }
+  #input-reponse:focus{
+    outline:none;
+    border-color: var(--bleu);
+  }
+  #btn-verifier{
+    margin-top:12px;
+    width:100%;
+    padding:10px;
+    background: var(--bleu-fonce);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-size:0.92rem;
+    font-weight:600;
+    cursor:pointer;
+    transition: background 0.15s ease;
+  }
+  #btn-verifier:hover{
+    background: var(--bleu);
+  }
+  #btn-verifier:disabled{
+    background: var(--gris-clair);
+    color: var(--gris);
+    cursor:not-allowed;
+  }
+  #zone-retour{
+    display:none;
+    margin-top:12px;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:0.88rem;
+    line-height:1.4;
+  }
+  #zone-retour.succes{
+    display:block;
+    background: var(--vert-fond);
+    color: var(--vert);
+    border:1px solid #b7e3c6;
+  }
+  #zone-retour.erreur{
+    display:block;
+    background: var(--rouge-fond);
+    color: var(--rouge);
+    border:1px solid #f0bcbc;
+  }
+  #panneau-final{
+    display:none;
+    background: var(--vert-fond);
+    border:1px solid #b7e3c6;
+    border-radius:10px;
+    padding:16px;
+  }
+  #panneau-final h3{
+    margin:0 0 8px 0;
+    color: var(--vert);
+  }
+  #panneau-final p{
+    font-size:0.9rem;
+    line-height:1.5;
+    color:#1f2937;
+    margin:0 0 12px 0;
+  }
+  #panneau-final button{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    font-size:0.92rem;
+    font-weight:600;
+    cursor:pointer;
+    margin-bottom:8px;
+  }
+  #btn-suivant{
+    background: var(--vert);
+    color:#fff;
+  }
+  #btn-suivant:hover{ filter:brightness(0.95); }
+  #btn-recommencer-exercice{
+    background:#fff;
+    color: var(--gris);
+    border:1px solid var(--gris-clair) !important;
+  }
+  #btn-recommencer-exercice:hover{
+    background: var(--gris-clair);
+  }
+  #btn-regenerer-figure{
+    width:100%;
+    padding:9px 10px;
+    background:#fff;
+    color: var(--bleu);
+    border:1px solid var(--bleu-clair);
+    border-radius:8px;
+    font-size:0.82rem;
+    font-weight:600;
+    cursor:pointer;
+    transition: background 0.15s ease;
+  }
+  #btn-regenerer-figure:hover{
+    background: #eef4fb;
+  }
+  #note-regenerer{
+    font-size:0.76rem;
+    color: var(--gris);
+    line-height:1.35;
+    margin:2px 0 0 0;
+  }
+  #message-erreur-chargement{
+    display:none;
+    margin:20px;
+    padding:16px;
+    background: var(--rouge-fond);
+    border:1px solid #f0bcbc;
+    color: var(--rouge);
+    border-radius:8px;
+    font-size:0.9rem;
+    max-width:500px;
+  }
+</style>
+</head>
+<body>
+
+<div id="bandeau">
+  Abscisses d'un point sur une droite graduée
+  <span class="sous-titre">Série de 5 exercices — nombres entiers naturels</span>
+</div>
+
+<div id="conteneur">
+
+  <div id="colonne-gauche">
+
+    <div id="indicateur-exercice"></div>
+
+    <button id="btn-regenerer-figure" type="button">↻ Régénérer la figure</button>
+    <p id="note-regenerer">À utiliser si tu as effacé un point ou la droite par erreur : la figure est redessinée sans perdre ta progression.</p>
+
+    <ol id="liste-etapes"></ol>
+
+    <div id="carte-etape">
+      <h3 id="titre-etape"></h3>
+      <p id="consigne-etape"></p>
+      <details class="indice">
+        <summary>Afficher l'indice</summary>
+        <div class="contenu-indice" id="contenu-indice"></div>
+      </details>
+      <div id="zone-saisie">
+        <label for="input-reponse">Ta réponse (nombre entier naturel) :</label>
+        <input type="number" id="input-reponse" min="0" step="1" inputmode="numeric">
+      </div>
+      <button id="btn-verifier">Vérifier cette étape</button>
+      <div id="zone-retour"></div>
+    </div>
+
+    <div id="panneau-final">
+      <h3>🎉 Bravo, exercice terminé !</h3>
+      <p id="texte-final"></p>
+      <button id="btn-suivant"></button>
+      <button id="btn-recommencer-exercice">Recommencer cet exercice</button>
+    </div>
+
+  </div>
+
+  <div id="colonne-droite">
+    <div id="ggb-element"></div>
+    <div id="message-erreur-chargement">
+      L'application GeoGebra n'a pas pu se charger. Vérifie ta connexion
+      internet et désactive un éventuel bloqueur de publicités pour ce site,
+      puis recharge la page.
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  const TOL = 0.28; // tolérance numérique pour la vérification des placements de points
+
+  // ---------------------------------------------------------------------
+  // Fonctions utilitaires géométriques (API GeoGebra)
+  // ---------------------------------------------------------------------
+  function api(){ return window.ggbApplet; }
+
+  function coordonneesPoint(nom){
+    return { x: api().getXcoord(nom), y: api().getYcoord(nom) };
+  }
+
+  function objetsDuType(type){
+    return api().getAllObjectNames().filter(function(nom){
+      return api().exists(nom) && api().getObjectType(nom) === type;
+    });
+  }
+
+  // Les points "libres candidats" sont les points de la construction qui ne
+  // font pas partie des points de départ fournis pour l'exercice courant :
+  // ce sont ceux que l'élève a lui-même créés (utile pour les étapes où il
+  // doit placer un nouveau point).
+  function pointsLibresCandidats(){
+    const nomsPointsDepart = Object.keys(exercices[indexExerciceCourant].points || {});
+    return objetsDuType("point").filter(function(nom){
+      return nomsPointsDepart.indexOf(nom) === -1;
+    });
+  }
+
+  // Vérifie qu'un point a été placé exactement aux coordonnées attendues.
+  function verifierPlacementAbscisse(ciblex, cibley){
+    return function(){
+      const candidats = pointsLibresCandidats();
+      for(let i=0;i<candidats.length;i++){
+        const c = coordonneesPoint(candidats[i]);
+        if(Math.hypot(c.x - ciblex, c.y - cibley) < TOL) return true;
+      }
+      return false;
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Génération procédurale des exercices.
+  //
+  // Plutôt que 5 exercices figés, on tire, à chaque chargement de la page,
+  // 5 exercices parmi un pool de 50 générés aléatoirement (mêmes "familles"
+  // pédagogiques que la version initiale : lecture en repère standard,
+  // inversé ou décalé ; placement d'un point ; changement de repère sur une
+  // droite de points équidistants). Toutes les réponses attendues restent
+  // des nombres entiers naturels, quelle que soit la configuration tirée.
+  //
+  // Vocabulaire : le point d'abscisse 0 est nommé O (origine) et le point
+  // d'abscisse 1 est nommé U (unité) sur la figure.
+  // ---------------------------------------------------------------------
+  const NB_EXERCICES_SERIE = 5;
+  const TAILLE_POOL = 50;
+  const LETTRES_POINTS = ['A','B','C','D','E','F','G','H','J','K','M','N','P','Q','R','S','T','V','W','X','Y','Z']; // O, U, I, L exclus (réservés ou ambigus)
+
+  function entierAleatoire(min, max){
+    return Math.floor(Math.random()*(max-min+1))+min;
+  }
+  function choixAleatoire(tab){
+    return tab[Math.floor(Math.random()*tab.length)];
+  }
+  function melanger(tab){
+    const copie = tab.slice();
+    for(let i=copie.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const tmp = copie[i]; copie[i]=copie[j]; copie[j]=tmp;
+    }
+    return copie;
+  }
+  function tirerLettres(n){
+    return melanger(LETTRES_POINTS).slice(0,n);
+  }
+
+  // Choisit où placer O (abscisse 0) et U (abscisse 1) sur la droite :
+  // xOrigineMonde = position de O, uniteMonde = déplacement (signé) d'une
+  // unité. uniteMonde négatif => repère inversé (U à gauche de O).
+  // |uniteMonde| > 1 => les graduations sont plus espacées (plus complexe).
+  function genererConfigGraduation(){
+    const sens = choixAleatoire([1,1,1,-1]);
+    const ampleur = choixAleatoire([1,1,1,1,2,2,3]);
+    return { xOrigineMonde: entierAleatoire(1,6), uniteMonde: sens*ampleur };
+  }
+
+  function mondeDepuisAbscisse(cfg, abscisse){
+    return cfg.xOrigineMonde + abscisse*cfg.uniteMonde;
+  }
+
+  function calculerVue(pointsMonde){
+    const minX = Math.min.apply(null, pointsMonde) - 1.6;
+    const maxX = Math.max.apply(null, pointsMonde) + 1.6;
+    return [minX, maxX, -2, 2];
+  }
+
+  function indiceLecture(cfg, nom){
+    if(cfg.uniteMonde < 0){
+      return "Repère d'abord où sont O et U : ici U est à gauche de O, le sens de la graduation est donc inversé. " +
+             "Compte combien de fois la distance OU sépare " + nom + " de O, dans ce sens (de droite à gauche).";
+    }
+    if(Math.abs(cfg.uniteMonde) > 1){
+      return "Repère où sont O et U : la distance OU représente une unité, mais elle s'étend sur plusieurs graduations. " +
+             "Compte combien de fois cette distance sépare " + nom + " de O.";
+    }
+    return "Repère où sont O (abscisse 0) et U (abscisse 1), puis compte combien d'unités séparent O du point " + nom + ".";
+  }
+
+  // Exercice de lecture : un à trois points déjà placés, dont l'élève doit
+  // lire l'abscisse dans un repère (O, U) standard, inversé ou décalé.
+  function genererLectureSimple(){
+    const cfg = genererConfigGraduation();
+    const nbPoints = choixAleatoire([1,1,2,2,3]);
+    const maxAbscisse = Math.max(5, Math.floor(16/Math.abs(cfg.uniteMonde)));
+    const bassin = [];
+    for(let a=2; a<=maxAbscisse; a++) bassin.push(a);
+    const abscisses = melanger(bassin).slice(0, Math.min(nbPoints, bassin.length)).sort(function(a,b){return a-b;});
+    const lettres = tirerLettres(abscisses.length);
+    const points = {};
+    const etapes = [];
+    const pointsMonde = [cfg.xOrigineMonde, cfg.xOrigineMonde+cfg.uniteMonde];
+    abscisses.forEach(function(absc, i){
+      const nom = lettres[i];
+      const xMonde = mondeDepuisAbscisse(cfg, absc);
+      points[nom] = xMonde;
+      pointsMonde.push(xMonde);
+      const avertissement = (cfg.uniteMonde < 0) ? " Attention, le sens du repère a été inversé." : "";
+      etapes.push({
+        type:"lecture",
+        titre:"Étape " + (i+1) + " — Lire l'abscisse de " + nom,
+        consigne:"Quelle est l'abscisse du point " + nom + " ?" + avertissement,
+        indice: indiceLecture(cfg, nom),
+        reponseAttendue: absc
+      });
+    });
+    return {
+      points: points,
+      graduation: [ {label:"0", x:cfg.xOrigineMonde}, {label:"1", x:cfg.xOrigineMonde+cfg.uniteMonde} ],
+      vue: calculerVue(pointsMonde),
+      etapes: etapes
+    };
+  }
+
+  // Exercice de construction : l'élève place lui-même un point d'abscisse
+  // donnée, dans un repère qui peut être décalé, inversé ou dilaté.
+  function genererConstruction(){
+    const cfg = genererConfigGraduation();
+    const maxAbscisse = Math.max(5, Math.floor(14/Math.abs(cfg.uniteMonde)));
+    const absc = entierAleatoire(2, maxAbscisse);
+    const nom = choixAleatoire(tirerLettres(1));
+    const xMonde = mondeDepuisAbscisse(cfg, absc);
+    const pointsMonde = [cfg.xOrigineMonde, cfg.xOrigineMonde+cfg.uniteMonde, xMonde];
+    const precision = (cfg.uniteMonde < 0) ? " Attention, le sens du repère est inversé." : "";
+    return {
+      points: {},
+      graduation: [ {label:"0", x:cfg.xOrigineMonde}, {label:"1", x:cfg.xOrigineMonde+cfg.uniteMonde} ],
+      vue: calculerVue(pointsMonde),
+      etapes: [
+        {
+          type:"construction",
+          titre:"Étape 1 — Placer le point " + nom + " d'abscisse " + absc,
+          consigne:"Sur cette droite graduée, place le point " + nom + " d'abscisse " + absc + "." + precision,
+          indice:"Repère O et U : la distance OU correspond à une unité. Compte " + absc + " unités à partir de O, dans le sens de la graduation, puis utilise l'outil « Point » pour placer " + nom + " à cet endroit.",
+          verifier: verifierPlacementAbscisse(xMonde, 0)
+        }
+      ]
+    };
+  }
+
+  // Choisit un couple de points-repères (i0 = abscisse 0, i1 = abscisse 1)
+  // et un point-cible p dont l'abscisse dans ce nouveau repère est
+  // garantie entière et positive : p = i0 + k*(i1-i0), réponse attendue = k.
+  function choisirEtapeRepere(nbPoints){
+    const pas = choixAleatoire([1,1,2,2,3]);
+    let i0 = 0, i1 = Math.min(pas, nbPoints-1), trouve = false;
+    for(let essai=0; essai<40; essai++){
+      const iCandidat = entierAleatoire(0, nbPoints-1);
+      const direction = choixAleatoire([1,-1]);
+      const i1Candidat = iCandidat + direction*pas;
+      if(i1Candidat >= 0 && i1Candidat <= nbPoints-1 && i1Candidat !== iCandidat){
+        i0 = iCandidat; i1 = i1Candidat; trouve = true; break;
+      }
+    }
+    const kMax = Math.max(1, Math.floor((nbPoints-1)/pas));
+    let p = i1, k = 1;
+    for(let essai=0; essai<40; essai++){
+      const kCandidat = entierAleatoire(1, kMax);
+      const pCandidat = i0 + kCandidat*(i1-i0);
+      if(pCandidat >= 0 && pCandidat <= nbPoints-1 && pCandidat !== i0){
+        p = pCandidat; k = kCandidat; break;
+      }
+    }
+    return { i0: i0, i1: i1, p: p, k: k, pas: pas };
+  }
+
+  // Exercice "changement de repère" : une droite de points équidistants
+  // (sans O/U fixes, puisque le repère change à chaque question) où
+  // l'élève doit relire l'abscisse d'un même point selon différents choix
+  // d'origine et d'unité.
+  function genererRepereMultiple(){
+    const nbPoints = entierAleatoire(10,14);
+    const lettres = tirerLettres(nbPoints);
+    const points = {};
+    lettres.forEach(function(nom, i){ points[nom] = i; });
+    const nbEtapes = entierAleatoire(2,3);
+    const etapes = [];
+    for(let e=0; e<nbEtapes; e++){
+      const r = choisirEtapeRepere(nbPoints);
+      const nomI0 = lettres[r.i0], nomI1 = lettres[r.i1], nomP = lettres[r.p];
+      const inverse = (r.i1 < r.i0);
+      const uniteMultiple = (r.pas > 1) ? " Attention, l'unité de ce repère (la distance " + nomI0 + nomI1 + ") vaut " + r.pas + " « graduations » de la droite." : "";
+      const texteChangement = (e === 0)
+        ? "Sur cette droite, tous les points sont équidistants. Si on choisit le repère (" + nomI0 + ", " + nomI1 + ") — c'est-à-dire que " + nomI0 + " a pour abscisse 0 et " + nomI1 + " a pour abscisse 1 — quelle est l'abscisse du point " + nomP + " ?"
+        : "Change maintenant de repère : " + nomI0 + " a pour abscisse 0 et " + nomI1 + " a pour abscisse 1. Quelle est l'abscisse du point " + nomP + " dans ce nouveau repère ?";
+      const indiceSens = inverse
+        ? ("Ici, " + nomI1 + " est à gauche de " + nomI0 + " : le sens du repère est donc inversé. Compte combien de fois la distance " + nomI0 + nomI1 + " sépare " + nomP + " de " + nomI0 + ", dans le sens " + nomI0 + " → " + nomI1 + ".")
+        : ("Compte combien de fois la distance " + nomI0 + nomI1 + " sépare " + nomP + " de " + nomI0 + ".");
+      etapes.push({
+        type:"lecture",
+        titre:"Étape " + (e+1) + " — Repère (" + nomI0 + ", " + nomI1 + ") : abscisse de " + nomP,
+        consigne: texteChangement,
+        indice: indiceSens + uniteMultiple,
+        reponseAttendue: r.k
+      });
+    }
+    const pointsMonde = Object.keys(points).map(function(n){ return points[n]; });
+    return { points: points, graduation: [], vue: calculerVue(pointsMonde), etapes: etapes };
+  }
+
+  // Exercice "Détermine le repère (A, B)" inspiré du modèle de la feuille :
+  // deux graduations portent des valeurs connues (pas forcément 0 et 1),
+  // l'élève doit déduire O et U (partie a), puis placer un point C
+  // d'abscisse donnée dans ce repère (partie b).
+  // Les réponses de la partie a) sont des entiers naturels : les positions
+  // du O (abscisse 0) et du U (abscisse 1) sur la droite, que l'on
+  // exprime en numéro de graduation de gauche à droite.
+  function genererDeterminerRepere(){
+    // Deux valeurs consécutives (n et n+1) sont marquées sur la droite,
+    // ce qui suffit à déterminer le repère.
+    const vSmall = entierAleatoire(2, 8);
+    const vBig   = vSmall + 1;
+    const ampleur = choixAleatoire([1, 1, 1, 2]);
+    const sensSign = choixAleatoire([1, -1]);
+    const unite = sensSign * ampleur;
+
+    // Position physique (monde GeoGebra) du tick portant la valeur vSmall.
+    const worldXSmall = entierAleatoire(4, 8);
+    const xO = worldXSmall - vSmall * unite;   // position de l'origine O
+    const x1 = xO + unite;                     // position de U
+    const worldXBig = worldXSmall + unite;
+
+    // Point C à placer (abscisse entière ≥ 2, distincte des deux valeurs connues).
+    const bassin = [];
+    for(let a = 2; a <= 14; a++){ if(a !== vSmall && a !== vBig) bassin.push(a); }
+    const abscC = choixAleatoire(bassin);
+    const xC = xO + abscC * unite;
+
+    // Lettres utilisées pour la droite (8-12 graduations visibles).
+    const nbPoints = entierAleatoire(8, 12);
+    const lettres = tirerLettres(nbPoints);
+    const points = {};
+    // Répartition des points régulièrement autour de la zone d'intérêt.
+    const debut = Math.min(xO, xC, worldXSmall) - entierAleatoire(1,2)*Math.abs(unite);
+    lettres.forEach(function(nom, i){ points[nom] = debut + i * Math.abs(unite); });
+
+    // On fait figurer les deux ticks avec leurs valeurs (vSmall, vBig).
+    // Les points de la droite sont tous fixés ; C est à construire.
+    const nomC = tirerLettres(1).filter(function(l){ return !lettres.includes(l); })[0] || 'C';
+
+    const vuePoints = Object.keys(points).map(function(n){ return points[n]; });
+    vuePoints.push(xC);
+    const vue = calculerVue(vuePoints);
+
+    // Texte des consignes :
+    const sensTexte = (unite < 0) ? " (attention : le repère est inversé)" : "";
+    const ordreTicksTexte = (unite > 0)
+      ? vSmall + " est à gauche de " + vBig
+      : vSmall + " est à droite de " + vBig;
+
+    return {
+      points: points,
+      graduation: [
+        { label: String(vSmall), x: worldXSmall },
+        { label: String(vBig),   x: worldXBig   }
+      ],
+      vue: vue,
+      etapes: [
+        {
+          type: "lecture",
+          titre: "Étape 1a — Déterminer l'abscisse de O",
+          consigne: "Sur cette droite, les graduations " + vSmall + " et " + vBig + " sont indiquées en bleu" + sensTexte + ". De combien d'unités faut-il reculer à partir de la graduation " + vSmall + " pour atteindre O (l'abscisse 0) ?",
+          indice: "La distance entre deux graduations consécutives représente 1 unité. " + ordreTicksTexte + ". Pour aller de " + vSmall + " jusqu'à 0, il faut reculer de " + vSmall + " unité(s) dans le sens opposé à la graduation.",
+          reponseAttendue: vSmall,
+          _xO: xO
+        },
+        {
+          type: "construction",
+          titre: "Étape 1b — Placer le point " + nomC + " (abscisse " + abscC + ")",
+          consigne: "Place le point " + nomC + " dont l'abscisse est " + abscC + " dans ce repère" + sensTexte + ".",
+          indice: "À partir de O (que tu viens de localiser), compte " + abscC + " unité(s) dans le sens de la graduation. L'unité vaut la distance entre deux graduations consécutives.",
+          verifier: verifierPlacementAbscisse(xC, 0),
+          _xC: xC, _nomC: nomC, _abscC: abscC
+        }
+      ]
+    };
+  }
+
+  function genererPool(taille){
+    const pool = [];
+    for(let i=0;i<taille;i++){
+      const type = choixAleatoire(['lecture','lecture','construction','repere','determiner']);
+      if(type === 'construction') pool.push(genererConstruction());
+      else if(type === 'repere') pool.push(genererRepereMultiple());
+      else if(type === 'determiner') pool.push(genererDeterminerRepere());
+      else pool.push(genererLectureSimple());
+    }
+    return pool;
+  }
+
+  const exercices = melanger(genererPool(TAILLE_POOL)).slice(0, NB_EXERCICES_SERIE);
+
+  let indexExerciceCourant = 0;
+  let indexEtapeCourante = 0;
+  let etatEtapes = [];
+
+  const texteExplicationFinale =
+    "L'abscisse d'un point sur une droite graduée dépend entièrement du repère choisi : le point " +
+    "auquel on donne l'abscisse 0 (l'origine) et le point auquel on donne l'abscisse 1 (qui fixe " +
+    "l'unité et le sens de la graduation). Changer de repère - même en gardant exactement les mêmes " +
+    "points sur la droite - change les abscisses de tous les points, et peut même inverser le sens " +
+    "de lecture si le point d'abscisse 1 est placé avant celui d'abscisse 0.";
+
+  // ---------------------------------------------------------------------
+  // Rendu de l'interface
+  // ---------------------------------------------------------------------
+  const indicateurExerciceEl = document.getElementById("indicateur-exercice");
+  const listeEtapesEl = document.getElementById("liste-etapes");
+  const titreEtapeEl = document.getElementById("titre-etape");
+  const consigneEtapeEl = document.getElementById("consigne-etape");
+  const contenuIndiceEl = document.getElementById("contenu-indice");
+  const detailsIndiceEl = document.querySelector("details.indice");
+  const zoneSaisieEl = document.getElementById("zone-saisie");
+  const inputReponseEl = document.getElementById("input-reponse");
+  const btnVerifier = document.getElementById("btn-verifier");
+  const zoneRetour = document.getElementById("zone-retour");
+  const carteEtape = document.getElementById("carte-etape");
+  const panneauFinal = document.getElementById("panneau-final");
+  const texteFinalEl = document.getElementById("texte-final");
+  const btnSuivant = document.getElementById("btn-suivant");
+  const btnRecommencerExercice = document.getElementById("btn-recommencer-exercice");
+  const btnRegenererFigure = document.getElementById("btn-regenerer-figure");
+
+  function etapesCourantes(){
+    return exercices[indexExerciceCourant].etapes;
+  }
+
+  function rafraichirIndicateur(){
+    indicateurExerciceEl.textContent = "Exercice " + (indexExerciceCourant+1) + " sur " + exercices.length;
+  }
+
+  function rafraichirListe(){
+    listeEtapesEl.innerHTML = "";
+    etapesCourantes().forEach(function(etape, i){
+      const li = document.createElement("li");
+      let statutClasse = "";
+      let symbole = String(i+1);
+      if(etatEtapes[i] === "fait"){
+        statutClasse = "fait";
+        symbole = "✓";
+      } else if(i === indexEtapeCourante){
+        statutClasse = "en-cours";
+      }
+      if(statutClasse) li.className = statutClasse;
+      li.innerHTML = '<span class="puce">'+symbole+'</span><span>'+etape.titre.replace(/^Étape \d+ — /,"")+'</span>';
+      listeEtapesEl.appendChild(li);
+    });
+  }
+
+  function afficherEtapeCourante(){
+    zoneRetour.className = "";
+    zoneRetour.style.display = "none";
+    zoneRetour.textContent = "";
+    detailsIndiceEl.open = false;
+    rafraichirIndicateur();
+
+    const etapes = etapesCourantes();
+
+    if(indexEtapeCourante >= etapes.length){
+      carteEtape.style.display = "none";
+      panneauFinal.style.display = "block";
+      texteFinalEl.textContent = texteExplicationFinale;
+      const dernierExercice = (indexExerciceCourant === exercices.length - 1);
+      if(dernierExercice){
+        btnSuivant.textContent = "Recommencer la série depuis le début";
+      } else {
+        btnSuivant.textContent = "Exercice suivant →";
+      }
+      return;
+    }
+    carteEtape.style.display = "block";
+    panneauFinal.style.display = "none";
+    const etape = etapes[indexEtapeCourante];
+    titreEtapeEl.textContent = etape.titre;
+    consigneEtapeEl.textContent = etape.consigne;
+    contenuIndiceEl.textContent = etape.indice;
+    if(etape.type === "lecture"){
+      zoneSaisieEl.style.display = "block";
+      inputReponseEl.value = "";
+      setTimeout(function(){ inputReponseEl.focus(); }, 0);
+    } else {
+      zoneSaisieEl.style.display = "none";
+    }
+    btnVerifier.disabled = false;
+    rafraichirListe();
+  }
+
+  function verifierEtapeCourante(){
+    const etape = etapesCourantes()[indexEtapeCourante];
+    if(etape.type === "lecture"){
+      const brut = inputReponseEl.value.trim();
+      if(brut === "") return false;
+      const valeur = Number(brut);
+      return Number.isInteger(valeur) && valeur >= 0 && valeur === etape.reponseAttendue;
+    }
+    if(typeof window.ggbApplet === "undefined" || !window.ggbApplet){
+      return false;
+    }
+    try{
+      return etape.verifier();
+    }catch(e){
+      return false;
+    }
+  }
+
+  btnVerifier.addEventListener("click", function(){
+    const etape = etapesCourantes()[indexEtapeCourante];
+    if(etape.type !== "lecture" && (typeof window.ggbApplet === "undefined" || !window.ggbApplet)){
+      afficherRetour(false, "L'application GeoGebra n'est pas encore prête. Patiente un instant puis réessaie.");
+      return;
+    }
+    const resultat = verifierEtapeCourante();
+    if(resultat){
+      afficherRetour(true, "Bravo, c'est correct ! Passage à l'étape suivante...");
+      etatEtapes[indexEtapeCourante] = "fait";
+      btnVerifier.disabled = true;
+      setTimeout(function(){
+        indexEtapeCourante++;
+        afficherEtapeCourante();
+      }, 1000);
+    } else {
+      afficherRetour(false, "Ce n'est pas encore ça. Relis la consigne, regarde l'indice si besoin, et vérifie à nouveau.");
+    }
+  });
+
+  inputReponseEl.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      e.preventDefault();
+      btnVerifier.click();
+    }
+  });
+
+  function afficherRetour(succes, texte){
+    zoneRetour.style.display = "block";
+    zoneRetour.className = succes ? "succes" : "erreur";
+    zoneRetour.textContent = texte;
+  }
+
+  function demarrerExercice(index){
+    indexExerciceCourant = index;
+    indexEtapeCourante = 0;
+    etatEtapes = etapesCourantes().map(function(){ return "a-faire"; });
+    construireLigneGraduee(indexExerciceCourant);
+    afficherEtapeCourante();
+  }
+
+  btnSuivant.addEventListener("click", function(){
+    const dernierExercice = (indexExerciceCourant === exercices.length - 1);
+    if(dernierExercice){
+      demarrerExercice(0);
+    } else {
+      demarrerExercice(indexExerciceCourant + 1);
+    }
+  });
+
+  btnRecommencerExercice.addEventListener("click", function(){
+    demarrerExercice(indexExerciceCourant);
+  });
+
+  btnRegenererFigure.addEventListener("click", function(){
+    if(typeof window.ggbApplet === "undefined" || !window.ggbApplet) return;
+    construireLigneGraduee(indexExerciceCourant);
+    afficherRetour(true, "La figure a été régénérée.");
+  });
+
+  // Calcule la liste complète des graduations entières visibles dans la
+  // fenêtre. Pour les exercices standards (labels "0" et "1"), seuls ces
+  // deux ticks portent un nombre. Pour les exercices "determiner", les
+  // deux ticks fournis portent leurs valeurs (ex. "3" et "4") ; les autres
+  // restent sans étiquette comme une règle ordinaire.
+  function genererGraduationsContinues(ex){
+    if(!ex.graduation || ex.graduation.length < 2) return [];
+    // Cherche les deux ticks de référence (quelle que soit leur valeur).
+    const ref0 = ex.graduation[0]; // premier tick fourni
+    const ref1 = ex.graduation[1]; // second tick fourni
+    const unite = ref1.x - ref0.x;
+    if(Math.abs(unite) < 1e-9) return ex.graduation;
+    const xMin = ex.vue[0] + 0.3, xMax = ex.vue[1] - 0.3;
+    const kA = (xMin - ref0.x) / unite;
+    const kB = (xMax - ref0.x) / unite;
+    const kLo = Math.ceil(Math.min(kA, kB));
+    const kHi = Math.floor(Math.max(kA, kB));
+    // Valeur d'abscisse correspondant à chaque tick (ex. ref0.label = "3" → valeurBase = 3).
+    const valeurBase = Number(ref0.label);
+    const estStandard = (ref0.label === "0" && ref1.label === "1") || (ref0.label === "1" && ref1.label === "0");
+    const graduations = [];
+    for(let k = kLo; k <= kHi; k++){
+      const abscisse = valeurBase + k; // abscisse de ce tick dans le repère
+      let label = null;
+      if(estStandard){
+        label = (abscisse === 0) ? "0" : (abscisse === 1) ? "1" : null;
+      } else {
+        // On étiquette uniquement les deux ticks fournis explicitement.
+        if(k === 0) label = ref0.label;
+        else if(k === 1) label = ref1.label;
+      }
+      graduations.push({ x: ref0.x + k*unite, label: label, abscisse: abscisse, estStandard: estStandard });
+    }
+    return graduations;
+  }
+
+  // ---------------------------------------------------------------------
+  // Construction géométrique initiale : une droite graduée (les axes et la
+  // grille de GeoGebra sont masqués, on dessine nous-mêmes la droite, ses
+  // graduations éventuelles, et les points de départ de l'exercice).
+  // ---------------------------------------------------------------------
+  function construireLigneGraduee(index){
+    const a = api();
+    const ex = exercices[index];
+    a.reset();
+    a.setCoordSystem(ex.vue[0], ex.vue[1], ex.vue[2], ex.vue[3]);
+    a.setAxesVisible(false, false);
+    a.setGridVisible(false);
+
+    // La droite elle-même, dessinée comme un vecteur pour obtenir une
+    // flèche au bout (convention d'une droite graduée). L'objet est créé
+    // directement à partir de coordonnées littérales (pas de point libre
+    // intermédiaire) puis fixé : il ne peut donc pas être déplacé.
+    a.evalCommand("ligneNombre=Vector((" + (ex.vue[0]+0.3) + ",0),(" + (ex.vue[1]-0.3) + ",0))");
+    a.setColor("ligneNombre", 29, 53, 87);
+    a.setLineThickness("ligneNombre", 3);
+    a.setLabelVisible("ligneNombre", false);
+    a.setFixed("ligneNombre", true);
+
+    // Décalage (en unités du repère graphique) permettant de centrer un
+    // texte d'un seul caractère sous/au-dessus de sa graduation.
+    const largeurConteneurPx = document.getElementById("ggb-element").clientWidth || 800;
+    const pixelsParUnite = largeurConteneurPx / (ex.vue[1] - ex.vue[0]);
+    const decalageTexte = 4.5 / pixelsParUnite;
+
+    // Les graduations visuelles.
+    genererGraduationsContinues(ex).forEach(function(g, i){
+      const tick = "grad" + i;
+      a.evalCommand(tick + "=Segment((" + g.x + ",-0.18),(" + g.x + ",0.18))");
+      a.setColor(tick, 107, 114, 128);
+      a.setLineThickness(tick, 2);
+      a.setLabelVisible(tick, false);
+      a.setFixed(tick, true);
+      if(g.label !== null){
+        const etiquette = "gradTxt" + i;
+        a.evalCommand(etiquette + '=Text("' + g.label + '",(' + (g.x - decalageTexte) + ",-0.55))");
+        // Pour les exercices "determiner", les valeurs connues sont en bleu
+        // pour les distinguer visuellement du reste.
+        if(g.estStandard){
+          a.setColor(etiquette, 55, 65, 81);
+        } else {
+          a.setColor(etiquette, 29, 53, 150);
+        }
+        a.setFixed(etiquette, true);
+
+        // O et U : uniquement quand les labels sont "0" et "1"
+        // (exercices de lecture/construction standard).
+        const lettreRepere = (g.label === "0") ? "O" : (g.label === "1") ? "U" : null;
+        if(lettreRepere){
+          const etiquetteHaut = "gradLettre" + i;
+          a.evalCommand(etiquetteHaut + '=Text("' + lettreRepere + '",(' + (g.x - decalageTexte) + ",0.45))");
+          a.setColor(etiquetteHaut, 69, 123, 157);
+          a.setFixed(etiquetteHaut, true);
+        }
+      }
+    });
+
+    // Les points de départ de l'exercice, sur la droite (y = 0). Ils sont
+    // fixés (non déplaçables) pour éviter qu'ils ne soient bougés par
+    // erreur et faussent l'exercice.
+    Object.keys(ex.points).forEach(function(nom){
+      const x = ex.points[nom];
+      a.evalCommand(nom + "=(" + x + ",0)");
+      a.setColor(nom, 214, 69, 69);
+      a.setFixed(nom, true);
+      a.setLabelVisible(nom, true);
+      a.setLabelStyle(nom, 0); // 0 = nom seul (pas les coordonnées)
+      a.setPointStyle(nom, 0);
+      a.setPointSize(nom, 4);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Initialisation de l'applet GeoGebra
+  // ---------------------------------------------------------------------
+  window.addEventListener("load", function(){
+
+    if(typeof GGBApplet === "undefined"){
+      document.getElementById("message-erreur-chargement").style.display = "block";
+      return;
+    }
+
+    const conteneurGgb = document.getElementById("ggb-element");
+
+    const parametres = {
+      appName: "classic",
+      perspective: "G",
+      width: conteneurGgb.clientWidth,
+      height: conteneurGgb.clientHeight,
+      showToolBar: true,
+      showAlgebraInput: false,
+      showMenuBar: false,
+      showResetIcon: false,
+      language: "fr",
+      country: "FR",
+      appletOnLoad: function(api){
+        window.ggbApplet = api;
+        demarrerExercice(0);
+      }
+    };
+
+    const applet = new GGBApplet(parametres, true);
+    applet.inject("ggb-element");
+
+    window.addEventListener("resize", function(){
+      if(window.ggbApplet){
+        window.ggbApplet.setSize(conteneurGgb.clientWidth, conteneurGgb.clientHeight);
+      }
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
