@@ -55,6 +55,7 @@
   #conteneur{
     display:flex;
     height: calc(100vh - 64px);
+    height: calc(100dvh - 64px); /* unité dynamique : suit la vraie zone visible sur mobile (barre d'adresse qui apparaît/disparaît), contrairement à 100vh qui reste calée sur la hauteur "figée" du viewport */
     width:100%;
   }
   #colonne-gauche{
@@ -363,6 +364,7 @@
   html.mode-empile #colonne-droite{
     width:100%;
     height:62vh;
+    height:62dvh;
     min-height:340px;
   }
 
@@ -384,6 +386,7 @@
   }
   html.mode-paysage-compact #conteneur{
     height: calc(100vh - 36px);
+    height: calc(100dvh - 36px);
   }
   html.mode-paysage-compact #colonne-gauche{
     width:230px;
@@ -1306,6 +1309,35 @@
     window.addEventListener("orientationchange", planifierAjustementTaille);
     if(window.visualViewport){
       window.visualViewport.addEventListener("resize", planifierAjustementTaille);
+    }
+
+    // Filet de sécurité déterminant pour le bug "la figure GeoGebra reste
+    // minuscule après un passage en paysage" : les listeners ci-dessus
+    // devinent des délais (60/300/700/1500 ms) après lesquels la mise en
+    // page DEVRAIT s'être stabilisée. Sur certains navigateurs/webviews
+    // mobiles, la rotation, l'apparition/disparition de la barre d'adresse
+    // ou le changement de classe mode-empile/mode-paysage-compact peuvent
+    // se stabiliser plus tard que ces délais — l'applet est alors
+    // redimensionné une dernière fois sur une taille de conteneur encore
+    // fausse, et reste coincé ainsi jusqu'au prochain vrai resize.
+    // Le ResizeObserver, lui, ne devine rien : il est notifié par le
+    // navigateur exactement quand la taille RÉELLE de la colonne droite a
+    // changé, quelle qu'en soit la cause, et redimensionne alors l'applet
+    // en conséquence.
+    if(window.ResizeObserver){
+      let derniereTailleObservee = "";
+      const colonneDroite = document.getElementById("colonne-droite");
+      const observateurTaille = new ResizeObserver(function(entrees){
+        const entree = entrees[0];
+        if(!entree) return;
+        const cle = Math.round(entree.contentRect.width) + "x" + Math.round(entree.contentRect.height);
+        if(cle === derniereTailleObservee) return;
+        derniereTailleObservee = cle;
+        if(window.ggbApplet){
+          window.ggbApplet.setSize(conteneurGgb.clientWidth, conteneurGgb.clientHeight);
+        }
+      });
+      observateurTaille.observe(colonneDroite);
     }
   });
 
