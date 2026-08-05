@@ -1241,11 +1241,30 @@
     const applet = new GGBApplet(parametres, true);
     applet.inject("ggb-element");
 
-    window.addEventListener("resize", function(){
+    // Ajustement de la taille de l'applet GeoGebra à la taille réelle de
+    // son conteneur. Un seul appel au moment de l'événement "resize" ne
+    // suffit pas sur mobile : lors d'un changement d'orientation (surtout
+    // sur iOS Safari), la barre d'adresse et la mise en page CSS se
+    // stabilisent avec un léger retard, donc le premier appel capture
+    // parfois une taille encore transitoire et la figure reste "coincée"
+    // en trop petit. On rappelle donc plusieurs fois, échelonné dans le
+    // temps, après chaque changement de taille/orientation.
+    function ajusterTailleGgb(){
       if(window.ggbApplet){
         window.ggbApplet.setSize(conteneurGgb.clientWidth, conteneurGgb.clientHeight);
       }
-    });
+    }
+    function planifierAjustementTaille(){
+      ajusterTailleGgb();
+      setTimeout(ajusterTailleGgb, 60);
+      setTimeout(ajusterTailleGgb, 300);
+      setTimeout(ajusterTailleGgb, 700);
+    }
+    window.addEventListener("resize", planifierAjustementTaille);
+    window.addEventListener("orientationchange", planifierAjustementTaille);
+    if(window.visualViewport){
+      window.visualViewport.addEventListener("resize", planifierAjustementTaille);
+    }
   });
 
 })();
