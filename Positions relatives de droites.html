@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Géométrie Plane — Parallèles, Perpendiculaires et Vocabulaire</title>
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+<style>
+  :root{
+    --bleu-fonce: #1d3557;
+    --bleu: #457b9d;
+    --bleu-clair: #a8dadc;
+    --fond: #f1f4f8;
+    --vert: #2a9d5c;
+    --vert-fond: #e6f6ec;
+    --rouge: #d64545;
+    --rouge-fond: #fbe9e9;
+    --gris: #6b7280;
+    --gris-clair: #e2e6ec;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0; padding:0; height:100%;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--fond);
+    color:#1f2937;
+  }
+
+  /* Navigation Principale */
+  #bandeau{
+    height:64px;
+    background: var(--bleu-fonce);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 0 24px;
+    flex-shrink:0;
+  }
+  #bandeau .titre-app{
+    font-size:1.2rem;
+    font-weight:600;
+  }
+  #nav-exercices{
+    display:flex;
+    gap:8px;
+  }
+  .btn-nav-ex{
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+  .btn-nav-ex:hover{ background: rgba(255,255,255,0.25); }
+  .btn-nav-ex.actif{
+    background: var(--bleu-clair);
+    color: var(--bleu-fonce);
+    font-weight: 700;
+    border-color: var(--bleu-clair);
+  }
+
+  /* Conteneur d'exercices */
+  #conteneur-principal{
+    height: calc(100vh - 64px);
+    width:100%;
+    position:relative;
+    overflow:hidden;
+  }
+  .section-exercice{
+    display:none;
+    height:100%;
+    width:100%;
+  }
+  .section-exercice.active{
+    display:flex;
+  }
+
+  /* Layouts */
+  .layout-ex1{ display:flex; width:100%; height:100%; }
+  .col-gauche-ex1{ width:420px; min-width:420px; background:#fff; border-right:1px solid var(--gris-clair); padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; }
+  .col-droite-ex1{ flex:1; background:#fff; }
+
+  .tableau-vocabulaire{ width:100%; border-collapse:collapse; margin-top:10px; }
+  .tableau-vocabulaire th, .tableau-vocabulaire td{ padding:10px 8px; border-bottom:1px solid var(--gris-clair); text-align:left; font-size:0.9rem; }
+  .tableau-vocabulaire th{ background:#f8fafc; color:var(--bleu-fonce); }
+  .tableau-vocabulaire select{ width:100%; padding:6px; border-radius:6px; border:1px solid var(--gris); font-size:0.9rem; outline:none; }
+  
+  .statut-reponse{ font-weight:bold; font-size:1.1rem; text-align:center; }
+  .statut-reponse.correct{ color: var(--vert); }
+  .statut-reponse.incorrect{ color: var(--rouge); }
+
+  .layout-ex-multi{ display:flex; flex-direction:column; width:100%; height:100%; }
+  .barre-sub-tabs{ background:#fff; border-bottom:1px solid var(--gris-clair); padding:10px 20px; display:flex; align-items:center; gap:12px; }
+  .btn-sub-tab{ background:var(--fond); border:1px solid var(--gris-clair); padding:6px 14px; border-radius:20px; cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--gris); }
+  .btn-sub-tab.actif{ background:var(--bleu-fonce); color:#fff; border-color:var(--bleu-fonce); }
+
+  .zone-travail-multi{ display:flex; flex:1; height:calc(100% - 53px); }
+  .panneau-consigne{ width:340px; min-width:340px; background:#fff; border-right:1px solid var(--gris-clair); padding:20px; display:flex; flex-direction:column; gap:14px; overflow-y:auto; }
+  .panneau-ggb{ flex:1; background:#fff; position:relative; }
+
+  .btn-action{ width:100%; padding:10px; background: var(--bleu-fonce); color:#fff; border:none; border-radius:8px; font-size:0.92rem; font-weight:600; cursor:pointer; transition: background 0.15s ease; }
+  .btn-action:hover{ background: var(--bleu); }
+  .btn-suivant{ width:100%; margin-top:10px; padding:10px; background: var(--vert); color:#fff; border:none; border-radius:8px; font-size:0.92rem; font-weight:700; cursor:pointer; }
+  
+  .zone-retour-msg{ display:none; padding:12px; border-radius:8px; font-size:0.88rem; line-height:1.4; }
+  .zone-retour-msg.succes{ background: var(--vert-fond); color: var(--vert); border:1px solid #b7e3c6; }
+  .zone-retour-msg.erreur{ background: var(--rouge-fond); color: var(--rouge); border:1px solid #f0bcbc; }
+
+  details.indice{ font-size:0.85rem; color: var(--bleu); }
+  details.indice summary{ cursor:pointer; font-weight:600; }
+  details.indice .contenu-indice{ background:#fff; border:1px dashed var(--bleu-clair); border-radius:6px; padding:8px; margin-top:4px; color:#374151; }
+</style>
+</head>
+<body>
+
+<div id="bandeau">
+  <div class="titre-app">Géométrie Plane : Relations entre droites</div>
+  <div id="nav-exercices">
+    <button class="btn-nav-ex actif" onclick="changerExercice(0)">Ex 1 : Vocabulaire</button>
+    <button class="btn-nav-ex" onclick="changerExercice(1)">Ex 2 : Parallèles</button>
+    <button class="btn-nav-ex" onclick="changerExercice(2)">Ex 3 : Perpendiculaires</button>
+  </div>
+</div>
+
+<div id="conteneur-principal">
+
+  <!-- EXERCICE 1 -->
+  <div class="section-exercice active" id="ex-0">
+    <div class="layout-ex1">
+      <div class="col-gauche-ex1">
+        <h3 style="margin:0; color:var(--bleu-fonce)">Exercice 1 — Observe et complète</h3>
+        <p style="font-size:0.9rem; line-height:1.4; margin:0">Sélectionne la relation géométrique exacte.</p>
+        <table class="tableau-vocabulaire">
+          <thead><tr><th>Paire</th><th>Relation</th><th></th></tr></thead>
+          <tbody id="tbody-ex1"></tbody>
+        </table>
+        <button class="btn-action" onclick="verifierExercice1()">Vérifier le tableau</button>
+        <div id="msg-retour-ex1" class="zone-retour-msg"></div>
+      </div>
+      <div class="col-droite-ex1" id="ggb-container-ex1"></div>
+    </div>
+  </div>
+
+  <!-- EXERCICE 2 -->
+  <div class="section-exercice" id="ex-1">
+    <div class="layout-ex-multi">
+      <div class="barre-sub-tabs">
+        <span style="font-size:0.88rem; font-weight:700; color:var(--bleu-fonce)">Configurations :</span>
+        <button class="btn-sub-tab actif" onclick="changerSubTab(2, 0)">Figure A</button>
+        <button class="btn-sub-tab" onclick="changerSubTab(2, 1)">Figure B</button>
+        <button class="btn-sub-tab" onclick="changerSubTab(2, 2)">Figure C</button>
+      </div>
+      <div class="zone-travail-multi">
+        <div class="panneau-consigne">
+          <h3 id="titre-ex2" style="margin:0; color:var(--bleu-fonce)"></h3>
+          <p id="consigne-ex2" style="font-size:0.9rem; line-height:1.4; margin:0"></p>
+          <details class="indice">
+            <summary>Afficher l'indice</summary>
+            <div class="contenu-indice">• Utilise l'outil « Droite parallèle ».<br>• Nomme ta droite <b>b</b> (clic droit -> Renommer).</div>
+          </details>
+          <button class="btn-action" onclick="verifierExercice2()">Vérifier la figure</button>
+          <div id="msg-retour-ex2" class="zone-retour-msg"></div>
+        </div>
+        <div class="panneau-ggb" id="ggb-container-ex2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXERCICE 3 -->
+  <div class="section-exercice" id="ex-2">
+    <div class="layout-ex-multi">
+      <div class="barre-sub-tabs">
+        <span style="font-size:0.88rem; font-weight:700; color:var(--bleu-fonce)">Configurations :</span>
+        <button class="btn-sub-tab actif" onclick="changerSubTab(3, 0)">Figure A</button>
+        <button class="btn-sub-tab" onclick="changerSubTab(3, 1)">Figure B</button>
+        <button class="btn-sub-tab" onclick="changerSubTab(3, 2)">Figure C</button>
+      </div>
+      <div class="zone-travail-multi">
+        <div class="panneau-consigne">
+          <h3 id="titre-ex3" style="margin:0; color:var(--bleu-fonce)"></h3>
+          <p id="consigne-ex3" style="font-size:0.9rem; line-height:1.4; margin:0"></p>
+          <details class="indice">
+            <summary>Afficher l'indice</summary>
+            <div class="contenu-indice">• Utilise l'outil « Droite perpendiculaire ».<br>• Nomme ta droite <b>p</b> (clic droit -> Renommer).</div>
+          </details>
+          <button class="btn-action" onclick="verifierExercice3()">Vérifier la figure</button>
+          <div id="msg-retour-ex3" class="zone-retour-msg"></div>
+        </div>
+        <div class="panneau-ggb" id="ggb-container-ex3"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- LOGIQUE GGB ---
+window.onObjectAdded = function(objName) {
+  const a = window.activeApplet;
+  if (!a) return;
+  if (a.getObjectType(objName) === "line") a.setLabelVisible(objName, true);
+};
+
+const questionsEx1 = [ { d1: "a", d2: "b" }, { d1: "a", d2: "c" }, { d1: "a", d2: "e" }, { d1: "c", d2: "d" }, { d1: "b", d2: "c" }, { d1: "d", d2: "f" } ];
+const subConfigsEx2 = [
+  { titre: "Exercice 2 — Parallèles", consigne: "Trace la droite b parallèle à la droite a passant par le point P.", droites: { a: "Line((-4,0), (4,2))" }, points: { P: [-1, 3] }, vue: [-6, 6, -4, 5] },
+  { titre: "Exercice 2 — Parallèles", consigne: "Trace la droite b parallèle à la droite a passant par le point Q.", droites: { a: "Line((-2,-3), (1,3))" }, points: { Q: [3, 0] }, vue: [-5, 5, -5, 5] },
+  { titre: "Exercice 2 — Parallèles", consigne: "Trace la droite b parallèle à la droite a passant par le point R.", droites: { a: "Line((-4,3), (3,-2))" }, points: { R: [-2, -2] }, vue: [-6, 6, -5, 5] }
+];
+const subConfigsEx3 = [
+  { titre: "Exercice 3 — Perpendiculaires", consigne: "Trace la droite p perpendiculaire à la droite a passant par le point P.", droites: { a: "Line((-4,-1), (4,1))" }, points: { P: [-2, 3] }, vue: [-6, 6, -4, 5] },
+  { titre: "Exercice 3 — Perpendiculaires", consigne: "Trace la droite p perpendiculaire à la droite a passant par le point B.", droites: { a: "Line((-4,-2), (2,3))" }, points: { B: [0, 1.333] }, vue: [-5, 5, -4, 5] },
+  { titre: "Exercice 3 — Perpendiculaires", consigne: "Trace la droite p perpendiculaire à la droite a passant par le point C.", droites: { a: "Line((-3,3), (3,-3))" }, points: { C: [2, 2] }, vue: [-5, 5, -4, 5] }
+];
+
+let appletEx1, appletEx2, appletEx3;
+let subTabEx2 = 0, subTabEx3 = 0;
+
+function fixerRepere(a, containerId, vueCible){
+  if(!a) return;
+  const conteneur = document.getElementById(containerId);
+  if(!conteneur) return;
+  const w = conteneur.clientWidth, h = conteneur.clientHeight;
+  const [xMin, xMax, yMin, yMax] = vueCible;
+  const ratioEcran = w/h, ratioCadre = (xMax-xMin)/(yMax-yMin);
+  let demiL = (xMax-xMin)/2, demiH = (yMax-yMin)/2;
+  if(ratioCadre > ratioEcran) demiH = demiL/ratioEcran; else demiL = demiH*ratioEcran;
+  a.setCoordSystem((xMin+xMax)/2 - demiL, (xMin+xMax)/2 + demiL, (yMin+yMax)/2 - demiH, (yMin+yMax)/2 + demiH);
+}
+
+// --- INITIALISATIONS ---
+function initEx1(){
+  const tbody = document.getElementById("tbody-ex1");
+  tbody.innerHTML = "";
+  questionsEx1.forEach((q, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><b>${q.d1}</b> et <b>${q.d2}</b></td><td><select id="select-ex1-${idx}"><option value="">-- Choisir --</option><option value="∥">∥ (parallèles)</option><option value="⊥">⊥ (perpendiculaires)</option><option value="∦">∦ (sécantes)</option><option value="=">= (confondues)</option></select></td><td id="statut-ex1-${idx}" class="statut-reponse"></td>`;
+    tbody.appendChild(tr);
+  });
+  new GGBApplet({appName: "classic", perspective: "2", width: document.getElementById("ggb-container-ex1").clientWidth, height: document.getElementById("ggb-container-ex1").clientHeight, showToolBar: false, showAlgebraInput: false, showMenuBar: false, language: "fr", appletOnLoad: function(api){ appletEx1 = api; window.activeApplet = api; chargerFigureEx1(); }}, true).inject("ggb-container-ex1");
+}
+
+function chargerFigureEx1(){
+  appletEx1.newConstruction();
+  appletEx1.setAxesVisible(false, false); appletEx1.setGridVisible(false);
+  appletEx1.evalCommand("a = Line((-5,-1), (4,2))");
+  appletEx1.evalCommand("b = Line((-5,-3), (4,0))");
+  appletEx1.evalCommand("c = PerpendicularLine((-1,0.33), a)");
+  appletEx1.evalCommand("d = Line((-4,3), (3,-3))");
+  appletEx1.evalCommand("e = Line((-5,-1), (4,2))");
+  appletEx1.evalCommand("f = Line((-3,-4), (1,4))");
+  appletEx1.setLabelVisible("a", false); appletEx1.setLabelVisible("e", false);
+  appletEx1.evalCommand('lblA = Text("a", (-5.3, -0.8))'); appletEx1.evalCommand('lblE = Text("e", (2.2, 1.7))');
+  ["a","b","c","d","e","f"].forEach(d => appletEx1.setLabelVisible(d, true));
+}
+
+function verifierExercice1(){
+  let toutCorrect = true;
+  questionsEx1.forEach((q, idx) => {
+    const sel = document.getElementById(`select-ex1-${idx}`);
+    const stat = document.getElementById(`statut-ex1-${idx}`);
+    const repUser = sel.value;
+  });
+}
+
+// --- VÉRIFICATION PARALLÈLES ET PERPENDICULAIRES (Avec Nommage) ---
+function verifierConstructions(type) {
+  const isPara = (type === 2);
+  const targetName = isPara ? "b" : "p";
+  const applet = isPara ? appletEx2 : appletEx3;
+  const cfg = isPara ? subConfigsEx2[subTabEx2] : subConfigsEx3[subTabEx3];
+  const pNom = Object.keys(cfg.points)[0];
+  const msg = document.getElementById(isPara ? "msg-retour-ex2" : "msg-retour-ex3");
+  msg.style.display = "block";
+
+  const droites = applet.getAllObjectNames("line").filter(d => d !== "a");
+  if (droites.length === 0) {
+    msg.className = "zone-retour-msg erreur";
+    msg.textContent = "Aucune droite n'a été tracée.";
+    return;
+  }
+
+  let reussi = false;
+  let geometrieOkMaisNomFaux = false;
+
+  droites.forEach(d => {
+    const tmp = "tmp_" + Math.random().toString(36).substr(2,5);
+    const tmpD = "tmpD_" + Math.random().toString(36).substr(2,5);
+    
+    applet.evalCommand(`${tmp} = ${isPara ? "AreParallel" : "ArePerpendicular"}(a, ${d})`);
+    applet.evalCommand(`${tmpD} = Distance(${pNom}, ${d})`);
+
+    const estCorrecteGeometriquement = (applet.getValue(tmp) === 1 && applet.getValue(tmpD) < 0.25);
+
+    if (estCorrecteGeometriquement) {
+      if (d === targetName) {
+        reussi = true;
+      } else {
+        geometrieOkMaisNomFaux = true;
+      }
+    }
+    applet.deleteObject(tmp);
+    applet.deleteObject(tmpD);
+  });
+
+  if (reussi) {
+    msg.className = "zone-retour-msg succes";
+    msg.innerHTML = `<b>Parfait !</b> La droite est correctement placée et nommée "${targetName}".`;
+  } else if (geometrieOkMaisNomFaux) {
+    msg.className = "zone-retour-msg erreur";
+    msg.textContent = `La droite est bien placée, mais elle ne s'appelle pas "${targetName}". Fais un clic droit dessus pour la renommer !`;
+  } else {
+    msg.className = "zone-retour-msg erreur";
+    msg.textContent = `La droite "${targetName}" n'est pas encore correcte (mauvaise position ou nom inexistant).`;
+  }
+}
+
+function verifierExercice2() { verifierConstructions(2); }
+function verifierExercice3() { verifierConstructions(3); }
+
+// --- NAVIGATION ---
+function changerExercice(idx){
+  document.querySelectorAll(".btn-nav-ex").forEach((b, i) => b.classList.toggle("actif", i === idx));
+  document.querySelectorAll(".section-exercice").forEach((s, i) => s.classList.toggle("active", i === idx));
+  if(idx === 1 && !appletEx2) initExConstruction(2);
+  if(idx === 2 && !appletEx3) initExConstruction(3);
+}
+
+function initExConstruction(numEx){
+  const params = {appName: "classic", perspective: "2", width: document.getElementById(`ggb-container-ex${numEx}`).clientWidth, height: document.getElementById(`ggb-container-ex${numEx}`).clientHeight, showToolBar: true, showAlgebraInput: false, showMenuBar: false, language: "fr", appletOnLoad: function(api){ 
+    if(numEx === 2) appletEx2 = api; else appletEx3 = api; window.activeApplet = api; api.registerAddListener("onObjectAdded"); chargerSubConfig(numEx, 0); 
+  }};
+  new GGBApplet(params, true).inject(`ggb-container-ex${numEx}`);
+}
+
+function chargerSubConfig(numEx, subIdx){
+  const applet = (numEx === 2) ? appletEx2 : appletEx3;
+  const cfg = (numEx === 2) ? subConfigsEx2[subIdx] : subConfigsEx3[subIdx];
+  document.getElementById(`titre-ex${numEx}`).textContent = cfg.titre;
+  document.getElementById(`consigne-ex${numEx}`).textContent = cfg.consigne;
+  applet.newConstruction();
+  
+  // Suppression des axes et de la grille
+  applet.setAxesVisible(false, false);
+  applet.setGridVisible(false);
+
+  fixerRepere(applet, `ggb-container-ex${numEx}`, cfg.vue);
+  Object.keys(cfg.droites).forEach(d => { applet.evalCommand(`${d} = ${cfg.droites[d]}`); applet.setLabelVisible(d, true); });
+  Object.keys(cfg.points).forEach(p => { applet.evalCommand(`${p} = (${cfg.points[p][0]}, ${cfg.points[p][1]})`); applet.setLabelVisible(p, true); });
+}
+
+function changerSubTab(numEx, subIdx){
+  if(numEx === 2) subTabEx2 = subIdx; else subTabEx3 = subIdx;
+  document.querySelectorAll(`#ex-${numEx-1} .btn-sub-tab`).forEach((b, i) => b.classList.toggle("actif", i === subIdx));
+  chargerSubConfig(numEx, subIdx);
+}
+
+window.addEventListener("load", () => { changerExercice(0); initEx1(); });
+</script>
+</body>
+</html>

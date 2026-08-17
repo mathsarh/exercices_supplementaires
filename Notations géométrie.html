@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulaire de la géométrie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --slate: #1e2a3a;
+    --paper: #f0f4ff;
+    --ink: #172033;
+    --muted: #64748b;
+    --indigo: #4f6ef7;
+    --indigo-dark: #3f57d9;
+    --success: #22c55e;
+    --error: #ef4444;
+    --amber: #f59e0b;
+    --line: #dbe3f4;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--ink);
+  }
+  button, select, input { font: inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid rgba(79, 110, 247, 0.4);
+    outline-offset: 3px;
+  }
+  .app-shell {
+    min-height: 100%;
+    background:
+      radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 24rem),
+      linear-gradient(180deg, var(--slate) 0 15rem, var(--paper) 15rem 100%);
+  }
+  .main-width { width: min(100% - 2rem, 780px); margin-inline: auto; }
+  .hero { padding: 2.6rem 0 2rem; color: white; }
+  .hero-title { margin: 0; font-family: "Syne", sans-serif; letter-spacing: -0.02em; font-weight: 800; font-size: clamp(1.6rem, 4.4vw, 2.2rem); }
+  .hero-subtitle { max-width: 42rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+  .content { padding-bottom: 4rem; }
+
+  .score-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: -0.6rem;
+    padding: 1.25rem;
+  }
+  .score-values { min-width: 150px; }
+  .score-line { font-size: 0.88rem; color: var(--muted); }
+  .score-line strong { display: block; font-family: "Syne", sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--indigo); }
+  .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+  .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+  .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+  .example-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(30, 42, 58, 0.08);
+    padding: 1.4rem 1.5rem;
+    margin-top: 1.4rem;
+  }
+  .example-title { margin: 0 0 0.9rem; font-family: "Syne", sans-serif; font-weight: 800; font-size: 1.05rem; }
+  .recap-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .recap-table th { text-align: left; color: var(--muted); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 0.6rem 0.5rem; }
+  .recap-table td { padding: 0.5rem 0.6rem; border-top: 1px solid var(--line); }
+  .recap-table td:first-child { font-family: "Courier New", monospace; font-weight: 700; white-space: nowrap; }
+  .rule-box {
+    margin-top: 1.1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    background: #fff7e7;
+    color: #8a5200;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .rule-box strong { display: block; margin-bottom: 0.3rem; }
+
+  .section-block { margin-top: 2.6rem; }
+  .section-heading-row { display: flex; align-items: baseline; gap: 0.9rem; }
+  .section-kicker {
+    margin: 0;
+    font-family: "Syne", sans-serif;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--indigo-dark);
+  }
+  .section-title { margin: 0.25rem 0 0; font-family: "Syne", sans-serif; font-size: 1.2rem; font-weight: 800; }
+  .section-rule { border: none; border-top: 1px solid var(--line); margin: 0.8rem 0 1.1rem; }
+  .section-instructions { margin: 0 0 1.1rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+  .exercise-list { display: grid; gap: 1rem; }
+  .exercise-card {
+    background: white;
+    padding: 1.25rem 1.3rem;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 420ms ease, transform 420ms ease, border-color 180ms ease;
+  }
+  .exercise-card.is-visible { opacity: 1; transform: translateY(0); }
+
+  .exercise-card.is-correct { border-color: var(--success); }
+  .exercise-card.is-incorrect { border-color: var(--amber); }
+  .exercise-card.is-shaking { animation: shake 340ms ease; }
+  .exercise-card.is-success-pop { animation: pop 340ms ease; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-3px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+  }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+  .card-label-wrap { display: flex; align-items: center; gap: 0.6rem; }
+  .item-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 0; }
+  .attempt-dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #dbe3f4; transition: background 150ms ease; }
+  .dot.is-wrong { background: var(--error); }
+  .dot.is-success { background: var(--success); }
+
+  .prompt-text { margin: 0 0 0.9rem; line-height: 1.55; font-size: 0.98rem; }
+
+  .equality {
+    font-family: "Courier New", monospace;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #192238;
+    background: #f4f6fd;
+    padding: 0.7rem 0.9rem;
+    border-radius: 10px;
+    margin: 0 0 0.9rem;
+    overflow-x: auto;
+  }
+
+  .options-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.9rem; }
+  .option-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 999px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    user-select: none;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  }
+  .option-chip.is-selected { border-color: var(--indigo); background: #eef2ff; color: var(--indigo-dark); font-weight: 700; }
+  .option-chip.is-disabled { cursor: default; opacity: 0.75; }
+
+  .numeric-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .numeric-row .equality-part { font-family: "Courier New", monospace; font-weight: 700; }
+  .numeric-input {
+    width: 100%;
+    max-width: 420px;
+    min-height: 40px;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 8px;
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+  }
+  .numeric-input.math-code {
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+    max-width: 150px;
+    text-align: center;
+  }
+  .numeric-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+  .symbol-toolbar { display: inline-flex; gap: 0.35rem; align-items: center; }
+  .symbol-btn {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 0.6rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 8px;
+    background: #f4f6fd;
+    color: var(--indigo-dark);
+    font-family: "Courier New", monospace;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease, transform 100ms ease;
+    user-select: none;
+  }
+  .symbol-btn:hover:not(:disabled) { background: #eef2ff; border-color: var(--indigo); transform: translateY(-1px); }
+  .symbol-btn:active:not(:disabled) { transform: translateY(0); }
+  .symbol-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .feedback { margin: 0; font-size: 0.9rem; font-weight: 650; flex: 1; min-width: 200px; }
+  .feedback.correct { color: var(--success); }
+  .feedback.incorrect { color: var(--error); }
+
+  .validate-button {
+    min-height: 40px;
+    padding: 0.6rem 1.1rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--indigo);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+  .correction {
+    display: none;
+    margin-top: 0.9rem;
+    padding: 0.85rem;
+    border-radius: 10px;
+    background: #fff7e7;
+    color: #8a5200;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+  .correction.is-visible { display: block; }
+  .correction strong { display: block; margin-bottom: 0.25rem; }
+
+  .restart-button {
+    min-height: 46px;
+    padding: 0.75rem 1.3rem;
+    border-radius: 12px;
+    background: #4f6ef7;
+    border: 0;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 300ms ease;
+  }
+  .modal-backdrop.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-card {
+    background: white;
+    border-radius: 24px;
+    padding: 2.2rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: translateY(20px);
+    transition: transform 300ms ease;
+  }
+  .modal-backdrop.is-active .modal-card {
+    transform: translateY(0);
+  }
+  .modal-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+  .modal-title {
+    font-family: "Syne", sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 0.6rem;
+  }
+  .modal-text {
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 1.5rem;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  @media (max-width: 620px) {
+    .score-panel { grid-template-columns: 1fr; }
+    .card-actions { flex-direction: column; align-items: stretch; }
+    .validate-button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="hero">
+    <div class="main-width">
+      <h1 class="hero-title">Le vocabulaire de la géométrie</h1>
+      <p class="hero-subtitle">Points, droites, segments, demi-droites, distances : traduis des phrases en notations mathématiques, identifie leur nature, puis réédite-les en langage usuel.</p>
+      <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;">Nouveaux exercices</button>
+    </div>
+  </header>
+  <main class="main-width content">
+
+    <section class="score-panel" aria-labelledby="score-caption">
+      <div class="score-values" aria-live="polite">
+        <div class="score-line"><strong id="resolved-score">0 / 0</strong>corrigés</div>
+      </div>
+      <div>
+        <p id="score-caption" class="score-label">Progression</p>
+        <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-panel">
+      <p class="example-title">Rappel des notations</p>
+      <table class="recap-table">
+        <tr><th>Notation</th><th>Signification</th></tr>
+        <tr><td>X</td><td>le point X</td></tr>
+        <tr><td>d</td><td>la droite d</td></tr>
+        <tr><td>AB ou BA</td><td>la droite passant par les points A et B</td></tr>
+        <tr><td>[AB]</td><td>le segment d'extrémités A et B</td></tr>
+        <tr><td>[AB  ou  BA]</td><td>la demi-droite d'origine A et passant par le point B</td></tr>
+        <tr><td>|AB|</td><td>la distance entre les points A et B</td></tr>
+      </table>
+      <div class="rule-box">
+        <strong>Attention aux majuscules et aux crochets !</strong>
+        Les points s'écrivent toujours en <strong>majuscules</strong>. Pour une demi-droite, le crochet est accolé à l'origine : <code>[AB</code> ou <code>BA]</code> a pour origine le point A.
+      </div>
+    </section>
+
+    <!-- SECTION 1 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Section 1</p>
+          <h2 class="section-title">Traduis en langage mathématique</h2>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Écris la notation mathématique correspondant à chaque phrase. Utilise les crochets [ ] et les barres | | quand il le faut.</p>
+      <div id="section1-list" class="exercise-list"></div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Section 2</p>
+          <h2 class="section-title">Identifie la nature de la notation</h2>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Pour chaque notation mathématique, indique s'il s'agit d'un point, d'une droite, d'un segment, d'une demi-droite ou d'une distance.</p>
+      <div id="section2-list" class="exercise-list"></div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Section 3</p>
+          <h2 class="section-title">Traduis en langage usuel</h2>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Traduis les expressions mathématiques suivantes en langage usuel.</p>
+      <div id="section3-list" class="exercise-list"></div>
+    </section>
+
+  </main>
+  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+</div>
+
+<!-- Modale de félicitations -->
+<div id="completion-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card">
+    <div class="modal-icon">🎯</div>
+    <h2 id="modal-title" class="modal-title">Bravo !</h2>
+    <p class="modal-text">Tu as terminé l'ensemble des exercices de vocabulaire de la géométrie.</p>
+    <button id="modal-restart-button" class="restart-button" type="button">Recommencer une série</button>
+  </div>
+</div>
+
+<script>
+  const state = { resolved: 0, total: 0 };
+  const liveRegion = document.getElementById("live-region");
+  const resolvedScore = document.getElementById("resolved-score");
+  const progressTrack = document.getElementById("progress-track");
+  const progressFill = document.getElementById("progress-fill");
+  const completionModal = document.getElementById("completion-modal");
+  const modalRestartButton = document.getElementById("modal-restart-button");
+
+  function announce(message) {
+    liveRegion.textContent = "";
+    window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+  }
+
+  function updateGlobalScore() {
+    resolvedScore.textContent = `${state.resolved} / ${state.total}`;
+    const pct = state.total ? (state.resolved / state.total) * 100 : 0;
+    progressFill.style.width = `${pct}%`;
+    progressTrack.setAttribute("aria-valuemax", String(state.total));
+    progressTrack.setAttribute("aria-valuenow", String(state.resolved));
+
+    if (state.total > 0 && state.resolved === state.total) {
+      window.setTimeout(() => {
+        completionModal.classList.add("is-active");
+        announce("Félicitations, vous avez complété tous les exercices !");
+      }, 500);
+    }
+  }
+
+  function markResolved() {
+    state.resolved += 1;
+    updateGlobalScore();
+  }
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function randChoice(arr) { return arr[randInt(0, arr.length - 1)]; }
+  function shuffle(items) {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+  function letterLabel(index) { return `${String.fromCharCode(97 + index)})`; }
+
+  function cardHeader(label) {
+    const header = document.createElement("div");
+    header.className = "card-header";
+    const labelWrap = document.createElement("div");
+    labelWrap.className = "card-label-wrap";
+    const itemLabel = document.createElement("p");
+    itemLabel.className = "item-label";
+    itemLabel.textContent = label;
+    labelWrap.appendChild(itemLabel);
+    header.appendChild(labelWrap);
+    const dots = document.createElement("div");
+    dots.className = "attempt-dots";
+    const dotEls = [];
+    for (let i = 0; i < 3; i += 1) {
+      const d = document.createElement("span");
+      d.className = "dot";
+      dots.appendChild(d);
+      dotEls.push(d);
+    }
+    header.appendChild(dots);
+    return { header, dotEls };
+  }
+
+  function cardActions() {
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+    const feedback = document.createElement("p");
+    feedback.className = "feedback";
+    const validateBtn = document.createElement("button");
+    validateBtn.className = "validate-button";
+    validateBtn.type = "button";
+    validateBtn.textContent = "Vérifier";
+    actions.appendChild(feedback);
+    actions.appendChild(validateBtn);
+    return { actions, feedback, validateBtn };
+  }
+
+  function finalizeCard(card, dotEls, disableableElements, feedback, validateBtn, correction, isCorrectFn, maxAttempts = 3) {
+    let attempts = 0;
+    let done = false;
+    const validate = () => {
+      if (done) return;
+      
+      const textInputs = Array.from(card.querySelectorAll("input[type='text']"));
+      if (textInputs.some((el) => el.value.trim() === "")) {
+        feedback.textContent = "Complète la réponse avant de vérifier.";
+        feedback.className = "feedback";
+        return;
+      }
+
+      const isCorrect = isCorrectFn();
+      const dot = dotEls[attempts];
+      attempts += 1;
+
+      if (isCorrect) {
+        done = true;
+        if (dot) dot.classList.add("is-success");
+        markResolved();
+        disableableElements.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+        validateBtn.disabled = true;
+        card.classList.add("is-correct", "is-success-pop");
+        feedback.className = "feedback correct";
+        feedback.textContent = "Bonne réponse !";
+        announce("Bonne réponse.");
+        return;
+      }
+
+      if (dot) dot.classList.add("is-wrong");
+
+      if (attempts >= maxAttempts) {
+        done = true;
+        markResolved();
+        disableableElements.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+        validateBtn.disabled = true;
+        card.classList.add("is-incorrect");
+        feedback.className = "feedback incorrect";
+        feedback.textContent = "Ce n'est pas tout à fait ça, regarde la correction.";
+        correction.classList.add("is-visible");
+        announce("Réponse incorrecte, correction affichée.");
+        return;
+      }
+
+      const remaining = maxAttempts - attempts;
+      feedback.className = "feedback incorrect";
+      feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+      card.classList.remove("is-shaking");
+      void card.offsetWidth;
+      card.classList.add("is-shaking");
+      announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+    };
+    return validate;
+  }
+
+  const POINTS_POOL = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P", "R", "S", "T", "U", "V", "W"];
+  const LOWER_POOL = ["a", "b", "c", "d", "e", "f", "g", "h", "k", "m", "n", "p"];
+
+  function pickPointsPair(usedPairs) {
+    let x, y, key;
+    let guard = 0;
+    do {
+      x = randChoice(POINTS_POOL);
+      do { y = randChoice(POINTS_POOL); } while (y === x);
+      key = [x, y].sort().join("");
+      guard += 1;
+    } while (usedPairs.has(key) && guard < 60);
+    usedPairs.add(key);
+    return [x, y];
+  }
+  function pickSingle(pool, usedSet) {
+    let v;
+    let guard = 0;
+    do {
+      v = randChoice(pool);
+      guard += 1;
+    } while (usedSet.has(v) && guard < 40);
+    usedSet.add(v);
+    return v;
+  }
+  function normalize(str) { return (str || "").replace(/\s+/g, ""); }
+
+  function insertSymbol(input, symbol) {
+    if (input.disabled) return;
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    const val = input.value;
+    input.value = val.substring(0, start) + symbol + val.substring(end);
+    input.selectionStart = input.selectionEnd = start + symbol.length;
+    input.focus();
+  }
+
+  // ---------- SECTION 1 : Phrase -> Notation ----------
+  function buildSection1() {
+    const container = document.getElementById("section1-list");
+    const usedPairs = new Set();
+    const usedLetters = new Set();
+    
+    const items = [
+      (() => { const [x, y] = pickPointsPair(usedPairs); return { prompt: `La droite passant par les points ${x} et ${y}`, accepted: [`${x}${y}`, `${y}${x}`] }; })(),
+      (() => { const [x, y] = pickPointsPair(usedPairs); return { prompt: `Le segment d'extrémités ${x} et ${y}`, accepted: [`[${x}${y}]`, `[${y}${x}]`] }; })(),
+      (() => { 
+        const [x, y] = pickPointsPair(usedPairs); 
+        return { 
+          prompt: `La demi-droite d'origine ${x} et passant par le point ${y}`, 
+          accepted: [`[${x}${y}`, `[${x}${y})`, `${y}${x}]`, `${y}${x}(`] 
+        }; 
+      })(),
+      (() => { const l = pickSingle(LOWER_POOL, usedLetters); return { prompt: `La droite ${l}`, accepted: [l] }; })(),
+      (() => { const [x, y] = pickPointsPair(usedPairs); return { prompt: `La distance entre les points ${x} et ${y}`, accepted: [`|${x}${y}|`, `|${y}${x}|`] }; })()
+    ];
+
+    shuffle(items).forEach((item, index) => {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+      const { header, dotEls } = cardHeader(letterLabel(index));
+      card.appendChild(header);
+
+      const prompt = document.createElement("p");
+      prompt.className = "prompt-text";
+      prompt.textContent = item.prompt;
+      card.appendChild(prompt);
+
+      const row = document.createElement("div");
+      row.className = "numeric-row";
+      
+      const label = document.createElement("span");
+      label.className = "equality-part";
+      label.textContent = "Notation :";
+      
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "numeric-input math-code";
+      input.setAttribute("aria-label", "Notation mathématique");
+
+      const symbolWrap = document.createElement("div");
+      symbolWrap.className = "symbol-toolbar";
+      const symbolBtns = [];
+
+      ["[", "]", "|"].forEach((sym) => {
+        const symBtn = document.createElement("button");
+        symBtn.type = "button";
+        symBtn.className = "symbol-btn";
+        symBtn.textContent = sym;
+        symBtn.title = `Insérer ${sym}`;
+        symBtn.addEventListener("click", () => insertSymbol(input, sym));
+        symbolWrap.appendChild(symBtn);
+        symbolBtns.push(symBtn);
+      });
+
+      row.append(label, input, symbolWrap);
+      card.appendChild(row);
+
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Réponse attendue :</strong>${item.accepted[0]} (ou variante équivalente)`;
+      card.appendChild(correction);
+
+      const validate = finalizeCard(card, dotEls, [input, ...symbolBtns], feedback, validateBtn, correction, () => {
+        const val = normalize(input.value);
+        return item.accepted.some((a) => normalize(a) === val);
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    });
+
+    return items.length;
+  }
+
+  // ---------- SECTION 2 : Notation -> Nature ----------
+  const CATEGORIES = ["Point", "Droite", "Segment", "Demi-droite", "Distance"];
+
+  function buildSection2() {
+    const container = document.getElementById("section2-list");
+    const usedPairs = new Set();
+    const usedSingles = new Set();
+    const usedLetters = new Set();
+
+    const generators = [
+      () => { const x = pickSingle(POINTS_POOL, usedSingles); return { symbol: x, category: "Point", phrase: `Le point ${x}.` }; },
+      () => { const l = pickSingle(LOWER_POOL, usedLetters); return { symbol: l, category: "Droite", phrase: `La droite ${l}.` }; },
+      () => { const [x, y] = pickPointsPair(usedPairs); return { symbol: `${x}${y}`, category: "Droite", phrase: `La droite passant par les points ${x} et ${y}.` }; },
+      () => { const [x, y] = pickPointsPair(usedPairs); return { symbol: `[${x}${y}]`, category: "Segment", phrase: `Le segment d'extrémités ${x} et ${y}.` }; },
+      () => { const [o, e] = pickPointsPair(usedPairs); return { symbol: `[${o}${e}`, category: "Demi-droite", phrase: `La demi-droite d'origine ${o} et passant par le point ${e}.` }; },
+      () => { const [x, y] = pickPointsPair(usedPairs); return { symbol: `|${x}${y}|`, category: "Distance", phrase: `La distance entre les points ${x} et ${y}.` }; }
+    ];
+
+    let items = generators.map(fn => fn());
+
+    shuffle(items).forEach((item, index) => {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+      const { header, dotEls } = cardHeader(letterLabel(index));
+      card.appendChild(header);
+
+      const equality = document.createElement("p");
+      equality.className = "equality";
+      equality.textContent = item.symbol;
+      card.appendChild(equality);
+
+      const optionsRow = document.createElement("div");
+      optionsRow.className = "options-row";
+      let selected = null;
+      const chips = {};
+      CATEGORIES.forEach((label) => {
+        const chip = document.createElement("span");
+        chip.className = "option-chip";
+        chip.textContent = label;
+        chip.setAttribute("role", "button");
+        chip.setAttribute("tabindex", "0");
+        function activate() {
+          if (chip.classList.contains("is-disabled")) return;
+          selected = label;
+          Object.values(chips).forEach((c) => c.classList.remove("is-selected"));
+          chip.classList.add("is-selected");
+        }
+        chip.addEventListener("click", activate);
+        chip.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); } });
+        chips[label] = chip;
+        optionsRow.appendChild(chip);
+      });
+      card.appendChild(optionsRow);
+
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>${item.category} — </strong>${item.phrase}`;
+      card.appendChild(correction);
+
+      const fakeInput = { get value() { return selected || ""; }, disabled: false, classList: { add: () => {} } };
+      const validate = finalizeCard(card, dotEls, [fakeInput], feedback, validateBtn, correction, () => selected === item.category);
+      validateBtn.addEventListener("click", () => {
+        validate();
+        if (validateBtn.disabled) Object.values(chips).forEach((c) => c.classList.add("is-disabled"));
+      });
+
+      container.appendChild(card);
+    });
+
+    return items.length;
+  }
+
+  // ---------- SECTION 3 : Notation -> Langage usuel ----------
+  function buildSection3() {
+    const container = document.getElementById("section3-list");
+    const usedPairs = new Set();
+    const usedLetters = new Set();
+
+    const items = [
+      (() => {
+        const [x, y] = pickPointsPair(usedPairs);
+        return {
+          type: "droite",
+          symbol: `${x}${y}`,
+          points: [x, y],
+          expectedText: `La droite passant par les points ${x} et ${y}`
+        };
+      })(),
+      (() => {
+        const [x, y] = pickPointsPair(usedPairs);
+        return {
+          type: "segment",
+          symbol: `[${x}${y}]`,
+          points: [x, y],
+          expectedText: `Le segment d'extrémités ${x} et ${y}`
+        };
+      })(),
+      (() => {
+        const [o, e] = pickPointsPair(usedPairs);
+        return {
+          type: "demi-droite",
+          symbol: `[${o}${e}`,
+          origin: o,
+          passing: e,
+          points: [o, e],
+          expectedText: `La demi-droite d'origine ${o} et passant par le point ${e}`
+        };
+      })(),
+      (() => {
+        const [x, y] = pickPointsPair(usedPairs);
+        return {
+          type: "distance",
+          symbol: `|${x}${y}|`,
+          points: [x, y],
+          expectedText: `La distance entre les points ${x} et ${y}`
+        };
+      })(),
+      (() => {
+        const l = pickSingle(LOWER_POOL, usedLetters);
+        return {
+          type: "droite-nommee",
+          symbol: l,
+          letter: l,
+          points: [],
+          expectedText: `La droite ${l}`
+        };
+      })()
+    ];
+
+    shuffle(items).forEach((item, index) => {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+      const { header, dotEls } = cardHeader(letterLabel(index));
+      card.appendChild(header);
+
+      const equality = document.createElement("p");
+      equality.className = "equality";
+      equality.textContent = item.symbol;
+      card.appendChild(equality);
+
+      const row = document.createElement("div");
+      row.className = "numeric-row";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "numeric-input";
+      input.setAttribute("aria-label", "Traduction en langage usuel");
+      row.appendChild(input);
+      card.appendChild(row);
+
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Exemple de formulation attendue :</strong>${item.expectedText}`;
+      card.appendChild(correction);
+
+      const checkFlexibleText = () => {
+        const raw = input.value.trim();
+        if (!raw) return false;
+
+        for (const pt of item.points) {
+          if (!raw.includes(pt)) return false;
+        }
+
+        const clean = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+        if (item.type === "droite") {
+          return clean.includes("droite") && !clean.includes("demi");
+        }
+        if (item.type === "segment") {
+          return clean.includes("segment");
+        }
+        if (item.type === "distance") {
+          return clean.includes("distance") || clean.includes("longueur");
+        }
+        if (item.type === "demi-droite") {
+          const hasDemi = clean.includes("demi");
+          const hasDroite = clean.includes("droite");
+          const hasOrigin = clean.includes("origine");
+          const originChar = item.origin;
+          const originMatched = raw.includes(`origine ${originChar}`) || 
+                                raw.includes(`origine: ${originChar}`) || 
+                                raw.includes(`d'origine ${originChar}`) ||
+                                raw.includes(`d'origine: ${originChar}`) ||
+                                (hasOrigin && raw.includes(originChar));
+          return (hasDemi || clean.includes("demidroite")) && hasDroite && originMatched;
+        }
+        if (item.type === "droite-nommee") {
+          return clean.includes("droite") && !clean.includes("demi") && raw.toLowerCase().includes(item.letter.toLowerCase());
+        }
+
+        return false;
+      };
+
+      const validate = finalizeCard(card, dotEls, [input], feedback, validateBtn, correction, checkFlexibleText);
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    });
+
+    return items.length;
+  }
+
+  function buildAll() {
+    completionModal.classList.remove("is-active");
+    document.getElementById("section1-list").replaceChildren();
+    document.getElementById("section2-list").replaceChildren();
+    document.getElementById("section3-list").replaceChildren();
+    state.resolved = 0;
+
+    const n1 = buildSection1();
+    const n2 = buildSection2();
+    const n3 = buildSection3();
+
+    state.total = n1 + n2 + n3;
+    updateGlobalScore();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".exercise-card").forEach((card) => card.classList.add("is-visible"));
+      });
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const active = document.activeElement;
+    if (!active) return;
+    if (active.tagName !== "INPUT" && active.getAttribute("role") !== "button") return;
+    const card = active.closest(".exercise-card");
+    if (!card) return;
+    const validateBtn = card.querySelector(".validate-button");
+    if (validateBtn && !validateBtn.disabled) {
+      event.preventDefault();
+      validateBtn.click();
+    }
+  });
+
+  document.getElementById("new-exercises-button").addEventListener("click", buildAll);
+  modalRestartButton.addEventListener("click", buildAll);
+
+  buildAll();
+</script>
+</body>
+</html>

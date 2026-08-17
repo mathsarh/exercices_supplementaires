@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Programme de construction — Médiatrices</title>
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+<style>
+  :root{
+    --bleu-fonce: #1d3557;
+    --bleu: #457b9d;
+    --fond: #f1f4f8;
+    --vert: #2a9d5c;
+    --vert-fond: #e6f6ec;
+    --rouge: #d64545;
+    --rouge-fond: #fbe9e9;
+    --gris-clair: #e2e6ec;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; height:100%; font-family: sans-serif; background: var(--fond); }
+
+  #bandeau{ height:64px; background: var(--bleu-fonce); color:#fff; display:flex; align-items:center; justify-content:space-between; padding: 0 24px; }
+  #conteneur-principal{ height: calc(100vh - 64px); display:flex; }
+  .panneau-consigne{ width:400px; background:#fff; padding:24px; display:flex; flex-direction:column; gap:16px; border-right:1px solid var(--gris-clair); overflow-y:auto; }
+  .etapes-box{ background: #f8fafc; border: 1px solid var(--gris-clair); border-radius: 8px; padding: 14px; }
+  .btn-action{ width:100%; padding:12px; background: var(--bleu-fonce); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+  .btn-action:hover{ background: var(--bleu); }
+  .zone-retour-msg{ padding:12px; border-radius:8px; margin-top:10px; display:none; }
+  .zone-retour-msg ul{ margin:8px 0 0; padding-left:20px; }
+  .zone-retour-msg li{ margin-bottom:4px; }
+  .succes{ background: var(--vert-fond); color: var(--vert); border:1px solid #b7e3c6; display:block !important;}
+  .erreur{ background: var(--rouge-fond); color: var(--rouge); border:1px solid #f0bcbc; display:block !important;}
+  .panneau-ggb{ flex:1; background:#fff; }
+  .niveau{ display:inline-block; font-size:12px; font-weight:600; padding:2px 8px; border-radius:12px; background:var(--gris-clair); color:var(--bleu-fonce); margin-bottom:4px; }
+</style>
+</head>
+<body>
+
+<div id="bandeau">
+  <div>Programme de construction — Médiatrices</div>
+  <button onclick="chargerNouvelExercice()">🔄 Nouvel exercice</button>
+</div>
+
+<div id="conteneur-principal">
+  <div class="panneau-consigne">
+    <span class="niveau" id="niveau-ex"></span>
+    <h3 id="titre-ex" style="display:none"></h3>
+    <div class="etapes-box"><ol id="liste-etapes"></ol></div>
+    <button class="btn-action" onclick="verifierConstruction()">Vérifier ma construction</button>
+    <div id="msg-retour" class="zone-retour-msg"></div>
+  </div>
+  <div class="panneau-ggb" id="ggb-container"></div>
+</div>
+
+<script>
+let applet;
+let exerciceCourant = null;
+let compteurCodageMediatrices = 0; // remis à zéro à chaque nouvel exercice, incrémenté à chaque médiatrice codée
+
+/* ---------- Lecture de la définition d'un objet GeoGebra (pour segments/droites/cercles construits directement à partir de points ou d'objets nommés) ---------- */
+function definitionOf(api, name) {
+  return (api.getCommandString(name, false) || "") + " " + (api.getDefinitionString(name) || "");
+}
+function refersTo(def, token) {
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp("\\b" + escaped + "\\b").test(def);
+}
+
+/* ---------- Utilitaires géométriques par coordonnées ----------
+   Ces vérifications portent sur la GÉOMÉTRIE RÉELLE de la construction
+   (coordonnées des points, équation des droites) plutôt que sur l'outil
+   utilisé pour la produire : peu importe comment l'élève a construit une
+   médiatrice ou une perpendiculaire, seul le résultat compte.
+------------------------------------------------------------------------- */
+function existsAs(api, name, type) { return api.exists(name) && api.getObjectType(name) === type; }
+function isCircleObj(api, name) {
+  // L'API GeoGebra renvoie "circle" pour un cercle "pur" (centre+point, centre+rayon, 3 points...)
+  // et seulement "conic" pour les coniques générales. On accepte les deux.
+  if (!api.exists(name)) return false;
+  const t = api.getObjectType(name);
+  return t === "circle" || t === "conic";
+}
+function isPoint(api, name) { return existsAs(api, name, "point"); }
+function XY(api, name) { return [api.getXcoord(name), api.getYcoord(name)]; }
+function dist(p, q) { return Math.hypot(p[0]-q[0], p[1]-q[1]); }
+function approx(a, b, tol) { return Math.abs(a-b) <= tol; }
+function dirFromPoints(p, q) { return [q[0]-p[0], q[1]-p[1]]; }
+function angleBetween(u, v) {
+  const nu = Math.hypot(u[0],u[1]), nv = Math.hypot(v[0],v[1]);
+  if (!nu || !nv) return null;
+  let c = (u[0]*v[0]+u[1]*v[1])/(nu*nv);
+  c = Math.max(-1, Math.min(1, c));
+  return Math.acos(c) * 180/Math.PI;
+}
+function isPerpDirs(u, v, tolDeg) {
+  const a = angleBetween(u, v);
+  return a !== null && Math.abs(a-90) <= tolDeg;
+}
+function lineCoeffs(api, name) {
+  if (!existsAs(api, name, "line")) return null;
+  const xml = api.getXML(name);
+  const m = xml && xml.match(/<coords x="([^"]+)" y="([^"]+)" z="([^"]+)"/);
+  if (!m) return null;
+  return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])];
+}
+function perpDirFromCoeffs(c) { return [-c[1], c[0]]; }
+function pointOnLineCoeffs(c, pt, tol) {
+  const norm = Math.hypot(c[0], c[1]) || 1;
+  return Math.abs(c[0]*pt[0] + c[1]*pt[1] + c[2]) / norm <= tol;
+}
+function pointOnThroughXY(p1, p2, pt, tol) {
+  const dx = p2[0]-p1[0], dy = p2[1]-p1[1];
+  const len = Math.hypot(dx, dy) || 1;
+  const cross = (pt[0]-p1[0])*dy - (pt[1]-p1[1])*dx;
+  return Math.abs(cross) / len <= tol;
+}
+function findLine(api, predicate) { return api.getAllObjectNames("line").find(predicate); }
+function hasSegmentOrLineBetween(api, p1, p2) {
+  if (!isPoint(api,p1) || !isPoint(api,p2)) return false;
+  for (const t of ["segment","line"]) {
+    const names = api.getAllObjectNames(t);
+    if (names.some(n => refersTo(definitionOf(api,n), p1) && refersTo(definitionOf(api,n), p2))) return true;
+  }
+  return false;
+}
+function isDistance(api, p1, p2, value, tol=0.3) {
+  if (!isPoint(api,p1) || !isPoint(api,p2)) return false;
+  return approx(dist(XY(api,p1), XY(api,p2)), value, tol);
+}
+function isPerpSegments(api, p1,p2,p3,p4, tolDeg=4) {
+  if (![p1,p2,p3,p4].every(n => isPoint(api,n))) return false;
+  return isPerpDirs(dirFromPoints(XY(api,p1),XY(api,p2)), dirFromPoints(XY(api,p3),XY(api,p4)), tolDeg);
+}
+function isParallelogramPoint(api, ptName, p1, p2, p3, tol=0.35) {
+  if (![ptName,p1,p2,p3].every(n => isPoint(api,n))) return false;
+  const P1=XY(api,p1), P2=XY(api,p2), P3=XY(api,p3);
+  const expected = [P2[0]+P3[0]-P1[0], P2[1]+P3[1]-P1[1]];
+  return dist(XY(api,ptName), expected) <= tol;
+}
+function isMediatrice(api, lineName, p1, p2, tolDeg=4, tolDist=0.15) {
+  const c = lineCoeffs(api, lineName);
+  if (!c || !isPoint(api,p1) || !isPoint(api,p2)) return false;
+  const A = XY(api,p1), B = XY(api,p2);
+  if (!isPerpDirs(dirFromPoints(A,B), perpDirFromCoeffs(c), tolDeg)) return false;
+  const mid = [(A[0]+B[0])/2, (A[1]+B[1])/2];
+  return pointOnLineCoeffs(c, mid, tolDist);
+}
+function isPerpLineThrough(api, lineName, dirP1, dirP2, throughPt, tolDeg=4, tolDist=0.15) {
+  const c = lineCoeffs(api, lineName);
+  if (!c || !isPoint(api,dirP1) || !isPoint(api,dirP2) || !isPoint(api,throughPt)) return false;
+  const dirRef = dirFromPoints(XY(api,dirP1), XY(api,dirP2));
+  if (!isPerpDirs(dirRef, perpDirFromCoeffs(c), tolDeg)) return false;
+  return pointOnLineCoeffs(c, XY(api,throughPt), tolDist);
+}
+function isPointOnLineNamed(api, ptName, lineName, tol=0.15) {
+  if (!isPoint(api,ptName)) return false;
+  const c = lineCoeffs(api, lineName);
+  if (!c) return false;
+  return pointOnLineCoeffs(c, XY(api,ptName), tol);
+}
+function isPointOnThrough(api, ptName, p1, p2, tol=0.15) {
+  if (!isPoint(api,ptName) || !isPoint(api,p1) || !isPoint(api,p2)) return false;
+  return pointOnThroughXY(XY(api,p1), XY(api,p2), XY(api,ptName), tol);
+}
+
+/* ---------- Pool d'exercices (difficulté progressive, médiatrices obligatoires) ---------- */
+const exercicesPool = [
+
+  { niveau: "Niveau 1", titre: "Médiatrice d'un segment",
+    etapes: ["Place deux points A et B.","Trace le segment [AB].",
+      "Trace la médiatrice m du segment [AB].",
+      "Place un point C sur la médiatrice m.","Trace les segments [CA] et [CB]."],
+    steps: [
+      {label:"le point A", check:(api)=>isPoint(api,"A")},
+      {label:"le point B", check:(api)=>isPoint(api,"B")},
+      {label:"le segment [AB]", check:(api)=>hasSegmentOrLineBetween(api,"A","B")},
+      {label:"la médiatrice m du segment [AB]", check:(api)=>isMediatrice(api,"m","A","B")},
+      {label:"le point C, sur la médiatrice m", check:(api)=>isPointOnLineNamed(api,"C","m")},
+      {label:"le segment [CA]", check:(api)=>hasSegmentOrLineBetween(api,"C","A")},
+      {label:"le segment [CB]", check:(api)=>hasSegmentOrLineBetween(api,"C","B")}
+    ]},
+
+  { niveau: "Niveau 1", titre: "Médiatrice et longueur imposée",
+    etapes: ["Place deux points A et B tels que |AB| = 6 cm.",
+      "Trace la médiatrice m du segment [AB].",
+      "Place un point C sur la médiatrice m tel que |AC| = 5 cm.",
+      "Trace les segments [CA] et [CB]."],
+    steps: [
+      {label:"le point A", check:(api)=>isPoint(api,"A")},
+      {label:"le point B", check:(api)=>isPoint(api,"B")},
+      {label:"le segment [AB] de longueur 6 cm", check:(api)=>hasSegmentOrLineBetween(api,"A","B") && isDistance(api,"A","B",6)},
+      {label:"la médiatrice m du segment [AB]", check:(api)=>isMediatrice(api,"m","A","B")},
+      {label:"le point C sur m tel que |AC| = 5 cm", check:(api)=>isPointOnLineNamed(api,"C","m") && isDistance(api,"C","A",5)},
+      {label:"le segment [CA]", check:(api)=>hasSegmentOrLineBetween(api,"C","A")},
+      {label:"le segment [CB]", check:(api)=>hasSegmentOrLineBetween(api,"C","B")}
+    ]},
+
+  { niveau: "Niveau 2", titre: "Cercle circonscrit à un triangle (deux médiatrices)",
+    etapes: ["Place trois points A, B et C.","Trace le triangle ABC (segments [AB], [BC] et [AC]).",
+      "Trace la médiatrice m1 du segment [AB].","Trace la médiatrice m2 du segment [BC].",
+      "Place le point O, intersection de m1 et m2.","Trace le cercle c de centre O passant par A."],
+    steps: [
+      {label:"le point A", check:(api)=>isPoint(api,"A")},
+      {label:"le point B", check:(api)=>isPoint(api,"B")},
+      {label:"le point C", check:(api)=>isPoint(api,"C")},
+      {label:"le segment [AB]", check:(api)=>hasSegmentOrLineBetween(api,"A","B")},
+      {label:"le segment [BC]", check:(api)=>hasSegmentOrLineBetween(api,"B","C")},
+      {label:"le segment [AC]", check:(api)=>hasSegmentOrLineBetween(api,"A","C")},
+      {label:"la médiatrice m1 du segment [AB]", check:(api)=>isMediatrice(api,"m1","A","B")},
+      {label:"la médiatrice m2 du segment [BC]", check:(api)=>isMediatrice(api,"m2","B","C")},
+      {label:"le point O, intersection de m1 et m2", check:(api)=>isPointOnLineNamed(api,"O","m1") && isPointOnLineNamed(api,"O","m2")},
+      {label:"le cercle c de centre O passant par A", check:(api)=>isCircleObj(api,"c") && refersTo(definitionOf(api,"c"),"O") && refersTo(definitionOf(api,"c"),"A")}
+    ]},
+
+  { niveau: "Niveau 2", titre: "Quadrilatère et médiatrice d'une diagonale",
+    etapes: ["Place quatre points A, B, C et D.",
+      "Trace les diagonales [AC] et [BD].",
+      "Trace la médiatrice m du segment [AC].",
+      "Place le point E, intersection de la médiatrice m et de la droite BD."],
+    steps: [
+      {label:"le point A", check:(api)=>isPoint(api,"A")},
+      {label:"le point B", check:(api)=>isPoint(api,"B")},
+      {label:"le point C", check:(api)=>isPoint(api,"C")},
+      {label:"le point D", check:(api)=>isPoint(api,"D")},
+      {label:"le segment [AC]", check:(api)=>hasSegmentOrLineBetween(api,"A","C")},
+      {label:"le segment [BD]", check:(api)=>hasSegmentOrLineBetween(api,"B","D")},
+      {label:"la médiatrice m du segment [AC]", check:(api)=>isMediatrice(api,"m","A","C")},
+      {label:"le point E, intersection de m et de la droite BD", check:(api)=>isPointOnLineNamed(api,"E","m") && isPointOnThrough(api,"E","B","D")}
+    ]},
+
+  { niveau: "Niveau 3", titre: "Rectangle mesuré et médiatrice d'un côté",
+    etapes: ["Place deux points A et B tels que |AB| = 6 cm.",
+      "Trace la droite perpendiculaire à la droite AB passant par B.",
+      "Place un point C sur cette perpendiculaire tel que |BC| = 4 cm.",
+      "Place le point D tel que ABCD soit un rectangle.",
+      "Trace la médiatrice m du segment [AB].",
+      "Place un point F sur la médiatrice m et trace les segments [FA] et [FB]."],
+    steps: [
+      {label:"le point A", check:(api)=>isPoint(api,"A")},
+      {label:"le point B", check:(api)=>isPoint(api,"B")},
+      {label:"le segment [AB] de longueur 6 cm", check:(api)=>hasSegmentOrLineBetween(api,"A","B") && isDistance(api,"A","B",6)},
+      {label:"la droite perpendiculaire à la droite AB passant par B", check:(api)=>!!findLine(api, n=>isPerpLineThrough(api,n,"A","B","B"))},
+      {label:"le point C, sur cette perpendiculaire, tel que |BC| = 4 cm", check:(api)=>{
+          const p = findLine(api, n=>isPerpLineThrough(api,n,"A","B","B"));
+          return !!p && isPointOnLineNamed(api,"C",p) && isDistance(api,"C","B",4);
+        }},
+      {label:"le point D tel que ABCD soit un rectangle", check:(api)=>isParallelogramPoint(api,"D","B","A","C")},
+      {label:"la médiatrice m du segment [AB]", check:(api)=>isMediatrice(api,"m","A","B")},
+      {label:"le point F, sur la médiatrice m", check:(api)=>isPointOnLineNamed(api,"F","m")},
+      {label:"le segment [FA]", check:(api)=>hasSegmentOrLineBetween(api,"F","A")},
+      {label:"le segment [FB]", check:(api)=>hasSegmentOrLineBetween(api,"F","B")}
+    ]},
+
+  { niveau: "Niveau 3", titre: "Triangle isocèle mesuré et deux médiatrices",
+    etapes: ["Place deux points A et B tels que |AB| = 7 cm.",
+      "Trace la médiatrice m1 du segment [AB].",
+      "Place un point C sur m1 tel que |CA| = 6 cm.",
+      "Trace le triangle ABC (segments [AB], [BC] et [AC]).",
+      "Trace la médiatrice m2 du segment [BC].",
+      "Place le point O, intersection de m1 et de m2."],
+    steps: [
+      {label:"le point A", check:(api)=>isPoint(api,"A")},
+      {label:"le point B", check:(api)=>isPoint(api,"B")},
+      {label:"le segment [AB] de longueur 7 cm", check:(api)=>hasSegmentOrLineBetween(api,"A","B") && isDistance(api,"A","B",7)},
+      {label:"la médiatrice m1 du segment [AB]", check:(api)=>isMediatrice(api,"m1","A","B")},
+      {label:"le point C, sur m1, tel que |CA| = 6 cm", check:(api)=>isPointOnLineNamed(api,"C","m1") && isDistance(api,"C","A",6)},
+      {label:"le segment [BC]", check:(api)=>hasSegmentOrLineBetween(api,"B","C")},
+      {label:"le segment [AC]", check:(api)=>hasSegmentOrLineBetween(api,"A","C")},
+      {label:"la médiatrice m2 du segment [BC]", check:(api)=>isMediatrice(api,"m2","B","C")},
+      {label:"le point O, intersection de m1 et de m2", check:(api)=>isPointOnLineNamed(api,"O","m1") && isPointOnLineNamed(api,"O","m2")}
+    ]},
+
+  { niveau: "Niveau 4", titre: "Triangle mesuré, deux médiatrices et cercle circonscrit",
+    etapes: ["Place deux points A et B tels que |AB| = 6 cm.",
+      "Place un point C tel que |BC| = 7 cm.","Trace le triangle ABC.",
+      "Trace la médiatrice m1 du segment [AB].","Trace la médiatrice m2 du segment [BC].",
+      "Place le point O, intersection de m1 et m2.","Trace le cercle c de centre O passant par A."],
+    steps: [
+      {label:"le point A", check:(api)=>isPoint(api,"A")},
+      {label:"le point B", check:(api)=>isPoint(api,"B")},
+      {label:"le segment [AB] de longueur 6 cm", check:(api)=>hasSegmentOrLineBetween(api,"A","B") && isDistance(api,"A","B",6)},
+      {label:"le point C", check:(api)=>isPoint(api,"C")},
+      {label:"le segment [BC] de longueur 7 cm", check:(api)=>hasSegmentOrLineBetween(api,"B","C") && isDistance(api,"B","C",7)},
+      {label:"le segment [AC]", check:(api)=>hasSegmentOrLineBetween(api,"A","C")},
+      {label:"la médiatrice m1 du segment [AB]", check:(api)=>isMediatrice(api,"m1","A","B")},
+      {label:"la médiatrice m2 du segment [BC]", check:(api)=>isMediatrice(api,"m2","B","C")},
+      {label:"le point O, intersection de m1 et m2", check:(api)=>isPointOnLineNamed(api,"O","m1") && isPointOnLineNamed(api,"O","m2")},
+      {label:"le cercle c de centre O passant par A", check:(api)=>isCircleObj(api,"c") && refersTo(definitionOf(api,"c"),"O") && refersTo(definitionOf(api,"c"),"A")}
+    ]},
+
+  { niveau: "Niveau 5", titre: "Rectangle mesuré, perpendiculaires et médiatrice",
+    etapes: ["Trace un rectangle ABCD tel que |AB| = 8 cm et |AD| = 5 cm.",
+      "Trace le segment [AC].",
+      "Trace la droite perpendiculaire à la droite AC passant par B. Elle coupe la droite AC en F et la droite DC en E.",
+      "Trace la médiatrice du segment [AC]. Elle coupe la droite AB en G et la droite DC en H.",
+      "Trace la droite perpendiculaire à la droite AG passant par H."],
+    evaluate: (api) => {
+      const r = [];
+      const chk = (ok, label) => r.push({ok, label});
+
+      const aOk = isPoint(api,"A"); chk(aOk, "le point A");
+      const bOk = isPoint(api,"B"); chk(bOk, "le point B");
+      const dOk = isPoint(api,"D"); chk(dOk, "le point D");
+      chk(aOk && bOk && hasSegmentOrLineBetween(api,"A","B") && isDistance(api,"A","B",8), "le segment [AB] de longueur 8 cm");
+      chk(aOk && bOk && dOk && isPerpSegments(api,"A","B","A","D"), "l'angle droit en A entre [AB] et [AD]");
+      chk(aOk && dOk && hasSegmentOrLineBetween(api,"A","D") && isDistance(api,"A","D",5), "le segment [AD] de longueur 5 cm");
+      const cOk = isPoint(api,"C") && isParallelogramPoint(api,"C","A","B","D");
+      chk(cOk, "le point C tel que ABCD soit un rectangle");
+
+      chk(aOk && cOk && hasSegmentOrLineBetween(api,"A","C"), "le segment [AC]");
+
+      const perp1 = (bOk && aOk && cOk) ? findLine(api, n => isPerpLineThrough(api,n,"A","C","B")) : null;
+      chk(!!perp1, "la droite perpendiculaire à la droite AC passant par B");
+
+      const fOk = !!perp1 && isPointOnLineNamed(api,"F",perp1) && isPointOnThrough(api,"F","A","C");
+      chk(fOk, "le point F, intersection de cette perpendiculaire avec la droite AC");
+
+      const eOk = !!perp1 && isPointOnLineNamed(api,"E",perp1) && isPointOnThrough(api,"E","D","C");
+      chk(eOk, "le point E, intersection de cette perpendiculaire avec la droite DC");
+
+      const medi = (aOk && cOk) ? findLine(api, n => isMediatrice(api, n, "A","C")) : null;
+      chk(!!medi, "la médiatrice du segment [AC]");
+
+      const gOk = !!medi && isPointOnLineNamed(api,"G",medi) && isPointOnThrough(api,"G","A","B");
+      chk(gOk, "le point G, intersection de la médiatrice avec la droite AB");
+
+      const hOk = !!medi && isPointOnLineNamed(api,"H",medi) && isPointOnThrough(api,"H","D","C");
+      chk(hOk, "le point H, intersection de la médiatrice avec la droite DC");
+
+      const perp2 = (gOk && hOk) ? !!findLine(api, n => isPerpLineThrough(api,n,"A","G","H")) : false;
+      chk(perp2, "la droite perpendiculaire à la droite AG passant par H");
+
+      return r;
+    }}
+];
+
+function verifierExercice(api, ex) {
+  if (typeof ex.evaluate === "function") {
+    return ex.evaluate(api).filter(x => !x.ok).map(x => x.label);
+  }
+  const erreurs = [];
+  ex.steps.forEach(step => { if (!step.check(api)) erreurs.push(step.label); });
+  return erreurs;
+}
+
+/* ---------- Gestion de l'affichage et de la progression des exercices ----------
+   Les exercices sont proposés dans l'ordre du tableau exercicesPool, qui est
+   trié par difficulté croissante (Niveau 1 en premier). On avance donc
+   séquentiellement d'un exercice au suivant à chaque clic sur "Nouvel exercice",
+   et on reboucle au début (Niveau 1) une fois le dernier exercice atteint.
+------------------------------------------------------------------------- */
+let indexExerciceCourant = -1;
+function pickExercice() {
+  indexExerciceCourant = (indexExerciceCourant + 1) % exercicesPool.length;
+  exerciceCourant = exercicesPool[indexExerciceCourant];
+  return exerciceCourant;
+}
+
+function afficherExercice(ex) {
+  document.getElementById("niveau-ex").textContent = ex.niveau;
+  document.getElementById("liste-etapes").innerHTML = ex.etapes.map(e => `<li>${e}</li>`).join("");
+}
+
+function verifierConstruction() {
+  if (!applet || !exerciceCourant) return;
+  const erreurs = verifierExercice(applet, exerciceCourant);
+  const msg = document.getElementById("msg-retour");
+  msg.className = "zone-retour-msg " + (erreurs.length === 0 ? "succes" : "erreur");
+  if (erreurs.length === 0) {
+    msg.textContent = "Bravo ! Ta construction respecte le programme demandé.";
+  } else {
+    msg.innerHTML = "Ce n'est pas encore correct. Voici ce qu'il faut revoir :<ul>"
+      + erreurs.map(e => `<li>${e}</li>`).join("")
+      + "</ul>";
+  }
+}
+
+/* ---------- Codage automatique des médiatrices ----------
+   Quand l'élève trace une médiatrice (outil "Médiatrice", avec 2 points
+   ou avec un segment), on ajoute automatiquement :
+   - des marques de longueurs égales (petits traits) sur les deux moitiés
+     du segment coupé,
+   - un carré d'angle droit à l'intersection.
+   Tous les objets ajoutés sont dynamiques (ils suivent les points si on
+   les déplace) et cachés dans la vue Algèbre (labels masqués).
+------------------------------------------------------------------------- */
+function findSegmentPoints(api, segName) {
+  if (!api.exists(segName) || api.getObjectType(segName) !== "segment") return null;
+  const def = (api.getCommandString(segName, false) || "") + " " + (api.getDefinitionString(segName) || "");
+  const m = def.match(/Segment\s*[\(\[]\s*([A-Za-z_][\w']*)\s*,\s*([A-Za-z_][\w']*)/i);
+  return m ? [m[1], m[2]] : null;
+}
+
+function codeMediatrice(api, lineName, p1, p2) {
+  const safe = String(lineName).replace(/[^A-Za-z0-9]/g, "") || "x";
+  const pre = "zzcod" + safe;
+  const foot = pre + "M", helper = pre + "H", s1 = pre + "S1", s2 = pre + "S2", ang = pre + "Ang";
+  if (api.exists(foot)) return; // déjà codée
+  try {
+    api.evalCommand(foot + "=Midpoint(" + p1 + "," + p2 + ")");
+    api.setVisible(foot, false);
+    api.setLabelVisible(foot, false);
+
+    // Point auxiliaire obtenu par rotation de 90° de p1 autour du pied de la médiatrice :
+    // sert uniquement à définir un angle droit dynamique (pas de vecteur/droite superflu affiché).
+    api.evalCommand(helper + "=Rotate(" + p1 + ",90°," + foot + ")");
+    api.setVisible(helper, false);
+    api.setLabelVisible(helper, false);
+
+    api.evalCommand(s1 + "=Segment(" + p1 + "," + foot + ")");
+    api.evalCommand(s2 + "=Segment(" + foot + "," + p2 + ")");
+    api.setLabelVisible(s1, false);
+    api.setLabelVisible(s2, false);
+    // Style de marque (1, 2 ou 3 traits) : différent pour chaque médiatrice de la figure,
+    // afin de ne pas confondre des médiatrices de segments non isométriques codées ensemble.
+    const style = (compteurCodageMediatrices % 3) + 1;
+    compteurCodageMediatrices++;
+    api.evalCommand("SetDecoration(" + s1 + "," + style + ")");
+    api.evalCommand("SetDecoration(" + s2 + "," + style + ")");
+
+    api.evalCommand(ang + "=Angle(" + p1 + "," + foot + "," + helper + ")");
+    api.setLabelVisible(ang, false);
+    api.evalCommand("SetRadius(" + ang + ",0.35)");
+  } catch (e) {
+    console.warn("Codage automatique de la médiatrice impossible pour " + lineName, e);
+  }
+}
+
+/* ---------- Codage automatique des perpendiculaires ----------
+   Même principe que pour les médiatrices, mais avec une détection
+   GÉOMÉTRIQUE plutôt que basée sur le texte de la commande : on ne peut pas
+   se fier au nom exact de la commande GeoGebra (elle apparaît sous des
+   formes différentes — "Perpendicular", "PerpendicularLine",
+   "Perpendiculaire"... — selon l'outil et la version utilisés). À la place,
+   dès qu'une nouvelle droite est tracée, on regarde si sa direction est
+   perpendiculaire à celle d'une droite ou d'un segment déjà existant dans
+   la figure ; si oui, on ajoute un petit carré d'angle droit dynamique à
+   leur intersection.
+   Astuce de construction : on prend un point sur la nouvelle droite à 1
+   unité de l'intersection (via UnitVector, donc toujours dynamique), et on
+   le fait tourner de 90° autour de l'intersection. Comme la perpendicularité
+   est vraie par construction, ce point tourné tombe exactement sur la
+   droite de référence, ce qui permet à GeoGebra d'afficher automatiquement
+   le petit carré d'angle droit (comme pour les médiatrices).
+------------------------------------------------------------------------- */
+function lineDirectionVector(api, name) {
+  if (!api.exists(name)) return null;
+  const t = api.getObjectType(name);
+  if (t === "line") {
+    const c = lineCoeffs(api, name);
+    return c ? perpDirFromCoeffs(c) : null;
+  }
+  if (t === "segment") {
+    const pts = findSegmentPoints(api, name);
+    if (pts && isPoint(api, pts[0]) && isPoint(api, pts[1])) {
+      return dirFromPoints(XY(api, pts[0]), XY(api, pts[1]));
+    }
+  }
+  return null;
+}
+
+function findPerpendicularPartner(api, name, tolDeg = 3) {
+  const dir1 = lineDirectionVector(api, name);
+  if (!dir1) return null;
+  const candidats = [...api.getAllObjectNames("line"), ...api.getAllObjectNames("segment")];
+  for (const cand of candidats) {
+    if (cand === name) continue;
+    const dir2 = lineDirectionVector(api, cand);
+    if (dir2 && isPerpDirs(dir1, dir2, tolDeg)) return cand;
+  }
+  return null;
+}
+
+function codePerpendiculaire(api, lineName, refName) {
+  const safe = String(lineName).replace(/[^A-Za-z0-9]/g, "") || "p";
+  const pre = "zzcodP" + safe;
+  const inter = pre + "I", pOnLine = pre + "P", helper = pre + "H", ang = pre + "Ang";
+  if (api.exists(inter)) return; // déjà codée
+  try {
+    api.evalCommand(inter + "=Intersect(" + lineName + "," + refName + ")");
+    if (!api.exists(inter) || api.getObjectType(inter) !== "point") {
+      if (api.exists(inter)) api.deleteObject(inter);
+      return;
+    }
+    api.setVisible(inter, false);
+    api.setLabelVisible(inter, false);
+
+    // Point dynamique sur la nouvelle droite, à 1 unité de l'intersection.
+    api.evalCommand(pOnLine + "=" + inter + "+UnitVector(" + lineName + ")");
+    api.setVisible(pOnLine, false);
+    api.setLabelVisible(pOnLine, false);
+
+    api.evalCommand(helper + "=Rotate(" + pOnLine + ",90°," + inter + ")");
+    api.setVisible(helper, false);
+    api.setLabelVisible(helper, false);
+
+    api.evalCommand(ang + "=Angle(" + pOnLine + "," + inter + "," + helper + ")");
+    api.setLabelVisible(ang, false);
+    api.evalCommand("SetRadius(" + ang + ",0.35)");
+  } catch (e) {
+    console.warn("Codage automatique de la perpendicularité impossible pour " + lineName, e);
+  }
+}
+
+function autoCodeIfPerpendiculaire(api, name) {
+  if (api.getObjectType(name) !== "line") return;
+  const safe = String(name).replace(/[^A-Za-z0-9]/g, "") || "x";
+  if (api.exists("zzcod" + safe + "M")) return; // déjà codée comme médiatrice, pas de doublon
+  const ref = findPerpendicularPartner(api, name);
+  if (ref) codePerpendiculaire(api, name, ref);
+}
+
+function autoCodeIfMediatrice(api, name) {
+  if (api.getObjectType(name) !== "line") return;
+  const def = (api.getCommandString(name, false) || "") + " " + (api.getDefinitionString(name) || "");
+  let p1 = null, p2 = null;
+  // GeoGebra peut renvoyer la commande sous plusieurs formes selon la version :
+  // "Médiatrice(A, B)", "PerpendicularBisector(A, B)" ou (forme historique) "LineBisector[A, B]" / "LineBisector[f]".
+  const m2 = def.match(/(?:M[ée]diatrice|PerpendicularBisector|LineBisector)\s*[\(\[]\s*([A-Za-z_][\w']*)\s*,\s*([A-Za-z_][\w']*)\s*[\)\]]/i);
+  if (m2) {
+    p1 = m2[1]; p2 = m2[2];
+  } else {
+    const m1 = def.match(/(?:M[ée]diatrice|PerpendicularBisector|LineBisector)\s*[\(\[]\s*([A-Za-z_][\w']*)\s*[\)\]]/i);
+    if (m1) {
+      const pts = findSegmentPoints(api, m1[1]);
+      if (pts) { p1 = pts[0]; p2 = pts[1]; }
+    }
+  }
+  if (p1 && p2 && api.exists(p1) && api.exists(p2)) {
+    codeMediatrice(api, name, p1, p2);
+  }
+}
+
+function chargerNouvelExercice() {
+  if (!applet) return;
+  applet.newConstruction();
+  applet.setAxesVisible(false, false);
+  applet.setGridVisible(false);
+  applet.setCoordSystem(-2, 14, -2, 10);
+  applet.evalCommand("SetAxesRatio(1,1)");
+  compteurCodageMediatrices = 0;
+  document.getElementById("msg-retour").style.display = "none";
+  afficherExercice(pickExercice());
+}
+
+function initGGB() {
+  new GGBApplet({
+    appName: "classic",
+    perspective: "G",
+    width: document.getElementById("ggb-container").clientWidth,
+    height: document.getElementById("ggb-container").clientHeight,
+    showToolBar: true,
+    showAlgebraInput: false,
+    algebraOpen: false,
+    showMenuBar: false,
+    language: "fr",
+    appletOnLoad: (api) => {
+      applet = api;
+      applet.setAxesVisible(false, false);
+      applet.setGridVisible(false);
+      applet.setCoordSystem(-2, 14, -2, 10);
+      applet.evalCommand("SetAxesRatio(1,1)");
+      applet.setErrorDialogsActive(false);
+      applet.registerAddListener(name => {
+        applet.setLabelVisible(name, true);
+        autoCodeIfMediatrice(applet, name);
+        autoCodeIfPerpendiculaire(applet, name);
+      });
+      afficherExercice(pickExercice());
+    }
+  }, true).inject("ggb-container");
+}
+
+window.onload = initGGB;
+</script>
+</body>
+</html>
