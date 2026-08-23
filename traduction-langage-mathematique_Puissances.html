@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traduire en langage mathématique</title>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #22c55e;
+      --error: #ef4444;
+      --amber: #f59e0b;
+      --line: #dbe3f4;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+    }
+    button, select, input { font: inherit; }
+    button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.4);
+      outline-offset: 3px;
+    }
+    .app-shell {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.14), transparent 24rem),
+        linear-gradient(180deg, var(--slate) 0 15rem, var(--paper) 15rem 100%);
+    }
+    .main-width { width: min(100% - 2rem, 840px); margin-inline: auto; }
+    .hero { padding: 2.6rem 0 2rem; color: white; }
+    .hero-title { margin: 0; letter-spacing: -0.03em; font-weight: 800; font-size: clamp(1.7rem, 4.6vw, 2.3rem); }
+    .hero-subtitle { max-width: 40rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+    .content { padding-bottom: 4rem; }
+
+    .score-panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: -0.6rem;
+      padding: 1.25rem;
+    }
+    .score-values { min-width: 150px; }
+    .score-line { font-size: 0.88rem; color: var(--muted); }
+    .score-line strong { display: block; font-weight: 800; font-size: 1.5rem; color: var(--indigo); }
+    .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+    .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+    .section-block { margin-top: 2.4rem; }
+    .section-heading { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+    .section-number {
+      flex: none;
+      width: 2.1rem; height: 2.1rem;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+    }
+    .section-title { margin: 0; font-size: 1.15rem; font-weight: 800; }
+    .section-instructions { margin: 0 0 1.1rem 0; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+    .exercise-list { display: grid; gap: 1rem; }
+    .exercise-card {
+      background: white;
+      padding: 1.25rem 1.3rem;
+      border: 2px solid transparent;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      transition: border-color 180ms ease;
+    }
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-incorrect { border-color: var(--error); }
+    .exercise-card.is-shaking { animation: shake 340ms ease; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+    }
+
+    .item-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 0 0 0.5rem; }
+    .phrase-text { font-size: 1.03rem; font-weight: 650; line-height: 1.5; margin: 0 0 0.9rem; }
+
+    .answer-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+    .answer-row .answer-tag { font-family: "Courier New", monospace; font-weight: 700; color: var(--muted); }
+    .answer-input {
+      flex: 1;
+      min-width: 220px;
+      min-height: 42px;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #192238;
+    }
+    .answer-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+    .exp-picker {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      border: 2px dashed var(--line);
+      border-radius: 14px;
+      padding: 0.65rem 0.8rem;
+      background: #f8faff;
+      margin-bottom: 0.9rem;
+    }
+    .exp-picker-label { font-weight: 800; color: var(--indigo-dark); font-size: 0.9rem; white-space: nowrap; margin-right: 0.15rem; }
+    .exp-btn {
+      min-width: 36px;
+      min-height: 36px;
+      border: 1px solid #ccd6ee;
+      border-radius: 10px;
+      background: white;
+      color: var(--indigo-dark);
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
+    }
+    .exp-btn:hover:not(:disabled) { background: #eef2ff; border-color: var(--indigo); transform: translateY(-1px); }
+    .exp-btn:active:not(:disabled) { transform: translateY(0); }
+    .exp-btn:disabled, .exp-btn.is-disabled { cursor: default; opacity: 0.55; }
+
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .feedback { margin: 0; font-size: 0.9rem; font-weight: 650; flex: 1; min-width: 200px; }
+    .feedback.correct { color: var(--success); }
+    .feedback.incorrect { color: var(--error); }
+
+    .validate-button {
+      min-height: 40px;
+      padding: 0.6rem 1rem;
+      border: 0;
+      border-radius: 10px;
+      background: var(--indigo);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+    .correction {
+      display: none;
+      margin-top: 0.9rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      background: #fff7e7;
+      color: #8a5200;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+    .correction.is-visible { display: block; }
+    .correction strong { display: block; margin-bottom: 0.25rem; }
+
+    .footer-actions { margin-top: 2.6rem; text-align: center; }
+    .restart-button {
+      min-height: 46px;
+      padding: 0.75rem 1.3rem;
+      border: 0;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    @media (max-width: 620px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .card-actions { flex-direction: column; align-items: stretch; }
+      .validate-button { width: 100%; }
+      .section-instructions { margin-left: 0; }
+      .exp-picker-label { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="main-width">
+        <h1 class="hero-title">Traduire une phrase en langage mathématique</h1>
+        <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;background:#4f6ef7;color:white;border:0;">Nouveaux exercices</button>
+      </div>
+    </header>
+    <main class="main-width content">
+      <section class="score-panel" aria-labelledby="score-caption">
+        <div class="score-values" aria-live="polite">
+          <div class="score-line"><strong id="resolved-score">0 / 0</strong>corrigés</div>
+        </div>
+        <div>
+          <p id="score-caption" class="score-label">Progression</p>
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 1 -->
+      <section class="section-block">
+        <div class="section-heading">
+          <h2 class="section-title">Traduis en langage mathématique</h2>
+        </div>
+        <p class="section-instructions">Pour chaque phrase, écris l'expression mathématique correspondante dans la case réponse.</p>
+        <div id="section1-list" class="exercise-list"></div>
+      </section>
+
+    </main>
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script>
+    const state = { resolved: 0, total: 0 };
+    const liveRegion = document.getElementById("live-region");
+    const resolvedScore = document.getElementById("resolved-score");
+    const progressTrack = document.getElementById("progress-track");
+    const progressFill = document.getElementById("progress-fill");
+
+    function announce(message) {
+      liveRegion.textContent = "";
+      window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+    }
+
+    function updateGlobalScore() {
+      resolvedScore.textContent = `${state.resolved} / ${state.total}`;
+      const pct = state.total ? (state.resolved / state.total) * 100 : 0;
+      progressFill.style.width = `${pct}%`;
+      progressTrack.setAttribute("aria-valuemax", String(state.total));
+      progressTrack.setAttribute("aria-valuenow", String(state.resolved));
+    }
+
+    function markResolved() {
+      state.resolved += 1;
+      updateGlobalScore();
+    }
+
+    // ---------- Utilitaires aléatoires ----------
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    function randChoice(arr) {
+      return arr[randInt(0, arr.length - 1)];
+    }
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+    function pickRandom(bank, count) {
+      return shuffle(bank).slice(0, count);
+    }
+    function letterLabel(index) {
+      return `${String.fromCharCode(97 + index)})`;
+    }
+    function randPair(min = 2, max = 12) {
+      const a = randInt(min, max);
+      let b = randInt(min, max);
+      while (b === a) b = randInt(min, max);
+      return [a, b];
+    }
+    function randOrderedPair(min = 2, max = 12) {
+      let [a, b] = randPair(min, max);
+      if (b > a) [a, b] = [b, a];
+      return [a, b];
+    }
+
+    function cardActions() {
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      const validateBtn = document.createElement("button");
+      validateBtn.className = "validate-button";
+      validateBtn.type = "button";
+      validateBtn.textContent = "Vérifier";
+      actions.appendChild(feedback);
+      actions.appendChild(validateBtn);
+      return { actions, feedback, validateBtn };
+    }
+
+    function finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, isCorrectFn, maxAttempts = 3) {
+      let attempts = 0;
+      const validate = () => {
+        if (resolvedRef.done) return;
+        if (allInputs.some((el) => el.value === "")) {
+          feedback.textContent = "Complète la case avant de vérifier.";
+          feedback.className = "feedback";
+          return;
+        }
+
+        attempts += 1;
+        const isCorrect = isCorrectFn();
+
+        if (isCorrect) {
+          resolvedRef.done = true;
+          markResolved();
+          allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+          validateBtn.disabled = true;
+          card.classList.add("is-correct");
+          feedback.className = "feedback correct";
+          feedback.textContent = "Bonne réponse !";
+          announce("Bonne réponse.");
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          resolvedRef.done = true;
+          markResolved();
+          allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+          validateBtn.disabled = true;
+          card.classList.add("is-incorrect");
+          feedback.className = "feedback incorrect";
+          feedback.textContent = "Ce n'est pas tout à fait ça, regarde la correction.";
+          correction.classList.add("is-visible");
+          announce("Réponse incorrecte, correction affichée.");
+          return;
+        }
+
+        const remaining = maxAttempts - attempts;
+        feedback.className = "feedback incorrect";
+        feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+        card.classList.remove("is-shaking");
+        void card.offsetWidth;
+        card.classList.add("is-shaking");
+        announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+      };
+      return validate;
+    }
+
+    // ---------- Clavier « Exposant » ----------
+    const SUP_DIGITS = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"];
+
+    function insertAtCursor(input, text) {
+      input.focus();
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, start) + text + input.value.slice(end);
+      const newPos = start + text.length;
+      input.setSelectionRange(newPos, newPos);
+    }
+
+    function buildExponentPicker(input) {
+      const wrap = document.createElement("div");
+      wrap.className = "exp-picker";
+      const label = document.createElement("span");
+      label.className = "exp-picker-label";
+      label.textContent = "Exposant :";
+      wrap.appendChild(label);
+      const buttons = [];
+      for (let d = 0; d <= 9; d += 1) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "exp-btn";
+        btn.textContent = String(d);
+        btn.setAttribute("aria-label", `Insérer l'exposant ${d}`);
+        btn.addEventListener("click", () => insertAtCursor(input, SUP_DIGITS[d]));
+        buttons.push(btn);
+        wrap.appendChild(btn);
+      }
+      return { element: wrap, buttons };
+    }
+
+    // Normalise une expression pour la comparaison : espaces retirés, x/×/* -> "."
+    function normalizeExpr(s) {
+      return String(s).replace(/\s+/g, "").replace(/[×xX*]/g, ".");
+    }
+
+    // ---------- Banque de phrases à traduire (catégories génératrices) ----------
+    const ORDINAL_PUISSANCE = {
+      2: "deuxième", 3: "troisième", 4: "quatrième", 5: "cinquième",
+      6: "sixième", 7: "septième", 8: "huitième", 9: "neuvième"
+    };
+    function ordinalPuissance(k) {
+      return ORDINAL_PUISSANCE[k] || `${k}e`;
+    }
+    function catSquare() {
+      const a = randInt(2, 12);
+      return { phrase: `Le carré de ${a}`, variants: [`${a}${SUP_DIGITS[2]}`] };
+    }
+    function catCube() {
+      const a = randInt(2, 12);
+      return { phrase: `Le cube de ${a}`, variants: [`${a}${SUP_DIGITS[3]}`] };
+    }
+    function catPower() {
+      const a = randInt(2, 12);
+      const k = randInt(2, 9);
+      const sup = k.toString().split("").map((d) => SUP_DIGITS[Number(d)]).join("");
+      return { phrase: `La ${ordinalPuissance(k)} puissance de ${a}`, variants: [`${a}${sup}`] };
+    }
+    function catDouble() {
+      const a = randInt(2, 15);
+      return { phrase: `Le double de ${a}`, variants: [`2.${a}`, `${a}.2`] };
+    }
+    function catTriple() {
+      const a = randInt(2, 15);
+      return { phrase: `Le triple de ${a}`, variants: [`3.${a}`, `${a}.3`] };
+    }
+    function catQuadruple() {
+      const a = randInt(2, 15);
+      return { phrase: `Le quadruple de ${a}`, variants: [`4.${a}`, `${a}.4`] };
+    }
+    function catDoubleSquare() {
+      const a = randInt(2, 10);
+      return { phrase: `Le double du carré de ${a}`, variants: [`2.${a}${SUP_DIGITS[2]}`, `${a}${SUP_DIGITS[2]}.2`] };
+    }
+    function catSquareDouble() {
+      const a = randInt(2, 10);
+      return { phrase: `Le carré du double de ${a}`, variants: [`(2.${a})${SUP_DIGITS[2]}`, `(${a}.2)${SUP_DIGITS[2]}`] };
+    }
+    function catTripleCube() {
+      const a = randInt(2, 8);
+      return { phrase: `Le triple du cube de ${a}`, variants: [`3.${a}${SUP_DIGITS[3]}`, `${a}${SUP_DIGITS[3]}.3`] };
+    }
+    function catCubeTriple() {
+      const a = randInt(2, 8);
+      return { phrase: `Le cube du triple de ${a}`, variants: [`(3.${a})${SUP_DIGITS[3]}`, `(${a}.3)${SUP_DIGITS[3]}`] };
+    }
+    function catSum() {
+      const [a, b] = randPair();
+      return { phrase: `La somme de ${a} et de ${b}`, variants: [`${a}+${b}`, `${b}+${a}`] };
+    }
+    function catDifference() {
+      const [a, b] = randOrderedPair();
+      return { phrase: `La différence entre ${a} et ${b}`, variants: [`${a}-${b}`] };
+    }
+    function catProduct() {
+      const [a, b] = randPair();
+      return { phrase: `Le produit de ${a} et de ${b}`, variants: [`${a}.${b}`, `${b}.${a}`] };
+    }
+    function catDoubleSum() {
+      const [a, b] = randPair();
+      return {
+        phrase: `Le double de la somme de ${a} et de ${b}`,
+        variants: [`2.(${a}+${b})`, `2.(${b}+${a})`, `(${a}+${b}).2`, `(${b}+${a}).2`]
+      };
+    }
+    function catTripleSum() {
+      const [a, b] = randPair();
+      return {
+        phrase: `Le triple de la somme de ${a} et de ${b}`,
+        variants: [`3.(${a}+${b})`, `3.(${b}+${a})`, `(${a}+${b}).3`, `(${b}+${a}).3`]
+      };
+    }
+    function catSquareSum() {
+      const [a, b] = randPair();
+      return { phrase: `Le carré de la somme de ${a} et de ${b}`, variants: [`(${a}+${b})${SUP_DIGITS[2]}`, `(${b}+${a})${SUP_DIGITS[2]}`] };
+    }
+    function catCubeSum() {
+      const [a, b] = randPair();
+      return { phrase: `Le cube de la somme de ${a} et de ${b}`, variants: [`(${a}+${b})${SUP_DIGITS[3]}`, `(${b}+${a})${SUP_DIGITS[3]}`] };
+    }
+    function catSumOfSquares() {
+      const [a, b] = randPair();
+      return {
+        phrase: `La somme des carrés de ${a} et de ${b}`,
+        variants: [`${a}${SUP_DIGITS[2]}+${b}${SUP_DIGITS[2]}`, `${b}${SUP_DIGITS[2]}+${a}${SUP_DIGITS[2]}`]
+      };
+    }
+    function catSumOfCubes() {
+      const [a, b] = randPair();
+      return {
+        phrase: `La somme des cubes de ${a} et de ${b}`,
+        variants: [`${a}${SUP_DIGITS[3]}+${b}${SUP_DIGITS[3]}`, `${b}${SUP_DIGITS[3]}+${a}${SUP_DIGITS[3]}`]
+      };
+    }
+    function catTripleSumOfCubes() {
+      const [a, b] = randPair();
+      const v1 = `${a}${SUP_DIGITS[3]}+${b}${SUP_DIGITS[3]}`;
+      const v2 = `${b}${SUP_DIGITS[3]}+${a}${SUP_DIGITS[3]}`;
+      return {
+        phrase: `Le triple de la somme des cubes de ${a} et de ${b}`,
+        variants: [`3.(${v1})`, `3.(${v2})`, `(${v1}).3`, `(${v2}).3`]
+      };
+    }
+    function catTripleCubeSum() {
+      const [a, b] = randPair();
+      return {
+        phrase: `Le triple du cube de la somme de ${a} et de ${b}`,
+        variants: [
+          `3.(${a}+${b})${SUP_DIGITS[3]}`, `3.(${b}+${a})${SUP_DIGITS[3]}`,
+          `(${a}+${b})${SUP_DIGITS[3]}.3`, `(${b}+${a})${SUP_DIGITS[3]}.3`
+        ]
+      };
+    }
+    function catSquareOfProduct() {
+      const [a, b] = randPair();
+      return { phrase: `Le carré du produit de ${a} et de ${b}`, variants: [`(${a}.${b})${SUP_DIGITS[2]}`, `(${b}.${a})${SUP_DIGITS[2]}`] };
+    }
+    function catDoubleProduct() {
+      const [a, b] = randPair();
+      const perms = [[2, a, b], [2, b, a], [a, b, 2], [b, a, 2], [a, 2, b], [b, 2, a]];
+      return { phrase: `Le double du produit de ${a} et de ${b}`, variants: perms.map((p) => p.join(".")) };
+    }
+    function catSquareDifference() {
+      const [a, b] = randOrderedPair();
+      return { phrase: `Le carré de la différence entre ${a} et ${b}`, variants: [`(${a}-${b})${SUP_DIGITS[2]}`] };
+    }
+    function catDifferenceOfSquares() {
+      const [a, b] = randOrderedPair();
+      return { phrase: `La différence des carrés de ${a} et de ${b}`, variants: [`${a}${SUP_DIGITS[2]}-${b}${SUP_DIGITS[2]}`] };
+    }
+    function catCubeDouble() {
+      const a = randInt(2, 10);
+      return { phrase: `Le cube du double de ${a}`, variants: [`(2.${a})${SUP_DIGITS[3]}`, `(${a}.2)${SUP_DIGITS[3]}`] };
+    }
+    function catQuadrupleSquare() {
+      const a = randInt(2, 10);
+      return { phrase: `Le quadruple du carré de ${a}`, variants: [`4.${a}${SUP_DIGITS[2]}`, `${a}${SUP_DIGITS[2]}.4`] };
+    }
+    function catSquareQuadruple() {
+      const a = randInt(2, 10);
+      return { phrase: `Le carré du quadruple de ${a}`, variants: [`(4.${a})${SUP_DIGITS[2]}`, `(${a}.4)${SUP_DIGITS[2]}`] };
+    }
+    function catQuadrupleCube() {
+      const a = randInt(2, 8);
+      return { phrase: `Le quadruple du cube de ${a}`, variants: [`4.${a}${SUP_DIGITS[3]}`, `${a}${SUP_DIGITS[3]}.4`] };
+    }
+    function catCubeQuadruple() {
+      const a = randInt(2, 8);
+      return { phrase: `Le cube du quadruple de ${a}`, variants: [`(4.${a})${SUP_DIGITS[3]}`, `(${a}.4)${SUP_DIGITS[3]}`] };
+    }
+    function catPowerOfDouble() {
+      const a = randInt(2, 8);
+      const k = randInt(4, 6);
+      const sup = SUP_DIGITS[k];
+      return { phrase: `La ${ordinalPuissance(k)} puissance du double de ${a}`, variants: [`(2.${a})${sup}`, `(${a}.2)${sup}`] };
+    }
+    function catQuadrupleSum() {
+      const [a, b] = randPair();
+      return {
+        phrase: `Le quadruple de la somme de ${a} et de ${b}`,
+        variants: [`4.(${a}+${b})`, `4.(${b}+${a})`, `(${a}+${b}).4`, `(${b}+${a}).4`]
+      };
+    }
+    function catQuadrupleSquareSum() {
+      const a = randInt(2, 12), b = randInt(2, 12);
+      return { phrase: `Le quadruple de la somme des carrés de ${a} et de ${b}`,
+        variants: buildScaledSumVariants(4, a, b, 2) };
+    }
+    function catQuadrupleSumOfCubes() {
+      const a = randInt(2, 10), b = randInt(2, 10);
+      return { phrase: `Le quadruple de la somme des cubes de ${a} et de ${b}`,
+        variants: buildScaledSumVariants(4, a, b, 3) };
+    }
+    function buildScaledSumVariants(mult, a, b, exp) {
+      const sup = SUP_DIGITS[exp];
+      const v1 = `${a}${sup}+${b}${sup}`;
+      const v2 = `${b}${sup}+${a}${sup}`;
+      return [`${mult}.(${v1})`, `${mult}.(${v2})`, `(${v1}).${mult}`, `(${v2}).${mult}`];
+    }
+    function catProductOfSquares() {
+      const [a, b] = randPair();
+      return {
+        phrase: `Le produit des carrés de ${a} et de ${b}`,
+        variants: [`${a}${SUP_DIGITS[2]}.${b}${SUP_DIGITS[2]}`, `${b}${SUP_DIGITS[2]}.${a}${SUP_DIGITS[2]}`]
+      };
+    }
+    function catProductOfCubes() {
+      const [a, b] = randPair();
+      return {
+        phrase: `Le produit des cubes de ${a} et de ${b}`,
+        variants: [`${a}${SUP_DIGITS[3]}.${b}${SUP_DIGITS[3]}`, `${b}${SUP_DIGITS[3]}.${a}${SUP_DIGITS[3]}`]
+      };
+    }
+    function catDifferenceOfCubes() {
+      const [a, b] = randOrderedPair();
+      return { phrase: `La différence des cubes de ${a} et de ${b}`, variants: [`${a}${SUP_DIGITS[3]}-${b}${SUP_DIGITS[3]}`] };
+    }
+    function catCubeOfProduct() {
+      const [a, b] = randPair();
+      return { phrase: `Le cube du produit de ${a} et de ${b}`, variants: [`(${a}.${b})${SUP_DIGITS[3]}`, `(${b}.${a})${SUP_DIGITS[3]}`] };
+    }
+    function catCubeDifference() {
+      const [a, b] = randOrderedPair();
+      return { phrase: `Le cube de la différence entre ${a} et ${b}`, variants: [`(${a}-${b})${SUP_DIGITS[3]}`] };
+    }
+    function catPowerOfSum() {
+      const [a, b] = randPair();
+      const k = randInt(4, 6);
+      const sup = SUP_DIGITS[k];
+      return { phrase: `La ${ordinalPuissance(k)} puissance de la somme de ${a} et de ${b}`, variants: [`(${a}+${b})${sup}`, `(${b}+${a})${sup}`] };
+    }
+    function catPowerOfDifference() {
+      const [a, b] = randOrderedPair();
+      const k = randInt(4, 6);
+      return { phrase: `La ${ordinalPuissance(k)} puissance de la différence entre ${a} et ${b}`, variants: [`(${a}-${b})${SUP_DIGITS[k]}`] };
+    }
+    function catPowerOfProduct() {
+      const [a, b] = randPair();
+      const k = randInt(4, 6);
+      const sup = SUP_DIGITS[k];
+      return { phrase: `La ${ordinalPuissance(k)} puissance du produit de ${a} et de ${b}`, variants: [`(${a}.${b})${sup}`, `(${b}.${a})${sup}`] };
+    }
+
+    // Catégories qui font intervenir un exposant : très largement favorisées dans le tirage.
+    const POWER_CATEGORIES = [
+      catSquare, catCube, catPower, catPower,
+      catDoubleSquare, catSquareDouble, catTripleCube, catCubeTriple,
+      catCubeDouble, catQuadrupleSquare, catSquareQuadruple, catQuadrupleCube, catCubeQuadruple,
+      catPowerOfDouble, catSquareSum, catCubeSum, catSumOfSquares, catSumOfCubes,
+      catTripleSumOfCubes, catTripleCubeSum, catQuadrupleSquareSum, catQuadrupleSumOfCubes,
+      catSquareOfProduct, catCubeOfProduct, catProductOfSquares, catProductOfCubes,
+      catSquareDifference, catCubeDifference, catDifferenceOfSquares, catDifferenceOfCubes,
+      catPowerOfSum, catPowerOfDifference, catPowerOfProduct
+    ];
+    // Catégories sans exposant : gardées en petite proportion pour la variété.
+    const PLAIN_CATEGORIES = [
+      catDouble, catTriple, catQuadruple, catSum, catDifference, catProduct,
+      catDoubleSum, catTripleSum, catQuadrupleSum, catDoubleProduct
+    ];
+
+    function genTranslationItem() {
+      const bank = Math.random() < 0.8 ? POWER_CATEGORIES : PLAIN_CATEGORIES;
+      const fn = randChoice(bank);
+      return fn();
+    }
+
+    const SECTION1_POOL_SIZE = 100;
+    const SECTION1_COUNT = 5;
+
+    function buildTranslationCard(container, item, label) {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+
+      const itemLabel = document.createElement("p");
+      itemLabel.className = "item-label";
+      itemLabel.textContent = label;
+      card.appendChild(itemLabel);
+
+      const phrase = document.createElement("p");
+      phrase.className = "phrase-text";
+      phrase.textContent = `${item.phrase} :`;
+      card.appendChild(phrase);
+
+      const answerRow = document.createElement("div");
+      answerRow.className = "answer-row";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "answer-input";
+      input.setAttribute("autocomplete", "off");
+      input.setAttribute("autocapitalize", "off");
+      input.setAttribute("spellcheck", "false");
+      input.setAttribute("aria-label", `Traduction mathématique de : ${item.phrase}`);
+      input.addEventListener("input", () => {
+        if (input.value.includes("^")) {
+          const pos = input.selectionStart;
+          input.value = input.value.replace(/\^/g, "");
+          input.setSelectionRange(Math.max(0, pos - 1), Math.max(0, pos - 1));
+        }
+      });
+      answerRow.appendChild(input);
+      card.appendChild(answerRow);
+
+      const picker = buildExponentPicker(input);
+      card.appendChild(picker.element);
+
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Réponse attendue :</strong>${item.variants[0]}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const baseValidate = finalizeCard(card, resolvedRef, [input], feedback, validateBtn, correction, () => {
+        const norm = normalizeExpr(input.value);
+        return item.variants.some((v) => normalizeExpr(v) === norm);
+      });
+      validateBtn.addEventListener("click", () => {
+        baseValidate();
+        if (resolvedRef.done) {
+          picker.buttons.forEach((b) => { b.disabled = true; b.classList.add("is-disabled"); });
+        }
+      });
+
+      container.appendChild(card);
+    }
+
+    function buildSection1() {
+      const container = document.getElementById("section1-list");
+      const pool = Array.from({ length: SECTION1_POOL_SIZE }, genTranslationItem);
+      const items = pickRandom(pool, SECTION1_COUNT);
+      items.forEach((item, index) => buildTranslationCard(container, item, letterLabel(index)));
+      return items.length;
+    }
+
+    function buildAll() {
+      document.getElementById("section1-list").replaceChildren();
+      state.resolved = 0;
+      state.total = buildSection1();
+      updateGlobalScore();
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const active = document.activeElement;
+      if (!active || active.tagName !== "INPUT") return;
+      const card = active.closest(".exercise-card");
+      if (!card) return;
+      const validateBtn = card.querySelector(".validate-button");
+      if (validateBtn && !validateBtn.disabled) {
+        event.preventDefault();
+        validateBtn.click();
+      }
+    });
+
+    document.getElementById("new-exercises-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+    });
+
+    buildAll();
+  </script>
+</body>
+</html>
