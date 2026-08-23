@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Du système métrique aux puissances de 10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --slate: #1e2a3a;
+    --paper: #f0f4ff;
+    --ink: #172033;
+    --muted: #64748b;
+    --indigo: #4f6ef7;
+    --indigo-dark: #3f57d9;
+    --success: #22c55e;
+    --error: #ef4444;
+    --amber: #f59e0b;
+    --line: #dbe3f4;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--ink);
+  }
+  button, select, input { font: inherit; }
+  button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid rgba(79, 110, 247, 0.4);
+    outline-offset: 3px;
+  }
+  .app-shell {
+    min-height: 100%;
+    background:
+      radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 24rem),
+      linear-gradient(180deg, var(--slate) 0 15rem, var(--paper) 15rem 100%);
+  }
+  .main-width { width: min(100% - 2rem, 780px); margin-inline: auto; }
+  .hero { padding: 2.6rem 0 2rem; color: white; }
+  .hero-title { margin: 0; font-family: "Syne", sans-serif; letter-spacing: 0.01em; font-weight: 700; font-size: clamp(1.5rem, 4.2vw, 2.1rem); line-height: 1.25; }
+  .hero-subtitle { max-width: 42rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+  .content { padding-bottom: 4rem; }
+
+  .score-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: -0.6rem;
+    padding: 1.25rem;
+  }
+  .score-values { min-width: 150px; }
+  .score-line { font-size: 0.88rem; color: var(--muted); }
+  .score-line strong { display: block; font-family: "Syne", sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--indigo); }
+  .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+  .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+  .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+  .example-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(30, 42, 58, 0.08);
+    padding: 1.4rem 1.5rem;
+    margin-top: 1.4rem;
+  }
+  .example-title { margin: 0 0 0.8rem; font-family: "Syne", sans-serif; font-weight: 700; font-size: 1.05rem; line-height: 1.3; }
+  .prefix-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .prefix-table th, .prefix-table td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); }
+  .prefix-table th { color: var(--muted); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .prefix-table td.power { font-family: "Courier New", monospace; font-weight: 700; color: var(--indigo-dark); }
+  .rule-box {
+    margin-top: 1.1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    background: #fff7e7;
+    color: #8a5200;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .rule-box strong { display: block; margin-bottom: 0.25rem; }
+
+  .section-block { margin-top: 2.6rem; }
+  .section-heading-row { display: flex; align-items: baseline; gap: 0.9rem; }
+  .section-kicker {
+    margin: 0;
+    font-family: "Syne", sans-serif;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--indigo-dark);
+  }
+  .section-title { margin: 0.3rem 0 0; font-family: "Syne", sans-serif; font-size: 1.2rem; font-weight: 700; line-height: 1.3; }
+  .section-rule { border: none; border-top: 1px solid var(--line); margin: 0.8rem 0 1.1rem; }
+  .section-instructions { margin: 0 0 1.1rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+  .exercise-list { display: grid; gap: 1rem; }
+  .exercise-card {
+    background: white;
+    padding: 1.25rem 1.3rem;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 420ms ease, transform 420ms ease, border-color 180ms ease;
+  }
+  .exercise-card.is-visible { opacity: 1; transform: translateY(0); }
+  .exercise-card:nth-child(2) { transition-delay: 60ms; }
+  .exercise-card:nth-child(3) { transition-delay: 120ms; }
+  .exercise-card:nth-child(4) { transition-delay: 180ms; }
+  .exercise-card:nth-child(5) { transition-delay: 240ms; }
+  .exercise-card:nth-child(6) { transition-delay: 300ms; }
+
+  .exercise-card.is-correct { border-color: var(--success); }
+  .exercise-card.is-incorrect { border-color: var(--amber); }
+  .exercise-card.is-shaking { animation: shake 340ms ease; }
+  .exercise-card.is-success-pop { animation: pop 340ms ease; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-3px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+  }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+  .item-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 0; }
+  .attempt-dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #dbe3f4; transition: background 150ms ease; }
+  .dot.is-wrong { background: var(--error); }
+  .dot.is-success { background: var(--success); }
+
+  .phrase-text { margin: 0 0 0.9rem; line-height: 1.55; font-size: 0.96rem; }
+
+  .raw-number {
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+    font-size: 1.1rem;
+    background: #f4f6fd;
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+    margin: 0 0 0.9rem;
+  }
+
+  .inverse-answer-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; font-family: "Courier New", monospace; font-weight: 700; }
+  .coeff-input { width: 4.4em; min-width: 60px; min-height: 40px; padding: 0.3rem 0.5rem; border: 1px solid #ccd6ee; border-radius: 8px; font-family: "Courier New", monospace; font-weight: 700; text-align: center; }
+  .coeff-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+  .options-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .option-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 999px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.86rem;
+    font-weight: 600;
+    user-select: none;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+  }
+  .option-chip.is-selected { border-color: var(--indigo); background: #eef2ff; color: var(--indigo-dark); font-weight: 700; }
+  .option-chip.is-disabled { cursor: default; opacity: 0.75; }
+
+  .numeric-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .numeric-row .equality-part { font-family: "Courier New", monospace; font-weight: 700; }
+  .numeric-input {
+    width: 230px;
+    max-width: 100%;
+    min-height: 40px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 8px;
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+    text-align: center;
+  }
+  .numeric-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+  .unit-suffix { font-weight: 700; color: var(--muted); }
+
+  .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .feedback { margin: 0; font-size: 0.9rem; font-weight: 650; flex: 1; min-width: 200px; }
+  .feedback.correct { color: var(--success); }
+  .feedback.incorrect { color: var(--error); }
+
+  .validate-button {
+    min-height: 40px;
+    padding: 0.6rem 1.1rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--indigo);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+  .correction {
+    display: none;
+    margin-top: 0.9rem;
+    padding: 0.85rem;
+    border-radius: 10px;
+    background: #fff7e7;
+    color: #8a5200;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+  .correction.is-visible { display: block; }
+  .correction strong { display: block; margin-bottom: 0.25rem; }
+  .correction .steps-line { font-family: "Courier New", monospace; display: block; }
+
+  .footer-actions { margin-top: 2.6rem; text-align: center; }
+  .restart-button {
+    min-height: 46px;
+    padding: 0.75rem 1.3rem;
+    border-radius: 12px;
+    background: #4f6ef7;
+    border: 0;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  @media (max-width: 620px) {
+    .score-panel { grid-template-columns: 1fr; }
+    .card-actions { flex-direction: column; align-items: stretch; }
+    .validate-button { width: 100%; }
+    .numeric-input { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="hero">
+    <div class="main-width">
+      <h1 class="hero-title">Du système métrique aux puissances de 10</h1>
+      <p class="hero-subtitle">Retrouver une valeur « plus parlante » exprimée dans l'unité de base (mètre, octet, bit...), en utilisant les préfixes multiplicateurs et les puissances de 10.</p>
+      <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;">Nouveaux exercices</button>
+    </div>
+  </header>
+  <main class="main-width content">
+
+    <section class="score-panel" aria-labelledby="score-caption">
+      <div class="score-values" aria-live="polite">
+        <div class="score-line"><strong id="resolved-score">0 / 0</strong>corrigés</div>
+      </div>
+      <div>
+        <p id="score-caption" class="score-label">Progression</p>
+        <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-panel">
+      <p class="example-title">Rappel : les préfixes multiplicateurs</p>
+      <table class="prefix-table">
+        <thead>
+          <tr><th>Préfixe</th><th>Symbole</th><th>On multiplie par</th><th>Puissance de 10</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>déca</td><td>da</td><td>10</td><td class="power">10¹</td></tr>
+          <tr><td>hecto</td><td>h</td><td>100</td><td class="power">10²</td></tr>
+          <tr><td>kilo</td><td>k</td><td>1 000</td><td class="power">10³</td></tr>
+          <tr><td>méga</td><td>M</td><td>1 000 000</td><td class="power">10⁶</td></tr>
+          <tr><td>giga</td><td>G</td><td>1 000 000 000</td><td class="power">10⁹</td></tr>
+        </tbody>
+      </table>
+      <div class="rule-box">
+        <strong>En faisant précéder le nom de l'unité de base d'un préfixe, on donne le nom d'un multiple de cette unité.</strong>
+        Exemple : 1 kilomètre = 1 . 10³ m = 1 000 m. 10¹, 10², 10³, 10⁶ et 10⁹ sont des puissances de 10.
+      </div>
+    </section>
+
+    <!-- SECTION 1 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Activité</p>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Chaque phrase exprime une grandeur à l'aide d'un préfixe multiplicateur (déca, hecto, kilo, méga ou giga). Convertis cette valeur dans l'unité de base correspondante (mètre, gramme, litre, octet ou bit), en utilisant la puissance de 10 associée au préfixe.</p>
+      <div id="section1-list" class="exercise-list"></div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Entraîne-toi</p>
+          <h2 class="section-title">Retrouve le bon préfixe</h2>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Cette fois, c'est l'inverse : le nombre est donné en notation décimale. Retrouve le préfixe qui permettrait de l'écrire le plus simplement possible, avec un petit nombre (entre 1 et 9) devant lui.</p>
+      <div id="section2-list" class="exercise-list"></div>
+    </section>
+
+  </main>
+  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+</div>
+
+<script>
+  const state = { resolved: 0, total: 0 };
+  const liveRegion = document.getElementById("live-region");
+  const resolvedScore = document.getElementById("resolved-score");
+  const progressTrack = document.getElementById("progress-track");
+  const progressFill = document.getElementById("progress-fill");
+
+  function announce(message) {
+    liveRegion.textContent = "";
+    window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+  }
+
+  function updateGlobalScore() {
+    resolvedScore.textContent = `${state.resolved} / ${state.total}`;
+    const pct = state.total ? (state.resolved / state.total) * 100 : 0;
+    progressFill.style.width = `${pct}%`;
+    progressTrack.setAttribute("aria-valuemax", String(state.total));
+    progressTrack.setAttribute("aria-valuenow", String(state.resolved));
+  }
+
+  function markResolved() {
+    state.resolved += 1;
+    updateGlobalScore();
+  }
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function shuffle(items) {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+  function pickRandom(bank, count) { return shuffle(bank).slice(0, count); }
+  function letterLabel(index) { return `${String.fromCharCode(97 + index)})`; }
+
+  function formatNumber(n) {
+    return n.toLocaleString("fr-BE").replace(/\u00a0/g, " ");
+  }
+
+  // Normalise une réponse numérique : ignore espaces (normaux ou insécables), points/virgules
+  // de séparation de milliers, et un éventuel suffixe d'unité ("m", "octets", "bits"...).
+  function normalizeNumericAnswer(raw) {
+    const cleaned = String(raw || "").replace(/[^\d]/g, "");
+    return cleaned === "" ? NaN : Number(cleaned);
+  }
+
+  function cardHeader(label) {
+    const header = document.createElement("div");
+    header.className = "card-header";
+    const itemLabel = document.createElement("p");
+    itemLabel.className = "item-label";
+    itemLabel.textContent = label;
+    header.appendChild(itemLabel);
+    const dots = document.createElement("div");
+    dots.className = "attempt-dots";
+    const dotEls = [];
+    for (let i = 0; i < 3; i += 1) {
+      const d = document.createElement("span");
+      d.className = "dot";
+      dots.appendChild(d);
+      dotEls.push(d);
+    }
+    header.appendChild(dots);
+    return { header, dotEls };
+  }
+
+  function cardActions() {
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+    const feedback = document.createElement("p");
+    feedback.className = "feedback";
+    const validateBtn = document.createElement("button");
+    validateBtn.className = "validate-button";
+    validateBtn.type = "button";
+    validateBtn.textContent = "Vérifier";
+    actions.appendChild(feedback);
+    actions.appendChild(validateBtn);
+    return { actions, feedback, validateBtn };
+  }
+
+  // Gère les 3 essais, les pastilles de tentative et la correction finale.
+  function finalizeCard(card, dotEls, allInputs, feedback, validateBtn, correction, isCorrectFn, maxAttempts = 3) {
+    let attempts = 0;
+    let done = false;
+    const validate = () => {
+      if (done) return;
+      if (allInputs.some((el) => el.value === "")) {
+        feedback.textContent = "Complète la case avant de vérifier.";
+        feedback.className = "feedback";
+        return;
+      }
+
+      const isCorrect = isCorrectFn();
+      const dot = dotEls[attempts];
+      attempts += 1;
+
+      if (isCorrect) {
+        done = true;
+        if (dot) dot.classList.add("is-success");
+        markResolved();
+        allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+        validateBtn.disabled = true;
+        card.classList.add("is-correct", "is-success-pop");
+        feedback.className = "feedback correct";
+        feedback.textContent = "Bonne réponse !";
+        announce("Bonne réponse.");
+        return;
+      }
+
+      if (dot) dot.classList.add("is-wrong");
+
+      if (attempts >= maxAttempts) {
+        done = true;
+        markResolved();
+        allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+        validateBtn.disabled = true;
+        card.classList.add("is-incorrect");
+        feedback.className = "feedback incorrect";
+        feedback.textContent = "Ce n'est pas tout à fait ça, regarde la correction.";
+        correction.classList.add("is-visible");
+        announce("Réponse incorrecte, correction affichée.");
+        return;
+      }
+
+      const remaining = maxAttempts - attempts;
+      feedback.className = "feedback incorrect";
+      feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+      card.classList.remove("is-shaking");
+      void card.offsetWidth;
+      card.classList.add("is-shaking");
+      announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+    };
+    return validate;
+  }
+
+  function makeNumericCard(label, phraseHtml, unitSuffix, ariaLabel, expected, correctionHtml) {
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label);
+    card.appendChild(header);
+
+    if (phraseHtml) {
+      const phrase = document.createElement("p");
+      phrase.className = "phrase-text";
+      phrase.innerHTML = phraseHtml;
+      card.appendChild(phrase);
+    }
+
+    const row = document.createElement("div");
+    row.className = "numeric-row";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.className = "numeric-input";
+    input.setAttribute("aria-label", ariaLabel);
+    row.appendChild(input);
+    if (unitSuffix) {
+      const suffix = document.createElement("span");
+      suffix.className = "unit-suffix";
+      suffix.textContent = unitSuffix;
+      row.appendChild(suffix);
+    }
+    card.appendChild(row);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = correctionHtml;
+    card.appendChild(correction);
+
+    const validate = finalizeCard(card, dotEls, [input], feedback, validateBtn, correction, () => normalizeNumericAnswer(input.value) === expected);
+    validateBtn.addEventListener("click", validate);
+
+    return card;
+  }
+
+  // ---------- SECTION 1 : activité (5 exercices tirés d'un pool, tous randomisés) ----------
+  // Valeurs vérifiées pour rester réalistes : distance Huy-Liège ~35-40 km par la route,
+  // consommation d'eau moyenne en Belgique ~96-100 L/jour/personne, tablette Côte d'Or ~180-200 g,
+  // tonneau bordelais traditionnel = 900 L, hauteur du Mont Blanc ~4 809 m, éléphant d'Afrique adulte ~6 t.
+  const SECTION1_POOL = [
+    {
+      phrase: "La longueur d'un terrain de football mesure environ <strong>1 hectomètre</strong>.",
+      unit: "m",
+      ariaLabel: "1 hectomètre en mètres",
+      expected: 100,
+      correction: "1 hectomètre = 1 . 10² m = <strong>100 m</strong>"
+    },
+    {
+      phrase: "Un terrain de padel standard mesure <strong>2 décamètres</strong> de long.",
+      unit: "m",
+      ariaLabel: "2 décamètres en mètres",
+      expected: 20,
+      correction: "2 décamètres = 2 . 10¹ m = <strong>20 m</strong>"
+    },
+    {
+      phrase: "La capacité de stockage de ma clé USB est <strong>32 gigaoctets</strong>.",
+      unit: "octets",
+      ariaLabel: "32 gigaoctets en octets",
+      expected: 32000000000,
+      correction: "32 gigaoctets = 32 . 10⁹ octets = <strong>32 000 000 000 octets</strong>"
+    },
+    {
+      phrase: "La distance entre Huy et Liège est d'environ <strong>40 kilomètres</strong> par la route.",
+      unit: "m",
+      ariaLabel: "40 kilomètres en mètres",
+      expected: 40000,
+      correction: "40 kilomètres = 40 . 10³ m = <strong>40 000 m</strong>"
+    },
+    {
+      phrase: "La vitesse de ma connexion Internet est d'environ <strong>100 mégabits</strong> par seconde.",
+      unit: "bits",
+      ariaLabel: "100 mégabits en bits",
+      expected: 100000000,
+      correction: "100 mégabits = 100 . 10⁶ bits = <strong>100 000 000 bits</strong>"
+    },
+    {
+      phrase: "La hauteur de la tour Eiffel (structure d'origine) est d'environ <strong>3 hectomètres</strong>.",
+      unit: "m",
+      ariaLabel: "3 hectomètres en mètres",
+      expected: 300,
+      correction: "3 hectomètres = 3 . 10² m = <strong>300 m</strong>"
+    },
+    {
+      phrase: "Un tour de piste d'athlétisme standard mesure <strong>4 hectomètres</strong>.",
+      unit: "m",
+      ariaLabel: "4 hectomètres en mètres",
+      expected: 400,
+      correction: "4 hectomètres = 4 . 10² m = <strong>400 m</strong>"
+    },
+    {
+      phrase: "La distance moyenne Terre-Lune est d'environ <strong>384 mégamètres</strong>.",
+      unit: "m",
+      ariaLabel: "384 mégamètres en mètres",
+      expected: 384000000,
+      correction: "384 mégamètres = 384 . 10⁶ m = <strong>384 000 000 m</strong>"
+    },
+    {
+      phrase: "Un marathon mesure environ <strong>42 kilomètres</strong>.",
+      unit: "m",
+      ariaLabel: "42 kilomètres en mètres",
+      expected: 42000,
+      correction: "42 kilomètres = 42 . 10³ m = <strong>42 000 m</strong>"
+    },
+    {
+      phrase: "La largeur d'un terrain de football mesure environ <strong>7 décamètres</strong>.",
+      unit: "m",
+      ariaLabel: "7 décamètres en mètres",
+      expected: 70,
+      correction: "7 décamètres = 7 . 10¹ m = <strong>70 m</strong>"
+    },
+    {
+      phrase: "La mémoire vive (RAM) de mon ordinateur est de <strong>16 gigaoctets</strong>.",
+      unit: "octets",
+      ariaLabel: "16 gigaoctets en octets",
+      expected: 16000000000,
+      correction: "16 gigaoctets = 16 . 10⁹ octets = <strong>16 000 000 000 octets</strong>"
+    },
+    {
+      phrase: "Une photo prise avec mon smartphone pèse environ <strong>5 mégaoctets</strong>.",
+      unit: "octets",
+      ariaLabel: "5 mégaoctets en octets",
+      expected: 5000000,
+      correction: "5 mégaoctets = 5 . 10⁶ octets = <strong>5 000 000 octets</strong>"
+    },
+    {
+      phrase: "Le débit d'une connexion fibre optique est d'environ <strong>500 mégabits</strong> par seconde.",
+      unit: "bits",
+      ariaLabel: "500 mégabits en bits",
+      expected: 500000000,
+      correction: "500 mégabits = 500 . 10⁶ bits = <strong>500 000 000 bits</strong>"
+    },
+    {
+      phrase: "Un sac de farine pèse <strong>1 kilogramme</strong>.",
+      unit: "g",
+      ariaLabel: "1 kilogramme en grammes",
+      expected: 1000,
+      correction: "1 kilogramme = 1 . 10³ g = <strong>1 000 g</strong>"
+    },
+    {
+      phrase: "Une grosse citrouille pèse environ <strong>8 kilogrammes</strong>.",
+      unit: "g",
+      ariaLabel: "8 kilogrammes en grammes",
+      expected: 8000,
+      correction: "8 kilogrammes = 8 . 10³ g = <strong>8 000 g</strong>"
+    },
+    {
+      phrase: "Une tablette de chocolat Côte d'Or pèse environ <strong>2 hectogrammes</strong>.",
+      unit: "g",
+      ariaLabel: "2 hectogrammes en grammes",
+      expected: 200,
+      correction: "2 hectogrammes = 2 . 10² g = <strong>200 g</strong>"
+    },
+    {
+      phrase: "Le réservoir de ma voiture a une capacité de <strong>5 décalitres</strong>.",
+      unit: "L",
+      ariaLabel: "5 décalitres en litres",
+      expected: 50,
+      correction: "5 décalitres = 5 . 10¹ L = <strong>50 L</strong>"
+    },
+    {
+      phrase: "Un tonneau bordelais traditionnel contient environ <strong>9 hectolitres</strong> de vin.",
+      unit: "L",
+      ariaLabel: "9 hectolitres en litres",
+      expected: 900,
+      correction: "9 hectolitres = 9 . 10² L = <strong>900 L</strong>"
+    },
+    {
+      phrase: "La consommation d'eau quotidienne d'une personne en Belgique est d'environ <strong>1 hectolitre</strong>.",
+      unit: "L",
+      ariaLabel: "1 hectolitre en litres",
+      expected: 100,
+      correction: "1 hectolitre = 1 . 10² L = <strong>100 L</strong>"
+    },
+    {
+      phrase: "La capacité de stockage d'une clé USB d'entrée de gamme est de <strong>8 gigaoctets</strong>.",
+      unit: "octets",
+      ariaLabel: "8 gigaoctets en octets",
+      expected: 8000000000,
+      correction: "8 gigaoctets = 8 . 10⁹ octets = <strong>8 000 000 000 octets</strong>"
+    },
+    {
+      phrase: "La distance entre Bruxelles et Paris est d'environ <strong>300 kilomètres</strong> par la route.",
+      unit: "m",
+      ariaLabel: "300 kilomètres en mètres",
+      expected: 300000,
+      correction: "300 kilomètres = 300 . 10³ m = <strong>300 000 m</strong>"
+    },
+    {
+      phrase: "Le Mont Blanc culmine à environ <strong>48 hectomètres</strong> d'altitude.",
+      unit: "m",
+      ariaLabel: "48 hectomètres en mètres",
+      expected: 4800,
+      correction: "48 hectomètres = 48 . 10² m = <strong>4 800 m</strong>"
+    },
+    {
+      phrase: "Un éléphant d'Afrique adulte pèse environ <strong>6 mégagrammes</strong> (soit 6 tonnes).",
+      unit: "g",
+      ariaLabel: "6 mégagrammes en grammes",
+      expected: 6000000,
+      correction: "6 mégagrammes = 6 . 10⁶ g = <strong>6 000 000 g</strong> (= 6 tonnes)"
+    },
+    {
+      phrase: "Une vidéo HD de 10 minutes occupe environ <strong>1 gigaoctet</strong> de stockage.",
+      unit: "octets",
+      ariaLabel: "1 gigaoctet en octets",
+      expected: 1000000000,
+      correction: "1 gigaoctet = 1 . 10⁹ octets = <strong>1 000 000 000 octets</strong>"
+    },
+    {
+      phrase: "La longueur d'un bassin de piscine olympique est de <strong>5 décamètres</strong>.",
+      unit: "m",
+      ariaLabel: "5 décamètres en mètres",
+      expected: 50,
+      correction: "5 décamètres = 5 . 10¹ m = <strong>50 m</strong>"
+    },
+    {
+      phrase: "La hauteur d'un immeuble de 6 étages est d'environ <strong>2 décamètres</strong>.",
+      unit: "m",
+      ariaLabel: "2 décamètres en mètres",
+      expected: 20,
+      correction: "2 décamètres = 2 . 10¹ m = <strong>20 m</strong>"
+    },
+    {
+      phrase: "La hauteur du Lion de Waterloo (butte comprise) est d'environ <strong>4 décamètres</strong>.",
+      unit: "m",
+      ariaLabel: "4 décamètres en mètres",
+      expected: 40,
+      correction: "4 décamètres = 4 . 10¹ m = <strong>40 m</strong>"
+    },
+    {
+      phrase: "Le tunnel sous la Manche mesure environ <strong>50 kilomètres</strong> de long.",
+      unit: "m",
+      ariaLabel: "50 kilomètres en mètres",
+      expected: 50000,
+      correction: "50 kilomètres = 50 . 10³ m = <strong>50 000 m</strong>"
+    },
+    {
+      phrase: "La distance entre la Terre et le Soleil est d'environ <strong>150 gigamètres</strong>.",
+      unit: "m",
+      ariaLabel: "150 gigamètres en mètres",
+      expected: 150000000000,
+      correction: "150 gigamètres = 150 . 10⁹ m = <strong>150 000 000 000 m</strong>"
+    },
+    {
+      phrase: "Une carte mémoire pour appareil photo a une capacité de <strong>64 gigaoctets</strong>.",
+      unit: "octets",
+      ariaLabel: "64 gigaoctets en octets",
+      expected: 64000000000,
+      correction: "64 gigaoctets = 64 . 10⁹ octets = <strong>64 000 000 000 octets</strong>"
+    },
+    {
+      phrase: "La taille d'un morceau de musique compressé (MP3) est d'environ <strong>4 mégaoctets</strong>.",
+      unit: "octets",
+      ariaLabel: "4 mégaoctets en octets",
+      expected: 4000000,
+      correction: "4 mégaoctets = 4 . 10⁶ octets = <strong>4 000 000 octets</strong>"
+    },
+    {
+      phrase: "La vitesse d'une connexion 4G est d'environ <strong>50 mégabits</strong> par seconde.",
+      unit: "bits",
+      ariaLabel: "50 mégabits en bits",
+      expected: 50000000,
+      correction: "50 mégabits = 50 . 10⁶ bits = <strong>50 000 000 bits</strong>"
+    },
+    {
+      phrase: "La vitesse d'une connexion Internet très haut débit peut atteindre <strong>1 gigabit</strong> par seconde.",
+      unit: "bits",
+      ariaLabel: "1 gigabit en bits",
+      expected: 1000000000,
+      correction: "1 gigabit = 1 . 10⁹ bits = <strong>1 000 000 000 bits</strong>"
+    },
+    {
+      phrase: "Un grand sac de pommes de terre pèse environ <strong>25 kilogrammes</strong>.",
+      unit: "g",
+      ariaLabel: "25 kilogrammes en grammes",
+      expected: 25000,
+      correction: "25 kilogrammes = 25 . 10³ g = <strong>25 000 g</strong>"
+    },
+    {
+      phrase: "Un ballon de football pèse environ <strong>4 hectogrammes</strong>.",
+      unit: "g",
+      ariaLabel: "4 hectogrammes en grammes",
+      expected: 400,
+      correction: "4 hectogrammes = 4 . 10² g = <strong>400 g</strong>"
+    },
+    {
+      phrase: "Une plaquette de beurre au format familial pèse environ <strong>5 hectogrammes</strong>.",
+      unit: "g",
+      ariaLabel: "5 hectogrammes en grammes",
+      expected: 500,
+      correction: "5 hectogrammes = 5 . 10² g = <strong>500 g</strong>"
+    },
+    {
+      phrase: "Une baleine bleue adulte pèse environ <strong>150 mégagrammes</strong> (soit 150 tonnes).",
+      unit: "g",
+      ariaLabel: "150 mégagrammes en grammes",
+      expected: 150000000,
+      correction: "150 mégagrammes = 150 . 10⁶ g = <strong>150 000 000 g</strong> (= 150 tonnes)"
+    },
+    {
+      phrase: "La capacité d'une bonbonne d'eau (fontaine à eau) est d'environ <strong>2 décalitres</strong>.",
+      unit: "L",
+      ariaLabel: "2 décalitres en litres",
+      expected: 20,
+      correction: "2 décalitres = 2 . 10¹ L = <strong>20 L</strong>"
+    },
+    {
+      phrase: "La capacité d'une baignoire standard est d'environ <strong>15 décalitres</strong>.",
+      unit: "L",
+      ariaLabel: "15 décalitres en litres",
+      expected: 150,
+      correction: "15 décalitres = 15 . 10¹ L = <strong>150 L</strong>"
+    },
+    {
+      phrase: "La capacité d'une citerne d'eau de pluie domestique est d'environ <strong>5 kilolitres</strong>.",
+      unit: "L",
+      ariaLabel: "5 kilolitres en litres",
+      expected: 5000,
+      correction: "5 kilolitres = 5 . 10³ L = <strong>5 000 L</strong>"
+    },
+    {
+      phrase: "La capacité d'une piscine gonflable familiale est d'environ <strong>3 kilolitres</strong>.",
+      unit: "L",
+      ariaLabel: "3 kilolitres en litres",
+      expected: 3000,
+      correction: "3 kilolitres = 3 . 10³ L = <strong>3 000 L</strong>"
+    },
+    {
+      phrase: "Un camion-citerne à lait transporte environ <strong>25 kilolitres</strong>.",
+      unit: "L",
+      ariaLabel: "25 kilolitres en litres",
+      expected: 25000,
+      correction: "25 kilolitres = 25 . 10³ L = <strong>25 000 L</strong>"
+    }
+  ];
+  const SECTION1_COUNT = 10;
+
+  function buildSection1() {
+    const container = document.getElementById("section1-list");
+    const items = pickRandom(SECTION1_POOL, SECTION1_COUNT);
+    items.forEach((item, index) => {
+      const card = makeNumericCard(
+        letterLabel(index),
+        item.phrase,
+        item.unit,
+        item.ariaLabel,
+        item.expected,
+        `<strong>Correction :</strong>${item.correction}`
+      );
+      container.appendChild(card);
+    });
+    return items.length;
+  }
+
+  // ---------- SECTION 2 : entraînement généré ----------
+  const PREFIXES = [
+    { name: "déca", power: "10¹", mult: 10 },
+    { name: "hecto", power: "10²", mult: 100 },
+    { name: "kilo", power: "10³", mult: 1000 },
+    { name: "méga", power: "10⁶", mult: 1000000 },
+    { name: "giga", power: "10⁹", mult: 1000000000 }
+  ];
+  const UNITS = [
+    { symbol: "m", plural: "mètres", label: "mètres" },
+    { symbol: "g", plural: "grammes", label: "grammes" },
+    { symbol: "L", plural: "litres", label: "litres" },
+    { symbol: "o", plural: "octets", label: "octets" },
+    { symbol: "bit", plural: "bits", label: "bits" }
+  ];
+
+  const SECTION2_COUNT = 8;
+
+  function randChoice(arr) { return arr[randInt(0, arr.length - 1)]; }
+
+  // Coefficient toujours entre 1 et 9 : c'est la seule façon d'exprimer le nombre
+  // avec un préfixe et un petit nombre, ce qui rend la réponse non ambiguë.
+  // On tire les préfixes via un cycle mélangé (plutôt que purement au hasard) pour
+  // garantir que les 5 préfixes reviennent régulièrement, sans qu'un seul (ex: méga)
+  // ne domine une série de 8 exercices par pur hasard.
+  function buildSection2Items(count) {
+    const items = [];
+    const seen = new Set();
+    let prefixCycle = shuffle(PREFIXES);
+    let cycleIndex = 0;
+    let guard = 0;
+    while (items.length < count && guard < count * 30) {
+      guard += 1;
+      if (cycleIndex >= prefixCycle.length) {
+        prefixCycle = shuffle(PREFIXES);
+        cycleIndex = 0;
+      }
+      const prefix = prefixCycle[cycleIndex];
+      const unit = randChoice(UNITS);
+      const number = randInt(1, 9);
+      const value = number * prefix.mult;
+      const key = `${value}-${unit.symbol}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      items.push({ prefix, unit, number, value });
+      cycleIndex += 1;
+    }
+    return shuffle(items);
+  }
+
+  function buildInverseCard(item, label) {
+    const { prefix, unit, number, value } = item;
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label);
+    card.appendChild(header);
+
+    const rawNumber = document.createElement("p");
+    rawNumber.className = "raw-number";
+    rawNumber.textContent = `${formatNumber(value)} ${unit.plural}`;
+    card.appendChild(rawNumber);
+
+    const answerRow = document.createElement("div");
+    answerRow.className = "inverse-answer-row";
+    const equalSpan = document.createElement("span");
+    equalSpan.textContent = `= ${number} `;
+    const suffixSpan = document.createElement("span");
+    suffixSpan.textContent = `……… ${unit.plural}`;
+    answerRow.append(equalSpan, suffixSpan);
+    card.appendChild(answerRow);
+
+    const optionsRow = document.createElement("div");
+    optionsRow.className = "options-row";
+    let selectedPrefix = null;
+    const chips = {};
+    PREFIXES.forEach((p) => {
+      const chip = document.createElement("span");
+      chip.className = "option-chip";
+      chip.textContent = p.name;
+      chip.setAttribute("role", "button");
+      chip.setAttribute("tabindex", "0");
+      function activate() {
+        if (chip.classList.contains("is-disabled")) return;
+        selectedPrefix = p.name;
+        Object.values(chips).forEach((c) => c.classList.remove("is-selected"));
+        chip.classList.add("is-selected");
+        suffixSpan.textContent = `${p.name}${unit.plural}`;
+      }
+      chip.addEventListener("click", activate);
+      chip.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); } });
+      chips[p.name] = chip;
+      optionsRow.appendChild(chip);
+    });
+    card.appendChild(optionsRow);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = `<strong>Correction :</strong>${formatNumber(value)} ${unit.plural} = ${number} . ${prefix.power} ${unit.plural} = <strong>${number} ${prefix.name}${unit.plural}</strong>`;
+    card.appendChild(correction);
+
+    const fakePrefixInput = { get value() { return selectedPrefix || ""; }, disabled: false, classList: { add: () => {} } };
+    const validate = finalizeCard(card, dotEls, [fakePrefixInput], feedback, validateBtn, correction, () => {
+      return selectedPrefix === prefix.name;
+    });
+    validateBtn.addEventListener("click", () => {
+      validate();
+      if (validateBtn.disabled) {
+        Object.values(chips).forEach((c) => c.classList.add("is-disabled"));
+      }
+    });
+
+    return card;
+  }
+
+  function buildSection2() {
+    const container = document.getElementById("section2-list");
+    const items = buildSection2Items(SECTION2_COUNT);
+    items.forEach((item, index) => {
+      container.appendChild(buildInverseCard(item, letterLabel(index)));
+    });
+    return items.length;
+  }
+
+  function buildAll() {
+    document.getElementById("section1-list").replaceChildren();
+    document.getElementById("section2-list").replaceChildren();
+    state.resolved = 0;
+
+    const n1 = buildSection1();
+    const n2 = buildSection2();
+
+    state.total = n1 + n2;
+    updateGlobalScore();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".exercise-card").forEach((card) => card.classList.add("is-visible"));
+      });
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const active = document.activeElement;
+    if (!active || active.tagName !== "INPUT") return;
+    const card = active.closest(".exercise-card");
+    if (!card) return;
+    const validateBtn = card.querySelector(".validate-button");
+    if (validateBtn && !validateBtn.disabled) {
+      event.preventDefault();
+      validateBtn.click();
+    }
+  });
+
+  document.getElementById("new-exercises-button").addEventListener("click", () => {
+    buildAll();
+    announce("De nouveaux exercices ont été générés.");
+  });
+
+  buildAll();
+</script>
+</body>
+</html>

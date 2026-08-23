@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les puissances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --slate: #1e2a3a;
+    --paper: #f0f4ff;
+    --ink: #172033;
+    --muted: #64748b;
+    --indigo: #4f6ef7;
+    --indigo-dark: #3f57d9;
+    --success: #22c55e;
+    --error: #ef4444;
+    --amber: #f59e0b;
+    --line: #dbe3f4;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--ink);
+  }
+  button, select, input { font: inherit; }
+  button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid rgba(79, 110, 247, 0.4);
+    outline-offset: 3px;
+  }
+  .app-shell {
+    min-height: 100%;
+    background:
+      radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 24rem),
+      linear-gradient(180deg, var(--slate) 0 15rem, var(--paper) 15rem 100%);
+  }
+  .main-width { width: min(100% - 2rem, 780px); margin-inline: auto; }
+  .hero { padding: 2.6rem 0 2rem; color: white; }
+  .hero-title { margin: 0; font-family: "Syne", sans-serif; letter-spacing: 0.01em; font-weight: 700; font-size: clamp(1.5rem, 4.2vw, 2.1rem); line-height: 1.25; }
+  .hero-subtitle { max-width: 42rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+  .content { padding-bottom: 4rem; }
+
+  .score-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: -0.6rem;
+    padding: 1.25rem;
+  }
+  .score-values { min-width: 150px; }
+  .score-line { font-size: 0.88rem; color: var(--muted); }
+  .score-line strong { display: block; font-family: "Syne", sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--indigo); }
+  .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+  .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+  .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+  .example-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(30, 42, 58, 0.08);
+    padding: 1.4rem 1.5rem;
+    margin-top: 1.4rem;
+  }
+  .example-title { margin: 0 0 0.8rem; font-family: "Syne", sans-serif; font-weight: 700; font-size: 1.05rem; line-height: 1.3; }
+  .vocab-grid { display: grid; grid-template-columns: 1fr; gap: 0.7rem; font-size: 0.92rem; line-height: 1.55; margin: 0 0 1.1rem; }
+  .vocab-grid .term { font-weight: 700; color: var(--indigo-dark); }
+  .reading-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.1rem; }
+  .reading-chip { background: #f4f6fd; border-radius: 10px; padding: 0.55rem 0.8rem; font-size: 0.86rem; line-height: 1.5; flex: 1 1 200px; }
+  .reading-chip strong { display: block; font-family: "Courier New", monospace; font-size: 1rem; margin-bottom: 0.2rem; }
+  .rule-box {
+    margin-top: 1.1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    background: #fff7e7;
+    color: #8a5200;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .rule-box strong { display: block; margin-bottom: 0.25rem; }
+  .rule-box + .rule-box { margin-top: 0.7rem; }
+
+  .section-block { margin-top: 2.6rem; }
+  .section-heading-row { display: flex; align-items: baseline; gap: 0.9rem; }
+  .section-kicker {
+    margin: 0;
+    font-family: "Syne", sans-serif;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--indigo-dark);
+  }
+  .section-rule { border: none; border-top: 1px solid var(--line); margin: 0.8rem 0 1.1rem; }
+  .section-instructions { margin: 0 0 1.1rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+  .exercise-list { display: grid; gap: 1rem; }
+  .exercise-card {
+    background: white;
+    padding: 1.25rem 1.3rem;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 420ms ease, transform 420ms ease, border-color 180ms ease;
+  }
+  .exercise-card.is-visible { opacity: 1; transform: translateY(0); }
+  .exercise-card:nth-child(2) { transition-delay: 60ms; }
+  .exercise-card:nth-child(3) { transition-delay: 120ms; }
+  .exercise-card:nth-child(4) { transition-delay: 180ms; }
+  .exercise-card:nth-child(5) { transition-delay: 240ms; }
+  .exercise-card:nth-child(6) { transition-delay: 300ms; }
+
+  .exercise-card.is-correct { border-color: var(--success); }
+  .exercise-card.is-incorrect { border-color: var(--amber); }
+  .exercise-card.is-shaking { animation: shake 340ms ease; }
+  .exercise-card.is-success-pop { animation: pop 340ms ease; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-3px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+  }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+  .item-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 0; }
+  .attempt-dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #dbe3f4; transition: background 150ms ease; }
+  .dot.is-wrong { background: var(--error); }
+  .dot.is-success { background: var(--success); }
+
+  .phrase-text { margin: 0 0 0.9rem; line-height: 1.55; font-size: 0.96rem; }
+
+  .raw-number {
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+    font-size: 1.1rem;
+    background: #f4f6fd;
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+    margin: 0 0 0.9rem;
+    letter-spacing: 0.02em;
+  }
+
+  .power-answer-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.55rem; margin-bottom: 0.9rem; font-family: "Courier New", monospace; font-weight: 700; }
+  .power-answer-row .dot-sep { align-self: center; color: var(--muted); font-size: 1.1rem; }
+  .power-notation { display: inline-flex; align-items: flex-start; }
+  .power-base-input {
+    width: 2.7em; min-width: 44px; min-height: 40px; padding: 0.3rem 0.35rem;
+    border: 1px solid #ccd6ee; border-radius: 8px 0 0 8px; border-right: none;
+    font-family: "Courier New", monospace; font-weight: 700; text-align: center;
+  }
+  .power-exp-input {
+    width: 2.1em; min-width: 34px; min-height: 26px; padding: 0.1rem 0.25rem;
+    margin-top: -0.15rem;
+    border: 1px solid #ccd6ee; border-radius: 6px;
+    font-family: "Courier New", monospace; font-weight: 700; text-align: center;
+    font-size: 0.78em; color: var(--indigo-dark);
+  }
+  .power-exp-input::-webkit-inner-spin-button, .power-exp-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .power-exp-input { -moz-appearance: textfield; appearance: textfield; }
+  .power-base-input.is-disabled, .power-exp-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+  .exp-hint { font-size: 0.78rem; color: var(--muted); font-weight: 500; align-self: center; }
+
+  .options-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .option-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 999px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.86rem;
+    font-weight: 600;
+    user-select: none;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+  }
+  .option-chip.is-selected { border-color: var(--indigo); background: #eef2ff; color: var(--indigo-dark); font-weight: 700; }
+  .option-chip.is-disabled { cursor: default; opacity: 0.75; }
+
+  .numeric-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .numeric-input {
+    width: 230px;
+    max-width: 100%;
+    min-height: 40px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 8px;
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+    text-align: center;
+  }
+  .numeric-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+  .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .feedback { margin: 0; font-size: 0.9rem; font-weight: 650; flex: 1; min-width: 200px; }
+  .feedback.correct { color: var(--success); }
+  .feedback.incorrect { color: var(--error); }
+
+  .validate-button {
+    min-height: 40px;
+    padding: 0.6rem 1.1rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--indigo);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+  .correction {
+    display: none;
+    margin-top: 0.9rem;
+    padding: 0.85rem;
+    border-radius: 10px;
+    background: #fff7e7;
+    color: #8a5200;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+  .correction.is-visible { display: block; }
+  .correction strong { display: block; margin-bottom: 0.25rem; }
+
+  .footer-actions { margin-top: 2.6rem; text-align: center; }
+  .restart-button {
+    min-height: 46px;
+    padding: 0.75rem 1.3rem;
+    border-radius: 12px;
+    background: #4f6ef7;
+    border: 0;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  @media (max-width: 620px) {
+    .score-panel { grid-template-columns: 1fr; }
+    .card-actions { flex-direction: column; align-items: stretch; }
+    .validate-button { width: 100%; }
+    .numeric-input { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="hero">
+    <div class="main-width">
+      <h1 class="hero-title">Les puissances</h1>
+      <p class="hero-subtitle">Vocabulaire, calcul et utilisation de la calculatrice pour manipuler les puissances d'un nombre naturel.</p>
+      <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;">Nouveaux exercices</button>
+    </div>
+  </header>
+  <main class="main-width content">
+
+    <section class="score-panel" aria-labelledby="score-caption">
+      <div class="score-values" aria-live="polite">
+        <div class="score-line"><strong id="resolved-score">0 / 0</strong>corrigés</div>
+      </div>
+      <div>
+        <p id="score-caption" class="score-label">Progression</p>
+        <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-panel">
+      <p class="example-title">Rappel : vocabulaire et cas particuliers</p>
+      <div class="vocab-grid">
+        <div><span class="term">Une puissance</span> d'un nombre est un produit de facteurs tous égaux à ce nombre. Dans 6⁵ : <span class="term">6</span> est la base (le facteur que l'on répète), <span class="term">5</span> est l'exposant (il indique le nombre de facteurs du produit).</div>
+      </div>
+      <div class="reading-row">
+        <div class="reading-chip"><strong>5⁴</strong>se lit « 5 exposant 4 », « 5 à la puissance 4 » ou « la 4ᵉ puissance de 5 ».</div>
+        <div class="reading-chip"><strong>6²</strong>se lit aussi « 6 au carré » ou « le carré de 6 ».</div>
+        <div class="reading-chip"><strong>7³</strong>se lit aussi « 7 au cube » ou « le cube de 7 ».</div>
+      </div>
+      <div class="rule-box">
+        <strong>Exposant 0 et exposant 1</strong>
+        Un nombre naturel élevé à la puissance 1 est égal à ce nombre : a¹ = a. Un nombre naturel non nul élevé à la puissance 0 est égal à 1 : a⁰ = 1.
+      </div>
+      <div class="rule-box">
+        <strong>Puissances de 0 et de 1</strong>
+        Toute puissance de 1 est égale à 1. Toute puissance de 0 (avec un exposant non nul) est égale à 0. 0⁰ n'est pas défini : on ne l'utilise pas.
+      </div>
+    </section>
+
+    <!-- SECTION 1 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Exercice 1</p>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Chaque ligne présente une expression. Si c'est un produit de facteurs tous identiques, écris-la sous la forme d'une puissance (indique la base et l'exposant). Si ce n'est pas le cas, dis-le.</p>
+      <div id="section1-list" class="exercise-list"></div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Exercice 2</p>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Calcule la valeur de chaque puissance. Sois attentif·ve aux cas particuliers (exposant 0, exposant 1, base 0 ou base 1).</p>
+      <div id="section2-list" class="exercise-list"></div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Exercice 3</p>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Ces calculs portent sur des nombres plus grands : utilise la touche « puissance » (x^y ou ^) de ta calculatrice.</p>
+      <div id="section3-list" class="exercise-list"></div>
+    </section>
+
+  </main>
+  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+</div>
+
+<script>
+  const state = { resolved: 0, total: 0 };
+  const liveRegion = document.getElementById("live-region");
+  const resolvedScore = document.getElementById("resolved-score");
+  const progressTrack = document.getElementById("progress-track");
+  const progressFill = document.getElementById("progress-fill");
+
+  function announce(message) {
+    liveRegion.textContent = "";
+    window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+  }
+
+  function updateGlobalScore() {
+    resolvedScore.textContent = `${state.resolved} / ${state.total}`;
+    const pct = state.total ? (state.resolved / state.total) * 100 : 0;
+    progressFill.style.width = `${pct}%`;
+    progressTrack.setAttribute("aria-valuemax", String(state.total));
+    progressTrack.setAttribute("aria-valuenow", String(state.resolved));
+  }
+
+  function markResolved() {
+    state.resolved += 1;
+    updateGlobalScore();
+  }
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function shuffle(items) {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+  function randChoice(arr) { return arr[randInt(0, arr.length - 1)]; }
+  function letterLabel(index) { return `${String.fromCharCode(97 + index)})`; }
+
+  const SUP_DIGITS = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  function toSuperscript(n) { return String(n).split("").map((d) => SUP_DIGITS[d] || d).join(""); }
+  function formatPower(base, exponent) { return `${base}${toSuperscript(exponent)}`; }
+  function formatNumber(n) { return n.toLocaleString("fr-BE").replace(/\u00a0/g, " "); }
+
+  // Calcule base^exponent par multiplications successives (nombres entiers uniquement,
+  // toujours dans la zone sûre des entiers JS grâce aux bornes choisies dans les générateurs).
+  function intPow(base, exponent) {
+    let result = 1;
+    for (let i = 0; i < exponent; i += 1) result *= base;
+    return result;
+  }
+
+  function normalizeNumericAnswer(raw) {
+    const trimmed = String(raw || "").trim();
+    if (trimmed === "") return NaN;
+    const negative = trimmed.startsWith("-");
+    const cleaned = trimmed.replace(/[^\d]/g, "");
+    if (cleaned === "") return NaN;
+    return negative ? -Number(cleaned) : Number(cleaned);
+  }
+
+  function cardHeader(label) {
+    const header = document.createElement("div");
+    header.className = "card-header";
+    const itemLabel = document.createElement("p");
+    itemLabel.className = "item-label";
+    itemLabel.textContent = label;
+    header.appendChild(itemLabel);
+    const dots = document.createElement("div");
+    dots.className = "attempt-dots";
+    const dotEls = [];
+    for (let i = 0; i < 3; i += 1) {
+      const d = document.createElement("span");
+      d.className = "dot";
+      dots.appendChild(d);
+      dotEls.push(d);
+    }
+    header.appendChild(dots);
+    return { header, dotEls };
+  }
+
+  function cardActions() {
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+    const feedback = document.createElement("p");
+    feedback.className = "feedback";
+    const validateBtn = document.createElement("button");
+    validateBtn.className = "validate-button";
+    validateBtn.type = "button";
+    validateBtn.textContent = "Vérifier";
+    actions.appendChild(feedback);
+    actions.appendChild(validateBtn);
+    return { actions, feedback, validateBtn };
+  }
+
+  function finalizeCard(card, dotEls, allInputs, feedback, validateBtn, correction, isCorrectFn, maxAttempts = 3) {
+    let attempts = 0;
+    let done = false;
+    const validate = () => {
+      if (done) return;
+      if (allInputs.some((el) => el.value === "")) {
+        feedback.textContent = "Complète la case avant de vérifier.";
+        feedback.className = "feedback";
+        return;
+      }
+
+      const isCorrect = isCorrectFn();
+      const dot = dotEls[attempts];
+      attempts += 1;
+
+      if (isCorrect) {
+        done = true;
+        if (dot) dot.classList.add("is-success");
+        markResolved();
+        allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+        validateBtn.disabled = true;
+        card.classList.add("is-correct", "is-success-pop");
+        feedback.className = "feedback correct";
+        feedback.textContent = "Bonne réponse !";
+        announce("Bonne réponse.");
+        return;
+      }
+
+      if (dot) dot.classList.add("is-wrong");
+
+      if (attempts >= maxAttempts) {
+        done = true;
+        markResolved();
+        allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+        validateBtn.disabled = true;
+        card.classList.add("is-incorrect");
+        feedback.className = "feedback incorrect";
+        feedback.textContent = "Ce n'est pas tout à fait ça, regarde la correction.";
+        correction.classList.add("is-visible");
+        announce("Réponse incorrecte, correction affichée.");
+        return;
+      }
+
+      const remaining = maxAttempts - attempts;
+      feedback.className = "feedback incorrect";
+      feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+      card.classList.remove("is-shaking");
+      void card.offsetWidth;
+      card.classList.add("is-shaking");
+      announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+    };
+    return validate;
+  }
+
+  // ---------- SECTION 1 : écrire plus simplement (produit identique -> puissance, ou piège somme) ----------
+  function genProductItem() {
+    const base = randInt(2, 9);
+    const exponent = randInt(2, 6);
+    const display = Array(exponent).fill(base).join(" . ");
+    return { type: "product", base, exponent, display };
+  }
+
+  function genAdditionTrapItem() {
+    const base = randInt(2, 9);
+    const count = randInt(3, 6);
+    const display = Array(count).fill(base).join(" + ");
+    return { type: "addition", base, count, display };
+  }
+
+  function genSection1Item() {
+    const r = Math.random();
+    if (r < 0.45) return genProductItem();
+    if (r < 0.7) return genMixedItem();
+    return genAdditionTrapItem();
+  }
+
+  // Construit un contrôle "base + exposant en petit et en haut", qui imite la vraie
+  // notation mathématique (utile pour des élèves qui découvrent la matière).
+  function createPowerNotationControl(baseAriaLabel, expAriaLabel) {
+    const wrapper = document.createElement("span");
+    wrapper.className = "power-notation";
+    const baseInput = document.createElement("input");
+    baseInput.type = "number";
+    baseInput.className = "power-base-input";
+    baseInput.setAttribute("aria-label", baseAriaLabel);
+    const expInput = document.createElement("input");
+    expInput.type = "number";
+    expInput.className = "power-exp-input";
+    expInput.setAttribute("aria-label", expAriaLabel);
+    wrapper.append(baseInput, expInput);
+    return { wrapper, baseInput, expInput };
+  }
+
+  function buildProductCard(item, label) {
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label);
+    card.appendChild(header);
+
+    const raw = document.createElement("p");
+    raw.className = "raw-number";
+    raw.textContent = item.display;
+    card.appendChild(raw);
+
+    const row = document.createElement("div");
+    row.className = "power-answer-row";
+    const equal = document.createElement("span");
+    equal.textContent = "=";
+    const { wrapper, baseInput, expInput } = createPowerNotationControl("base de la puissance", "exposant de la puissance");
+    const hint = document.createElement("span");
+    hint.className = "exp-hint";
+    hint.textContent = "(base, puis exposant en haut)";
+    row.append(equal, wrapper, hint);
+    card.appendChild(row);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = `<strong>Correction :</strong>${item.display} = <strong>${formatPower(item.base, item.exponent)}</strong>`;
+    card.appendChild(correction);
+
+    const validate = finalizeCard(card, dotEls, [baseInput, expInput], feedback, validateBtn, correction, () => {
+      return Number(baseInput.value) === item.base && Number(expInput.value) === item.exponent;
+    });
+    validateBtn.addEventListener("click", validate);
+
+    return card;
+  }
+
+  // ---------- SECTION 1 (suite) : facteurs non tous égaux -> produit de deux puissances ----------
+  function genMixedItem() {
+    const bases = shuffle([2, 3, 4, 5, 6, 7, 8, 9]).slice(0, 2).sort((a, b) => a - b);
+    const [baseA, baseB] = bases;
+    const countA = randInt(2, 4);
+    const countB = randInt(2, 4);
+    const factors = shuffle([...Array(countA).fill(baseA), ...Array(countB).fill(baseB)]);
+    return { type: "mixed", baseA, countA, baseB, countB, display: factors.join(" . ") };
+  }
+
+  function buildMixedCard(item, label) {
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label);
+    card.appendChild(header);
+
+    const raw = document.createElement("p");
+    raw.className = "raw-number";
+    raw.textContent = item.display;
+    card.appendChild(raw);
+
+    const instruction = document.createElement("p");
+    instruction.className = "phrase-text";
+    instruction.textContent = "Les facteurs ne sont pas tous égaux : regroupe-les et écris ce produit comme un produit de deux puissances.";
+    card.appendChild(instruction);
+
+    const row = document.createElement("div");
+    row.className = "power-answer-row";
+    const equal = document.createElement("span");
+    equal.textContent = "=";
+    const first = createPowerNotationControl("base de la première puissance", "exposant de la première puissance");
+    const dotSep = document.createElement("span");
+    dotSep.className = "dot-sep";
+    dotSep.textContent = ".";
+    const second = createPowerNotationControl("base de la deuxième puissance", "exposant de la deuxième puissance");
+    row.append(equal, first.wrapper, dotSep, second.wrapper);
+    card.appendChild(row);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = `<strong>Correction :</strong>${item.display} = <strong>${formatPower(item.baseA, item.countA)} . ${formatPower(item.baseB, item.countB)}</strong>`;
+    card.appendChild(correction);
+
+    const allInputs = [first.baseInput, first.expInput, second.baseInput, second.expInput];
+    const validate = finalizeCard(card, dotEls, allInputs, feedback, validateBtn, correction, () => {
+      const given = [
+        { base: Number(first.baseInput.value), exp: Number(first.expInput.value) },
+        { base: Number(second.baseInput.value), exp: Number(second.expInput.value) }
+      ].sort((a, b) => a.base - b.base);
+      const target = [
+        { base: item.baseA, exp: item.countA },
+        { base: item.baseB, exp: item.countB }
+      ];
+      return given[0].base === target[0].base && given[0].exp === target[0].exp &&
+             given[1].base === target[1].base && given[1].exp === target[1].exp;
+    });
+    validateBtn.addEventListener("click", validate);
+
+    return card;
+  }
+
+  function buildAdditionTrapCard(item, label) {
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label);
+    card.appendChild(header);
+
+    const raw = document.createElement("p");
+    raw.className = "raw-number";
+    raw.textContent = item.display;
+    card.appendChild(raw);
+
+    const question = document.createElement("p");
+    question.className = "phrase-text";
+    question.textContent = "Peut-on écrire cette expression sous la forme d'une puissance ?";
+    card.appendChild(question);
+
+    const optionsRow = document.createElement("div");
+    optionsRow.className = "options-row";
+    let selected = null;
+    const chips = {};
+    ["Oui", "Non"].forEach((label2) => {
+      const chip = document.createElement("span");
+      chip.className = "option-chip";
+      chip.textContent = label2;
+      chip.setAttribute("role", "button");
+      chip.setAttribute("tabindex", "0");
+      function activate() {
+        if (chip.classList.contains("is-disabled")) return;
+        selected = label2;
+        Object.values(chips).forEach((c) => c.classList.remove("is-selected"));
+        chip.classList.add("is-selected");
+      }
+      chip.addEventListener("click", activate);
+      chip.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); } });
+      chips[label2] = chip;
+      optionsRow.appendChild(chip);
+    });
+    card.appendChild(optionsRow);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    const productForm = `${item.count} . ${item.base}`;
+    correction.innerHTML = `<strong>Correction :</strong>Non, une addition répétée n'est pas une puissance : c'est un produit. ${item.display} = ${productForm} = <strong>${intPow(item.base, 1) * item.count}</strong>`;
+    card.appendChild(correction);
+
+    const fakeInput = { get value() { return selected || ""; }, disabled: false, classList: { add: () => {} } };
+    const validate = finalizeCard(card, dotEls, [fakeInput], feedback, validateBtn, correction, () => selected === "Non");
+    validateBtn.addEventListener("click", () => {
+      validate();
+      if (validateBtn.disabled) {
+        Object.values(chips).forEach((c) => c.classList.add("is-disabled"));
+      }
+    });
+
+    return card;
+  }
+
+  const SECTION1_COUNT = 6;
+  function buildSection1() {
+    const container = document.getElementById("section1-list");
+    for (let i = 0; i < SECTION1_COUNT; i += 1) {
+      const item = genSection1Item();
+      let card;
+      if (item.type === "product") card = buildProductCard(item, letterLabel(i));
+      else if (item.type === "mixed") card = buildMixedCard(item, letterLabel(i));
+      else card = buildAdditionTrapCard(item, letterLabel(i));
+      container.appendChild(card);
+    }
+    return SECTION1_COUNT;
+  }
+
+  // ---------- SECTION 2 : calcule (répartition garantie des cas, calcul mental privilégié) ----------
+  // Plutôt qu'un tirage purement aléatoire (qui peut sur-représenter certains cas comme
+  // base/exposant 1), chaque série d'exercices pioche une fois dans chaque catégorie clé :
+  // carrés parfaits (à connaître par cœur jusque 15), cubes, exposant 0, exposant 1,
+  // base 0, base 1, et puissances de 10.
+  function genCalcByType(type) {
+    let base, exponent;
+    switch (type) {
+      case "square":
+        base = randInt(2, 15);
+        exponent = 2;
+        break;
+      case "cube":
+        base = randInt(2, 10);
+        exponent = 3;
+        break;
+      case "power4":
+        // Puissances 4e à calculer mentalement (ex. 3⁴ = 81, 5⁴ = 625)
+        base = randInt(2, 5);
+        exponent = 4;
+        break;
+      case "power5":
+        // Puissances 5e à calculer mentalement (ex. 2⁵ = 32, 3⁵ = 243)
+        base = randInt(2, 4);
+        exponent = 5;
+        break;
+      case "exp0":
+        exponent = 0;
+        base = randInt(2, 20);
+        break;
+      case "exp1":
+        exponent = 1;
+        base = randInt(2, 20);
+        break;
+      case "base0":
+        base = 0;
+        exponent = randInt(1, 5);
+        break;
+      case "base1":
+        base = 1;
+        exponent = randInt(2, 8);
+        break;
+      case "powerOfTen":
+        base = randChoice([10, 100]);
+        exponent = base === 10 ? randInt(2, 5) : randInt(2, 3);
+        break;
+      default:
+        base = randInt(2, 9);
+        exponent = randInt(2, 4);
+    }
+    return { base, exponent, value: intPow(base, exponent) };
+  }
+
+  // Tire un exercice du type demandé en évitant toute redondance (même base ET même
+  // exposant) avec les exercices déjà générés dans la série en cours.
+  function genUniqueCalcByType(type, usedKeys) {
+    let item;
+    let tries = 0;
+    do {
+      item = genCalcByType(type);
+      tries += 1;
+    } while (usedKeys.has(`${item.base}^${item.exponent}`) && tries < 50);
+    usedKeys.add(`${item.base}^${item.exponent}`);
+    return item;
+  }
+
+  const SECTION2_TYPES = [
+    "square", "square", "square",
+    "cube", "cube",
+    "power4", "power4",
+    "power5",
+    "exp0", "exp1", "base0", "base1", "powerOfTen"
+  ];
+
+  function calculateCorrection(item) {
+    const { base, exponent, value } = item;
+    if (exponent === 0) {
+      return `${formatPower(base, exponent)} = <strong>1</strong> (tout nombre non nul élevé à la puissance 0 vaut 1)`;
+    }
+    if (exponent === 1) {
+      return `${formatPower(base, exponent)} = <strong>${base}</strong> (un nombre élevé à la puissance 1 est égal à lui-même)`;
+    }
+    if (base === 0) {
+      return `${formatPower(base, exponent)} = <strong>0</strong> (0 élevé à une puissance non nulle vaut toujours 0)`;
+    }
+    if (base === 1) {
+      return `${formatPower(base, exponent)} = <strong>1</strong> (toute puissance de 1 vaut 1)`;
+    }
+    const factors = Array(exponent).fill(base).join(" . ");
+    return `${formatPower(base, exponent)} = ${factors} = <strong>${formatNumber(value)}</strong>`;
+  }
+
+  function buildCalculateCard(item, label) {
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label);
+    card.appendChild(header);
+
+    const raw = document.createElement("p");
+    raw.className = "raw-number";
+    raw.textContent = `${formatPower(item.base, item.exponent)} =`;
+    card.appendChild(raw);
+
+    const row = document.createElement("div");
+    row.className = "numeric-row";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.className = "numeric-input";
+    input.setAttribute("aria-label", `${formatPower(item.base, item.exponent)}, résultat`);
+    row.appendChild(input);
+    card.appendChild(row);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = `<strong>Correction :</strong>${calculateCorrection(item)}`;
+    card.appendChild(correction);
+
+    const validate = finalizeCard(card, dotEls, [input], feedback, validateBtn, correction, () => normalizeNumericAnswer(input.value) === item.value);
+    validateBtn.addEventListener("click", validate);
+
+    return card;
+  }
+
+  function buildSection2() {
+    const container = document.getElementById("section2-list");
+    const types = shuffle(SECTION2_TYPES);
+    const usedKeys = new Set();
+    types.forEach((type, i) => {
+      const item = genUniqueCalcByType(type, usedKeys);
+      container.appendChild(buildCalculateCard(item, letterLabel(i)));
+    });
+    return types.length;
+  }
+
+  // ---------- SECTION 3 : calcule à la calculatrice (plus grands nombres) ----------
+  // Les bornes de base/exposant sont choisies pour que le résultat reste un entier
+  // exact et sûr en JavaScript (bien en dessous de Number.MAX_SAFE_INTEGER),
+  // tout en exigeant réellement l'usage d'une calculatrice.
+  function genCalculatorItem() {
+    const exponent = randInt(2, 5);
+    let maxBase;
+    if (exponent === 2) maxBase = 99;
+    else if (exponent === 3) maxBase = 60;
+    else if (exponent === 4) maxBase = 25;
+    else maxBase = 15;
+    const base = randInt(11, maxBase);
+    return { base, exponent, value: intPow(base, exponent) };
+  }
+
+  function buildCalculatorCard(item, label) {
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label);
+    card.appendChild(header);
+
+    const raw = document.createElement("p");
+    raw.className = "raw-number";
+    raw.textContent = `${formatPower(item.base, item.exponent)} =`;
+    card.appendChild(raw);
+
+    const row = document.createElement("div");
+    row.className = "numeric-row";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.className = "numeric-input";
+    input.setAttribute("aria-label", `${formatPower(item.base, item.exponent)}, résultat`);
+    row.appendChild(input);
+    card.appendChild(row);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = `<strong>Correction :</strong>${formatPower(item.base, item.exponent)} = <strong>${formatNumber(item.value)}</strong><br>Sur la calculatrice : ${item.base} → touche puissance (x^y) → ${item.exponent} → =`;
+    card.appendChild(correction);
+
+    const validate = finalizeCard(card, dotEls, [input], feedback, validateBtn, correction, () => normalizeNumericAnswer(input.value) === item.value);
+    validateBtn.addEventListener("click", validate);
+
+    return card;
+  }
+
+  const SECTION3_COUNT = 6;
+  function buildSection3() {
+    const container = document.getElementById("section3-list");
+    const usedKeys = new Set();
+    for (let i = 0; i < SECTION3_COUNT; i += 1) {
+      let item;
+      let tries = 0;
+      do {
+        item = genCalculatorItem();
+        tries += 1;
+      } while (usedKeys.has(`${item.base}^${item.exponent}`) && tries < 50);
+      usedKeys.add(`${item.base}^${item.exponent}`);
+      container.appendChild(buildCalculatorCard(item, letterLabel(i)));
+    }
+    return SECTION3_COUNT;
+  }
+
+  function buildAll() {
+    document.getElementById("section1-list").replaceChildren();
+    document.getElementById("section2-list").replaceChildren();
+    document.getElementById("section3-list").replaceChildren();
+    state.resolved = 0;
+
+    const n1 = buildSection1();
+    const n2 = buildSection2();
+    const n3 = buildSection3();
+
+    state.total = n1 + n2 + n3;
+    updateGlobalScore();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".exercise-card").forEach((card) => card.classList.add("is-visible"));
+      });
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const active = document.activeElement;
+    if (!active || active.tagName !== "INPUT") return;
+    const card = active.closest(".exercise-card");
+    if (!card) return;
+    const validateBtn = card.querySelector(".validate-button");
+    if (validateBtn && !validateBtn.disabled) {
+      event.preventDefault();
+      validateBtn.click();
+    }
+  });
+
+  document.getElementById("new-exercises-button").addEventListener("click", () => {
+    buildAll();
+    announce("De nouveaux exercices ont été générés.");
+  });
+
+  buildAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="fr">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Problèmes sur les puissances</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #16a34a;
+      --error: #dc2626;
+      --line: #dbe3f4;
+      --hint: #eef6ff;
+      --hint-line: #60a5fa;
+      --correction: #fff7e7;
+      --correction-line: #e3a227;
+      --card-radius: 17px;
+      --control-radius: 9px;
+      --progress-height: 11px;
+      --score-size: 68px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Source Sans Pro", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.48);
+      outline-offset: 3px;
+    }
+
+    .app-shell {
+      position: relative;
+      width: 100%;
+      min-height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 25rem), linear-gradient(180deg, var(--slate) 0 17rem, var(--paper) 17rem 100%);
+    }
+
+    .main-width {
+      width: min(calc(100% - 2rem), 900px);
+      margin-inline: auto;
+    }
+
+    .hero { padding: 2.5rem 0 2.2rem; color: #fff; }
+    .hero-title { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.1; font-weight: 800; }
+    .hero-subtitle { margin: 0.5rem 0 0; }
+    .hero-actions { display: flex; margin-top: 1.2rem; }
+    .content { padding-bottom: 4rem; }
+
+    .restart-button, .validate-button {
+      border: 0; border-radius: 11px; font-weight: 700; cursor: pointer; transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+    .restart-button:hover, .validate-button:hover:not(:disabled) { transform: translateY(-1px); }
+
+    .hero .restart-button {
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.72rem 1.15rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.16); background: #fff; color: var(--slate);
+    }
+
+    .advice-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1.35rem;
+      padding: 1.05rem 1.25rem;
+      border: 1px solid #c7d2fe;
+      border-radius: 16px;
+      background: #eef2ff;
+      color: #312e81;
+      font-size: 1rem;
+      box-shadow: 0 6px 18px rgba(79, 110, 247, 0.08);
+    }
+    .advice-banner svg {
+      flex: none;
+      color: var(--indigo);
+      width: 24px;
+      height: 24px;
+    }
+
+    .score-panel {
+      display: grid; grid-template-columns: minmax(200px, auto) 1fr; align-items: center; gap: 1.35rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 20px; background: #fff; box-shadow: 0 12px 32px rgba(30, 42, 58, 0.09);
+    }
+    .score-values { display: flex; align-items: center; gap: 1rem; }
+    .score-line { color: var(--muted); white-space: nowrap; }
+    .score-line strong { display: block; color: var(--indigo); font-size: 1.55rem; line-height: 1; font-weight: 800; }
+
+    .score-percent {
+      display: grid; place-items: center; width: var(--score-size); height: var(--score-size); flex: none; border: 5px solid #dfe5ff; border-radius: 50%; color: var(--indigo-dark); font-family: "Space Mono", monospace; font-weight: 700;
+    }
+
+    .score-label { margin: 0 0 0.25rem; font-weight: 700; }
+    .exercise-position { margin: 0 0 0.6rem; color: var(--indigo-dark); font-size: 1.08rem; font-weight: 800; }
+    .score-detail { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.92rem; }
+
+    .progress-track { height: var(--progress-height); overflow: hidden; border-radius: 99px; background: #e5eaf6; }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+    .completion-panel {
+      display: none; align-items: center; gap: 1rem; margin-top: 1rem; padding: 1.15rem 1.25rem; border: 1px solid #86d9a4; border-radius: 18px; background: #fff; box-shadow: 0 12px 28px rgba(22, 163, 74, 0.12);
+    }
+    .completion-panel.is-visible { display: flex; animation: success-pop 500ms ease both; }
+    .completion-icon { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 14px; color: var(--success); background: #dcfce7; }
+    .completion-title { margin: 0; font-size: 1.25rem; font-weight: 800; }
+    .completion-text { margin: 0.15rem 0 0; }
+    .final-score { margin: 0.3rem 0 0; color: #166534; font-family: "Space Mono", monospace; font-size: 1.05rem; font-weight: 700; }
+
+    .exercise-list { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
+    .exercise-card { padding: 1.35rem 1.4rem; border: 2px solid transparent; border-radius: var(--card-radius); background: #fff; box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08); transition: border-color 180ms ease, transform 180ms ease; animation: card-in 350ms both; }
+
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-incorrect { border-color: var(--error); }
+    .exercise-card.is-shaking { animation: gentle-shake 260ms ease; }
+
+    .item-label { margin: 0 0 0.45rem; color: var(--indigo); font-weight: 800; }
+    .prompt { margin: 0 0 0.75rem; font-weight: 700; line-height: 1.5; font-size: 1.08rem; }
+
+    .context-box { margin: 0 0 0.95rem; padding: 0.85rem 1.1rem; border-radius: 12px; background: #f4f6fd; border-left: 4px solid var(--indigo); font-size: 0.98rem; line-height: 1.6; }
+    .input-label { display: block; margin-bottom: 0.38rem; color: var(--muted); font-weight: 600; }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.1rem;
+      margin-top: 0.75rem;
+    }
+    .input-block {
+      display: flex;
+      flex-direction: column;
+    }
+    .power-field-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.4rem 0.7rem;
+      background: #f8faff;
+      border: 1px solid #ccd6ee;
+      border-radius: var(--control-radius);
+      width: fit-content;
+    }
+    .base-input {
+      width: 65px;
+      height: 40px;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      text-align: center;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--ink);
+    }
+    .exponent-input {
+      width: 48px;
+      height: 32px;
+      border: 1.5px solid var(--indigo);
+      border-radius: 6px;
+      text-align: center;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--indigo-dark);
+      background: #eef2ff;
+      margin-bottom: 12px;
+    }
+    .answer-input {
+      min-height: 44px;
+      padding: 0.56rem 0.72rem;
+      border: 1px solid #ccd6ee;
+      border-radius: var(--control-radius);
+      color: var(--ink);
+      background: #fff;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      width: 100%;
+    }
+    .answer-input:disabled, .base-input:disabled, .exponent-input:disabled {
+      background: #f4f6fd;
+      opacity: 0.86;
+    }
+
+    .power-field-group.field-ok { border-color: var(--success); background: #f0fdf4; }
+    .power-field-group.field-bad { border-color: var(--error); background: #fef2f2; }
+    .answer-input.field-ok { border-color: var(--success); background: #f0fdf4; }
+    .answer-input.field-bad { border-color: var(--error); background: #fef2f2; }
+
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.1rem; }
+    .feedback { flex: 1; min-width: 210px; margin: 0; font-weight: 600; }
+    .feedback.correct { color: var(--success); }
+    .feedback.incorrect { color: var(--error); }
+
+    .validate-button { min-height: 41px; padding: 0.6rem 1.05rem; color: #fff; background: var(--indigo); }
+    .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+    .hint-panel, .correction { display: none; margin-top: 0.95rem; padding: 0.9rem; border-radius: 10px; line-height: 1.6; }
+    .hint-panel { border-left: 4px solid var(--hint-line); color: #174675; background: var(--hint); }
+    .correction { border-left: 4px solid var(--correction-line); color: #7a4900; background: var(--correction); }
+    .hint-panel.is-visible, .correction.is-visible { display: block; animation: reveal-panel 240ms ease both; }
+
+    .answer-review { display: grid; gap: 0.45rem; margin-bottom: 0.2rem; }
+    .correct-answer { color: #166534; margin: 0; }
+
+    .footer-actions { margin-top: 2.5rem; text-align: center; }
+    .footer-actions .restart-button { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; border: 1px solid var(--line); background: #fff; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    @keyframes card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes success-pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes reveal-panel { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes gentle-shake { 0%, 100% { transform: translateX(0); } 33% { transform: translateX(-2px); } 66% { transform: translateX(2px); } }
+
+    @media (max-width: 680px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .score-values { justify-content: space-between; }
+      .card-actions { align-items: stretch; flex-direction: column; }
+      .validate-button, .answer-input { width: 100%; }
+    }
+  </style>
+ </head>
+ <body>
+  <div class="app-shell">
+   <header class="hero">
+    <div class="main-width">
+     <h1 class="hero-title">Problèmes sur les puissances</h1>
+     <p class="hero-subtitle"></p>
+     <div class="hero-actions">
+      <button id="new-exercises-button" class="restart-button" type="button" onclick="initApp()">
+       <i data-lucide="shuffle" aria-hidden="true"></i>
+       <span>Nouveaux problèmes</span>
+      </button>
+     </div>
+    </div>
+   </header>
+
+   <main class="main-width content">
+    <div class="advice-banner">
+     <i data-lucide="pen-tool" aria-hidden="true"></i>
+     <span><strong>Conseil de travail :</strong> Écris d'abord l'expression sous la forme d'une puissance avec la base et l'exposant, puis calcule sa valeur numérique.</span>
+    </div>
+
+    <section class="score-panel">
+     <div class="score-values" aria-live="polite">
+      <div class="score-line">
+       <strong id="score-value">0 / 3</strong> <span>problèmes réussis</span>
+      </div>
+      <div id="score-percent" class="score-percent">0 %</div>
+     </div>
+     <div>
+      <p class="score-label">Progression de la série</p>
+      <p id="exercise-position" class="exercise-position">En attente de démarrage</p>
+      <div id="progress-track" class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0">
+       <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <p id="score-detail" class="score-detail">0 terminé(s) · 0 réussi(s)</p>
+     </div>
+    </section>
+
+    <section id="completion-panel" class="completion-panel">
+     <div class="completion-icon">
+      <i data-lucide="trophy"></i>
+     </div>
+     <div>
+      <h2 class="completion-title">Série terminée !</h2>
+      <p class="completion-text">Tu as traité les 3 problèmes.</p>
+      <p id="final-score" class="final-score"></p>
+     </div>
+    </section>
+
+    <div id="exercise-list" class="exercise-list"></div>
+
+    <div class="footer-actions">
+     <button id="restart-button" class="restart-button" type="button" onclick="initApp()">
+      <i data-lucide="refresh-cw" aria-hidden="true"></i>
+      <span>Nouveau tirage de 3 problèmes</span>
+     </button>
+    </div>
+   </main>
+
+   <div id="live-region" class="sr-only" aria-live="polite"></div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const TOTAL_EXERCISES = 3;
+    const MAX_ATTEMPTS = 3;
+
+    let state = { completed: 0, correct: 0 };
+
+    const elements = {
+      list: document.getElementById("exercise-list"),
+      score: document.getElementById("score-value"),
+      percent: document.getElementById("score-percent"),
+      detail: document.getElementById("score-detail"),
+      position: document.getElementById("exercise-position"),
+      fill: document.getElementById("progress-fill"),
+      completion: document.getElementById("completion-panel"),
+      finalScore: document.getElementById("final-score")
+    };
+
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    function formatNumber(n) {
+      return n.toLocaleString("fr-FR").replace(/\u202f|\u00a0/g, " ");
+    }
+    
+    function parseBigIntInput(str) {
+      const cleaned = String(str).replace(/[\s\u00a0\u202f]/g, "");
+      if (!/^\d+$/.test(cleaned)) return null;
+      try { return BigInt(cleaned); } catch (e) { return null; }
+    }
+
+    function cardShell(labelText) {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+      const label = document.createElement("p");
+      label.className = "item-label";
+      label.textContent = labelText;
+      card.appendChild(label);
+      return card;
+    }
+    
+    function addPrompt(card, html) {
+      const p = document.createElement("div");
+      p.className = "context-box prompt";
+      p.innerHTML = html;
+      card.appendChild(p);
+      return p;
+    }
+    
+    function addCardActions(card) {
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedback.setAttribute("aria-live", "assertive");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "validate-button";
+      btn.textContent = "Vérifier";
+      actions.appendChild(feedback);
+      actions.appendChild(btn);
+      card.appendChild(actions);
+      return { actions, feedback, btn };
+    }
+    
+    function addHintAndCorrection(card, hintHtml, correctionHtml) {
+      const hint = document.createElement("div");
+      hint.className = "hint-panel";
+      hint.innerHTML = `<strong>Indice :</strong> <span>${hintHtml}</span>`;
+      card.appendChild(hint);
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = correctionHtml;
+      card.appendChild(correction);
+      return { hint, correction };
+    }
+
+    function finalizeAttempt(card, resolvedRef, allInputs, feedback, btn, hint, correction, checkFn, onPartial) {
+      let attempts = 0;
+      return () => {
+        if (resolvedRef.done) return;
+        if (allInputs.some((el) => el.value.trim() === "")) {
+          feedback.textContent = "Complète tous les champs avant de vérifier.";
+          feedback.className = "feedback";
+          return;
+        }
+
+        attempts += 1;
+        const result = checkFn();
+        const ok = result.ok;
+        if (typeof onPartial === "function") onPartial(result);
+
+        if (ok) {
+          resolvedRef.done = true;
+          state.correct += 1;
+          state.completed += 1;
+          allInputs.forEach((el) => { el.disabled = true; });
+          btn.disabled = true;
+          card.classList.add("is-correct");
+          feedback.className = "feedback correct";
+          feedback.textContent = "✅ Excellente réponse !";
+          updateScoreboard();
+          checkCompletion();
+          return;
+        }
+
+        if (attempts >= MAX_ATTEMPTS) {
+          resolvedRef.done = true;
+          state.completed += 1;
+          allInputs.forEach((el) => { el.disabled = true; });
+          btn.disabled = true;
+          card.classList.add("is-incorrect");
+          feedback.className = "feedback incorrect";
+          feedback.textContent = "❌ Essais épuisés. Voici la solution :";
+          hint.classList.add("is-visible");
+          correction.classList.add("is-visible");
+          updateScoreboard();
+          checkCompletion();
+          return;
+        }
+
+        const remaining = MAX_ATTEMPTS - attempts;
+        card.classList.remove("is-shaking");
+        void card.offsetWidth;
+        card.classList.add("is-shaking");
+        feedback.className = "feedback incorrect";
+
+        if (result.powerOk === true && result.valueOk === false) {
+          feedback.textContent = `☑️ La puissance est correcte, mais le résultat numérique est faux. Il te reste ${remaining} essai(s).`;
+        } else if (result.powerOk === false && result.valueOk === true) {
+          feedback.textContent = `☑️ Le résultat numérique est correct, mais la puissance écrite n'est pas la bonne. Il te reste ${remaining} essai(s).`;
+        } else {
+          feedback.textContent = `❌ Incorrect. Il te reste ${remaining} essai(s).`;
+        }
+      };
+    }
+
+    function buildPowerInputCard(labelText, title, promptText, expBase, expExponent, expValue, hintText, resultDetailText, valueLabelText = "Valeur calculée :") {
+      const card = cardShell(labelText);
+      addPrompt(card, `<strong>${title}</strong><br>${promptText}`);
+
+      const grid = document.createElement("div");
+      grid.className = "inputs-grid";
+
+      const blockPower = document.createElement("div");
+      blockPower.className = "input-block";
+      const labelP = document.createElement("label");
+      labelP.className = "input-label";
+      labelP.textContent = "Écris sous forme de puissance :";
+
+      const groupP = document.createElement("div");
+      groupP.className = "power-field-group";
+
+      const baseInput = document.createElement("input");
+      baseInput.type = "number";
+      baseInput.className = "base-input";
+      baseInput.placeholder = "Base";
+      baseInput.setAttribute("aria-label", "Base de la puissance");
+
+      const expInput = document.createElement("input");
+      expInput.type = "number";
+      expInput.className = "exponent-input";
+      expInput.placeholder = "Exp";
+      expInput.setAttribute("aria-label", "Exposant de la puissance");
+
+      groupP.appendChild(baseInput);
+      groupP.appendChild(expInput);
+      blockPower.appendChild(labelP);
+      blockPower.appendChild(groupP);
+
+      const blockVal = document.createElement("div");
+      blockVal.className = "input-block";
+      const labelV = document.createElement("label");
+      labelV.className = "input-label";
+      labelV.textContent = valueLabelText;
+
+      const valInput = document.createElement("input");
+      valInput.type = "text";
+      valInput.setAttribute("inputmode", "numeric");
+      valInput.className = "answer-input";
+      valInput.placeholder = "Résultat...";
+      valInput.setAttribute("aria-label", "Valeur numérique calculée");
+
+      blockVal.appendChild(labelV);
+      blockVal.appendChild(valInput);
+
+      grid.appendChild(blockPower);
+      grid.appendChild(blockVal);
+      card.appendChild(grid);
+
+      const { feedback, btn } = addCardActions(card);
+      const correctionHtml = `<div class="answer-review"><p class="correct-answer"><strong>Puissance :</strong> ${expBase}<sup>${expExponent}</sup></p><p class="correct-answer"><strong>Résultat :</strong> ${resultDetailText || formatNumber(expValue)}</p></div>`;
+      const { hint, correction } = addHintAndCorrection(card, hintText, correctionHtml);
+
+      const resolvedRef = { done: false };
+      const validate = finalizeAttempt(card, resolvedRef, [baseInput, expInput, valInput], feedback, btn, hint, correction, () => {
+        const b = Number(baseInput.value);
+        const e = Number(expInput.value);
+        const v = parseBigIntInput(valInput.value);
+        const powerOk = b === expBase && e === expExponent;
+        const valueOk = v !== null && v === BigInt(expValue);
+        return { ok: powerOk && valueOk, powerOk, valueOk };
+      }, (result) => {
+        groupP.classList.remove("field-ok", "field-bad");
+        groupP.classList.add(result.powerOk ? "field-ok" : "field-bad");
+        valInput.classList.remove("field-ok", "field-bad");
+        valInput.classList.add(result.valueOk ? "field-ok" : "field-bad");
+      });
+
+      btn.addEventListener("click", validate);
+      [baseInput, expInput, valInput].forEach(inp => {
+        inp.addEventListener("keypress", (ev) => { if (ev.key === "Enter") btn.click(); });
+      });
+
+      return card;
+    }
+
+    // =========================================================================
+    // BANQUE DE 5 PROBLÈMES SUR LES PUISSANCES (SANS HASARD NI PROBA)
+    // =========================================================================
+
+    // 1. Division cellulaire (Modifié : demande le temps total pour faire réfléchir l'élève)
+    function p1(label) {
+      const n = randInt(5, 8);
+      const totalMinutes = n * 20; 
+      const val = Math.pow(2, n);
+      return buildPowerInputCard(
+        label, "Division cellulaire",
+        `Une souche de bactéries se sépare en 2 toutes les 20 minutes. Partant d'une seule bactérie, combien en obtient-on après ${totalMinutes} minutes ?`,
+        2, n, val,
+        `Trouve d'abord le nombre d'étapes de division : en ${totalMinutes} minutes, il y a ${totalMinutes} divisé par 20 = ${n} cycles. À chaque étape, la quantité est multipliée par 2.`,
+        `${formatNumber(val)} bactéries`
+      );
+    }
+
+    // 2. Secret partagé
+    function p2(label, twist) {
+      const n = randInt(3, 5);
+      const exponent = twist ? n - 1 : n;
+      const val = Math.pow(3, exponent);
+      const promptText = twist
+        ? `On appelle "étape 1" le moment où un seul élève connaît un secret, avant tout envoi. À chaque étape suivante, chaque élève qui connaît déjà le secret le transmet à 3 nouveaux camarades. Combien de nouveaux élèves apprennent le secret à la ${n}ᵉ étape ?`
+        : `Un élève envoie un message à 3 camarades. À l'étape suivante, chacun de ces 3 élèves le transfère à 3 nouveaux élèves, et ainsi de suite. Combien de nouveaux élèves reçoivent le message à la ${n}ᵉ étape ?`;
+      const hintText = twist
+        ? `Attention : à l'étape 1, le secret n'a encore été transmis à personne (1 élève = 3⁰, aucun envoi). Le nombre d'envois réalisés jusqu'à l'étape ${n} est donc ${n} − 1 = ${exponent}, pas ${n}.`
+        : `À l'étape ${n}, le nombre de nouveaux élèves est multiplié par 3 à chaque fois.`;
+      return buildPowerInputCard(
+        label, "Propagation d'un message",
+        promptText,
+        3, exponent, val,
+        hintText,
+        `${formatNumber(val)} élèves`
+      );
+    }
+
+    // 3. Pliage de feuille
+    function p3(label) {
+      const n = randInt(6, 10);
+      const val = Math.pow(2, n);
+      return buildPowerInputCard(
+        label, "Pliage de papier",
+        `Chaque pliage en deux d'une feuille de papier double son nombre de couches. Combien de couches de papier obtient-on après ${n} pliages consécutifs ?`,
+        2, n, val,
+        `Chaque pliage double l'épaisseur. Il faut donc multiplier 2 par lui-même ${n} fois.`,
+        `${formatNumber(val)} couches`
+      );
+    }
+
+    // 4. Arbre généalogique ou embranchements
+    function p4(label, twist) {
+      const n = randInt(3, 5);
+      const exponent = twist ? n - 1 : n;
+      const val = Math.pow(4, exponent);
+      const promptText = twist
+        ? `On appelle "niveau 1" le tronc de l'arbre magique, avant toute séparation (une seule branche). À chaque niveau suivant, chaque branche se sépare en 4 nouvelles branches. Combien y a-t-il de branches au niveau ${n} ?`
+        : `Le tronc d'un arbre magique se sépare en 4 grosses branches. Chacune de ces branches se sépare à son tour en 4 branches moyennes, et ainsi de suite. Combien y a-t-il de branches au niveau ${n} ?`;
+      const hintText = twist
+        ? `Attention : au niveau 1, le tronc ne s'est pas encore séparé (1 branche = 4⁰). Le nombre de séparations jusqu'au niveau ${n} est donc ${n} − 1 = ${exponent}, pas ${n}.`
+        : `On multiplie le nombre de branches par 4 à chaque nouveau niveau.`;
+      return buildPowerInputCard(
+        label, "Le grand arbre magique",
+        promptText,
+        4, exponent, val,
+        hintText,
+        `${formatNumber(val)} branches`
+      );
+    }
+
+    // 5. Boîtes emboîtées (type Matriochkas)
+    function p5(label, twist) {
+      const n = randInt(3, 4);
+      const exponent = twist ? n - 1 : n;
+      const val = Math.pow(5, exponent);
+      const promptText = twist
+        ? `On appelle "niveau 1" la grande caisse elle-même, avant tout emboîtement (1 seul objet). À chaque niveau suivant, chaque objet est remplacé par 5 objets plus petits (cartons, puis boîtes, puis sachets...). Combien y a-t-il d'objets au niveau ${n} d'emboîtement ?`
+        : `Une grande caisse contient 5 cartons. Chaque carton contient 5 boîtes, et chaque boîte contient 5 sachets. Si le système continue ainsi, combien y a-t-il d'objets au niveau ${n} d'emboîtement ?`;
+      const hintText = twist
+        ? `Attention : au niveau 1, il n'y a encore eu aucun emboîtement (1 objet = 5⁰). Le nombre d'emboîtements jusqu'au niveau ${n} est donc ${n} − 1 = ${exponent}, pas ${n}.`
+        : `À chaque étape (cartons, boîtes, sachets...), on multiplie la quantité par 5.`;
+      return buildPowerInputCard(
+        label, "Les caisses d'expédition",
+        promptText,
+        5, exponent, val,
+        hintText,
+        `${formatNumber(val)} objets`
+      );
+    }
+
+    const problemBank = [p1, p2, p3, p4, p5];
+
+    // Problèmes pour lesquels la variante "indexation décalée" (niveau 1 = base⁰) a du sens.
+    const TWIST_ELIGIBLE = new Set([p2, p4, p5]);
+    // Probabilité qu'une fiche contienne un exercice avec cette variante.
+    const TWIST_PROBABILITY = 0.5;
+
+    function updateScoreboard() {
+      elements.score.textContent = `${state.correct} / ${TOTAL_EXERCISES}`;
+      elements.percent.textContent = `${Math.round((state.correct / TOTAL_EXERCISES) * 100)} %`;
+      elements.position.textContent = state.completed === TOTAL_EXERCISES ? "Série terminée" : `Exercice ${state.completed + 1} en cours`;
+      elements.detail.textContent = `${state.completed} terminé(s) · ${state.correct} réussi(s)`;
+      elements.fill.style.width = `${(state.completed / TOTAL_EXERCISES) * 100}%`;
+    }
+
+    function checkCompletion() {
+      if (state.completed === TOTAL_EXERCISES) {
+        elements.completion.classList.add("is-visible");
+        elements.finalScore.textContent = `Score final : ${state.correct} / ${TOTAL_EXERCISES}`;
+        // Scroll vers le bas pour bien voir le résultat final
+        setTimeout(() => {
+          elements.completion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+      }
+    }
+
+    function initApp() {
+      // Réinitialiser les états
+      state.completed = 0;
+      state.correct = 0;
+      elements.list.innerHTML = "";
+      elements.completion.classList.remove("is-visible");
+
+      // Sélectionner 3 exercices aléatoirement
+      const shuffled = [...problemBank].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, TOTAL_EXERCISES);
+
+      // Choisir, au plus, UN exercice éligible de la série qui recevra la variante
+      // "indexation décalée" (niveau/étape 1 = base⁰, l'élève doit retirer 1 à l'exposant).
+      const eligibleIndexes = selected
+        .map((fn, idx) => (TWIST_ELIGIBLE.has(fn) ? idx : -1))
+        .filter((idx) => idx !== -1);
+      let twistIndex = -1;
+      if (eligibleIndexes.length > 0 && Math.random() < TWIST_PROBABILITY) {
+        twistIndex = eligibleIndexes[randInt(0, eligibleIndexes.length - 1)];
+      }
+
+      // Générer les cartes
+      selected.forEach((generateFn, index) => {
+        const card = generateFn(`Problème ${index + 1} sur ${TOTAL_EXERCISES}`, index === twistIndex);
+        elements.list.appendChild(card);
+      });
+
+      updateScoreboard();
+      
+      // Remonter en haut de page
+      window.scrollTo(0, 0);
+      lucide.createIcons();
+    }
+
+    // Lancer au chargement
+    document.addEventListener("DOMContentLoaded", initApp);
+  </script>
+ </body>
+</html>
