@@ -474,30 +474,52 @@
     for (let i = 0; i < 5; i++) {
       const pos = positions[rand(0, positions.length - 1)];
 
-      // Generate random digits for left (7) and right (6) sides
-      const left  = Array.from({length: 7}, () => rand(0, 9));
-      const right = Array.from({length: 6}, () => rand(0, 9));
+      // The flat index (within [...left, ...right]) that will hold the target digit
+      const targetIndex = pos.side === "left"
+        ? (6 - pos.idx)        // left array: index 6=units, 0=millions
+        : (6 + pos.idx);       // right array starts at flat index 7
 
-      // Ensure no leading zero in integer part
-      if (left[6] === 0) left[6] = rand(1, 9);
+      let left, right, targetDigit;
 
-      // Pick a target digit that is unique across ALL positions (avoid ambiguity)
-      // Try up to 20 times to find a digit that appears only at the target position
-      let targetDigit = null;
-      for (let attempt = 0; attempt < 20; attempt++) {
-        const d = rand(1, 9);
-        // Check uniqueness
+      // Regenerate the whole number until we find a digit that can be placed
+      // at targetIndex AND appears nowhere else in the number (no ambiguity).
+      let found = false;
+      for (let regen = 0; regen < 50 && !found; regen++) {
+        left  = Array.from({length: 7}, () => rand(0, 9));
+        right = Array.from({length: 6}, () => rand(0, 9));
+
+        // Ensure no leading zero in integer part
+        if (left[0] === 0) left[0] = rand(1, 9);
+
         const allDigits = [...left, ...right];
-        const targetIndex = pos.side === "left"
-          ? (6 - pos.idx)   // left array: index 6=millions, 0=units
-          : pos.idx - 1;    // right array: index 0=dixièmes
-        const countElsewhere = allDigits.filter((v, flatIdx) => {
-          if (pos.side === "left")  return flatIdx !== (6 - pos.idx) && v === d;
-          else                      return flatIdx !== (7 + pos.idx - 1) && v === d;
-        }).length;
-        if (countElsewhere === 0) { targetDigit = d; break; }
+
+        // Candidate digits: 1-9 (avoid 0 as the "target" to keep it visually clear),
+        // excluding whatever is currently NOT at targetIndex elsewhere.
+        const candidates = [];
+        for (let d = 1; d <= 9; d++) {
+          const countElsewhere = allDigits.filter((v, flatIdx) => flatIdx !== targetIndex && v === d).length;
+          if (countElsewhere === 0) candidates.push(d);
+        }
+
+        if (candidates.length > 0) {
+          targetDigit = candidates[rand(0, candidates.length - 1)];
+          found = true;
+        }
       }
-      if (targetDigit === null) targetDigit = rand(1, 9); // fallback
+
+      // Extremely unlikely fallback: force a fresh, guaranteed-unique number from scratch
+      if (!found) {
+        left  = Array.from({length: 7}, (_, idx) => idx === targetIndex ? 0 : rand(0, 9));
+        right = Array.from({length: 6}, (_, idx) => (7 + idx) === targetIndex ? 0 : rand(0, 9));
+        if (left[0] === 0 && targetIndex !== 0) left[0] = rand(1, 9);
+        const allDigits = [...left, ...right];
+        const candidates = [];
+        for (let d = 1; d <= 9; d++) {
+          const countElsewhere = allDigits.filter((v, flatIdx) => flatIdx !== targetIndex && v === d).length;
+          if (countElsewhere === 0) candidates.push(d);
+        }
+        targetDigit = candidates.length > 0 ? candidates[rand(0, candidates.length - 1)] : 1;
+      }
 
       // Set the target digit at the right place
       if (pos.side === "left") {
