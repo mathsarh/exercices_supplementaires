@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propriétés de l'addition dans ℤ</title>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #22c55e;
+      --error: #ef4444;
+      --amber: #f59e0b;
+      --line: #dbe3f4;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+    }
+    button, select, input { font: inherit; }
+    button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.4);
+      outline-offset: 3px;
+    }
+    .app-shell {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.14), transparent 24rem),
+        linear-gradient(180deg, var(--slate) 0 15rem, var(--paper) 15rem 100%);
+    }
+    .main-width { width: min(100% - 2rem, 840px); margin-inline: auto; }
+    .hero { padding: 2.6rem 0 2rem; color: white; }
+    .hero-title { margin: 0; letter-spacing: -0.03em; font-weight: 800; font-size: clamp(1.7rem, 4.6vw, 2.3rem); }
+    .hero-subtitle { max-width: 40rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+    .content { padding-bottom: 4rem; }
+
+    .score-panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: -0.6rem;
+      padding: 1.25rem;
+    }
+    .score-values { min-width: 150px; }
+    .score-line { font-size: 0.88rem; color: var(--muted); }
+    .score-line strong { display: block; font-weight: 800; font-size: 1.5rem; color: var(--indigo); }
+    .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+    .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+    .section-block { margin-top: 2.4rem; }
+    .section-heading { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+    .section-number {
+      flex: none;
+      width: 2.1rem; height: 2.1rem;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+    }
+    .section-title { margin: 0; font-size: 1.15rem; font-weight: 800; }
+    .section-instructions { margin: 0 0 1.1rem 3.1rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+    .exercise-list { display: grid; gap: 1rem; }
+    .exercise-card {
+      background: white;
+      padding: 1.25rem 1.3rem;
+      border: 2px solid transparent;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      transition: border-color 180ms ease;
+    }
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-incorrect { border-color: var(--error); }
+    .exercise-card.is-shaking { animation: shake 340ms ease; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+    }
+
+    .item-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 0 0 0.5rem; }
+    .equality {
+      font-family: "Courier New", monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #192238;
+      background: #f4f6fd;
+      padding: 0.7rem 0.9rem;
+      border-radius: 10px;
+      margin: 0 0 0.9rem;
+      overflow-x: auto;
+    }
+
+    .options-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.9rem; }
+    .option-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.85rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 999px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+      transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+    .option-chip input { accent-color: var(--indigo); }
+    .option-chip.is-selected { border-color: var(--indigo); background: #eef2ff; color: var(--indigo-dark); font-weight: 700; }
+    .option-chip.is-disabled { cursor: default; opacity: 0.75; }
+
+    .method-list { display: grid; gap: 0.5rem; margin-bottom: 0.9rem; }
+    .method-option {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: "Courier New", monospace;
+      font-size: 0.93rem;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+    .method-option.is-selected { border-color: var(--indigo); background: #eef2ff; }
+    .method-option.is-disabled { cursor: default; opacity: 0.85; }
+    .method-tag {
+      flex: none;
+      width: 1.6rem; height: 1.6rem;
+      border-radius: 50%;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+      font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .numeric-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+    .numeric-row .equality-part { font-family: "Courier New", monospace; font-weight: 700; }
+    .numeric-input {
+      width: 100px;
+      min-height: 40px;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 8px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      text-align: center;
+    }
+    .numeric-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+    .blank-steps { display: grid; gap: 0.55rem; margin-bottom: 0.9rem; }
+    .blank-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 2.1;
+    }
+    .blank-line .fixed { white-space: pre; }
+    .blank-input {
+      width: 4.5em;
+      min-width: 64px;
+      min-height: 34px;
+      padding: 0.2rem 0.25rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 7px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .blank-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .feedback { margin: 0; font-size: 0.9rem; font-weight: 650; flex: 1; min-width: 200px; }
+    .feedback.correct { color: var(--success); }
+    .feedback.incorrect { color: var(--error); }
+
+    .validate-button {
+      min-height: 40px;
+      padding: 0.6rem 1rem;
+      border: 0;
+      border-radius: 10px;
+      background: var(--indigo);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .validate-button:disabled { cursor: default; opacity: 0.5; }
+    .steps-toggle {
+      min-height: 40px;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .correction {
+      display: none;
+      margin-top: 0.9rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      background: #fff7e7;
+      color: #8a5200;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+    .correction.is-visible { display: block; }
+    .correction strong { display: block; margin-bottom: 0.25rem; }
+
+    .intro-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      padding: 1.3rem 1.4rem;
+      margin-top: 1.6rem;
+      line-height: 1.6;
+    }
+    .intro-card h3 { margin: 0 0 0.6rem; font-size: 1.02rem; }
+    .intro-prop { margin: 0 0 1.1rem; }
+    .intro-prop:last-child { margin-bottom: 0; }
+    .intro-prop p { margin: 0.15rem 0; }
+    .intro-prop .prop-name { font-weight: 700; }
+    .intro-example {
+      font-family: "Courier New", monospace;
+      font-size: 0.92rem;
+      background: #f4f6fd;
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      margin: 0.4rem 0 0;
+      overflow-x: auto;
+    }
+    .intro-new {
+      margin-top: 1.3rem;
+      padding-top: 1.1rem;
+      border-top: 1px dashed var(--line);
+    }
+    .footer-actions { margin-top: 2.6rem; text-align: center; }
+    .restart-button {
+      min-height: 46px;
+      padding: 0.75rem 1.3rem;
+      border: 0;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    @media (max-width: 620px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .card-actions { flex-direction: column; align-items: stretch; }
+      .validate-button, .steps-toggle { width: 100%; }
+      .section-instructions { margin-left: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="main-width">
+        <h1 class="hero-title">Propriétés de l'addition dans ℤ</h1>
+        <p class="hero-subtitle">Commutativité, associativité, élément neutre et somme de deux nombres opposés : identifie les propriétés utilisées, puis calcule en t'appuyant sur elles avec des nombres entiers positifs et négatifs.</p>
+        <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;background:#4f6ef7;color:white;border:0;">Nouveaux exercices</button>
+      </div>
+    </header>
+    <main class="main-width content">
+      <section class="score-panel" aria-labelledby="score-caption">
+        <div class="score-values" aria-live="polite">
+          <div class="score-line"><strong id="resolved-score">0 / 19</strong>corrigés</div>
+        </div>
+        <div>
+          <p id="score-caption" class="score-label">Progression</p>
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="16" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION A : théorie -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">A</span>
+          <h2 class="section-title">Propriétés de l'addition</h2>
+        </div>
+        <p class="section-instructions">Les propriétés de l'addition vues avec les nombres naturels restent bien évidemment vraies avec les nombres entiers.</p>
+        <div class="intro-card">
+          <div class="intro-prop">
+            <p><span class="prop-name">1. L'addition des nombres entiers est commutative.</span><br>Dans une somme, changer l'ordre des termes ne modifie pas le résultat.</p>
+            <p class="intro-example">-5 + 3 = -2     et     3 + (-5) = -2     donc     -5 + 3 = 3 + (-5)</p>
+          </div>
+          <div class="intro-prop">
+            <p><span class="prop-name">2. L'addition des nombres entiers est associative.</span><br>Dans une somme, déplacer, supprimer ou introduire des parenthèses ne modifie pas le résultat.</p>
+            <p class="intro-example">(-9 + 3) + 5 = -6 + 5 = -1     et     -9 + (3 + 5) = -9 + 8 = -1     donc     (-9 + 3) + 5 = -9 + (3 + 5)</p>
+          </div>
+          <div class="intro-prop">
+            <p><span class="prop-name">3. L'addition des nombres entiers admet 0 comme élément neutre.</span><br>Dans une somme, le terme 0 ne modifie pas le résultat.</p>
+            <p class="intro-example">-8 + 0 = -8     et     0 + (-8) = -8     donc     -8 + 0 = -8 = 0 + (-8)</p>
+          </div>
+          <div class="intro-prop intro-new">
+            <p><span class="prop-name">4. Une nouvelle propriété</span><br>Pour calculer 3 + (-3), on se place sur la position 3 et on recule de 3 pas.</p>
+            <div id="intro-exercise"></div>
+            <p style="margin-top:0.7rem;">La somme de deux nombres opposés est égale au neutre 0.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 1 -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">1</span>
+          <h2 class="section-title">Indique la (ou les) propriété(s) utilisée(s)</h2>
+        </div>
+        <p class="section-instructions">Pour chaque égalité, coche la ou les propriétés de l'addition qui expliquent le passage de gauche à droite.</p>
+        <div id="section1-list" class="exercise-list"></div>
+      </section>
+
+      <!-- SECTION 2 -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">2</span>
+          <h2 class="section-title">Calcule en appliquant les propriétés de l'addition</h2>
+        </div>
+        <p class="section-instructions">Regroupe astucieusement les termes entre parenthèses (commutativité, associativité, élément neutre, opposés), indique les sommes partielles, puis le résultat final. Tu as 3 essais avant que la correction ne s'affiche.</p>
+        <div id="section2-list" class="exercise-list"></div>
+      </section>
+
+      <!-- SECTION 3 -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">3</span>
+          <h2 class="section-title">Défi : regroupe astucieusement les termes</h2>
+        </div>
+        <p class="section-instructions">La difficulté augmente d'item en item : les étapes (parenthèses, sommes, résultat) restent toujours affichées, mais de moins en moins de nombres sont donnés. Tu as 3 essais avant que la correction ne s'affiche.</p>
+        <div id="section4-list" class="exercise-list"></div>
+      </section>
+
+      <div class="footer-actions">
+        <button id="restart-button" class="restart-button" type="button">Générer d'autres exercices</button>
+      </div>
+    </main>
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script>
+    const state = { resolved: 0, total: 0 };
+    const liveRegion = document.getElementById("live-region");
+    const resolvedScore = document.getElementById("resolved-score");
+    const progressTrack = document.getElementById("progress-track");
+    const progressFill = document.getElementById("progress-fill");
+
+    function announce(message) {
+      liveRegion.textContent = "";
+      window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+    }
+
+    function updateGlobalScore() {
+      resolvedScore.textContent = `${state.resolved} / ${state.total}`;
+      const pct = state.total ? (state.resolved / state.total) * 100 : 0;
+      progressFill.style.width = `${pct}%`;
+      progressTrack.setAttribute("aria-valuemax", String(state.total));
+      progressTrack.setAttribute("aria-valuenow", String(state.resolved));
+    }
+
+    function markResolved() {
+      state.resolved += 1;
+      updateGlobalScore();
+    }
+
+    // Lit la valeur d'un champ en tolérant les parenthèses et les espaces qu'un élève
+    // pourrait ajouter en recopiant l'écriture "(-58)" vue dans les énoncés/corrections.
+    // Sans cette fonction, un champ de type "number" peut afficher "(-58)" sur certains
+    // appareils (tablettes/Chromebook) tout en renvoyant une value vide, ce qui fait
+    // échouer la vérification silencieusement.
+    function parseEntry(raw) {
+      const cleaned = String(raw ?? "").replace(/[()\s]/g, "");
+      return cleaned === "" ? NaN : Number(cleaned);
+    }
+
+    function sameSet(a, b) {
+      if (a.length !== b.length) return false;
+      const numeric = (x, y) => x - y;
+      const sa = [...a].sort(numeric);
+      const sb = [...b].sort(numeric);
+      return sa.every((v, i) => v === sb[i]);
+    }
+
+    // Toutes les permutations d'un tableau d'indices (utilisé pour accepter les groupes
+    // de parenthèses dans n'importe quel ordre lors de la correction)
+    function permutations(arr) {
+      if (arr.length <= 1) return [arr];
+      const result = [];
+      arr.forEach((item, idx) => {
+        const rest = arr.slice(0, idx).concat(arr.slice(idx + 1));
+        permutations(rest).forEach((p) => result.push([item, ...p]));
+      });
+      return result;
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function pickRandom(bank, count) {
+      return shuffle(bank).slice(0, count);
+    }
+
+    function pickOne(bank) {
+      return bank[Math.floor(Math.random() * bank.length)];
+    }
+
+    function letterLabel(index) {
+      return `${String.fromCharCode(97 + index)})`;
+    }
+
+    function makeBlankInput(ariaLabel) {
+      const input = document.createElement("input");
+      input.className = "blank-input";
+      input.type = "text";
+      input.inputMode = "numeric";
+      input.setAttribute("aria-label", ariaLabel);
+      return input;
+    }
+
+    function fixedSpan(text) {
+      const span = document.createElement("span");
+      span.className = "fixed";
+      span.textContent = text;
+      return span;
+    }
+
+    // Écrit un nombre pour affichage dans une somme : un nombre négatif qui suit un "+"
+    // doit être entre parenthèses (ex. "72 + (-22)"), mais pas s'il est en tête d'expression
+    // (ex. "-58 + 158"). isLeading = true pour le tout premier terme d'un (sous-)groupe.
+    function fmt(n, isLeading = false) {
+      return (!isLeading && n < 0) ? `(${n})` : `${n}`;
+    }
+
+    // Joint une liste de nombres avec " + ", en parenthésant tout terme négatif
+    // qui n'est pas le premier de la liste.
+    function joinSigned(nums) {
+      return nums.map((n, i) => fmt(n, i === 0)).join(" + ");
+    }
+
+    // ---------- SECTION 1 : propriétés (nombres entiers relatifs) ----------
+    const propertyLabels = {
+      commutativite: "Commutativité",
+      associativite: "Associativité",
+      neutre: "Élément neutre",
+      opposes: "Opposés (somme nulle)"
+    };
+
+    // Chaque item du pool est une liste de "lignes" ; la plupart des items n'ont qu'une
+    // seule ligne, mais certains (regroupement en deux étapes) en ont deux, chacune avec
+    // sa propre réponse attendue - comme le passage d) de la fiche papier.
+    const section1Bank = [
+      { lines: [{ equality: "-42 + 25 = 25 + (-42)", correct: ["commutativite"] }] },
+      { lines: [{ equality: "-17 + 34 = 34 + (-17)", correct: ["commutativite"] }] },
+      { lines: [{ equality: "56 + (-13) = -13 + 56", correct: ["commutativite"] }] },
+      { lines: [{ equality: "(-9 + 3) + 5 = -9 + (3 + 5)", correct: ["associativite"] }] },
+      { lines: [{ equality: "(12 + (-7)) + 4 = 12 + ((-7) + 4)", correct: ["associativite"] }] },
+      { lines: [{ equality: "((-15) + (-6)) + 20 = -15 + ((-6) + 20)", correct: ["associativite"] }] },
+      { lines: [{ equality: "-17 + 0 = -17", correct: ["neutre"] }] },
+      { lines: [{ equality: "0 + 16 = 16", correct: ["neutre"] }] },
+      { lines: [{ equality: "-53 + 0 = -53", correct: ["neutre"] }] },
+      { lines: [{ equality: "0 + (-28) = -28", correct: ["neutre"] }] },
+      { lines: [{ equality: "-17 + 17 = 0", correct: ["opposes"] }] },
+      { lines: [{ equality: "24 + (-24) = 0", correct: ["opposes"] }] },
+      { lines: [{ equality: "-8 + 8 = 0", correct: ["opposes"] }] },
+      { lines: [{ equality: "36 + (-36) = 0", correct: ["opposes"] }] },
+      { lines: [
+        { equality: "-72 + 13 + (-28) = -72 + (-28) + 13", correct: ["commutativite"] },
+        { equality: "= [-72 + (-28)] + 13", correct: ["associativite"] }
+      ] },
+      { lines: [
+        { equality: "-34 + 52 + 34 = -34 + 34 + 52", correct: ["commutativite"] },
+        { equality: "= (-34 + 34) + 52", correct: ["associativite"] }
+      ] },
+      { lines: [
+        { equality: "-19 + 45 + 19 = -19 + 19 + 45", correct: ["commutativite"] },
+        { equality: "= (-19 + 19) + 45", correct: ["associativite"] }
+      ] }
+    ];
+    const SECTION1_COUNT = 5;
+
+    function buildSection1() {
+      const container = document.getElementById("section1-list");
+      const items = pickRandom(section1Bank, SECTION1_COUNT);
+
+      items.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "exercise-card";
+
+        const itemLabel = document.createElement("p");
+        itemLabel.className = "item-label";
+        itemLabel.textContent = letterLabel(index);
+        card.appendChild(itemLabel);
+
+        const lineSelections = item.lines.map(() => new Set());
+
+        item.lines.forEach((line, lineIndex) => {
+          const equality = document.createElement("p");
+          equality.className = "equality";
+          equality.textContent = line.equality;
+          card.appendChild(equality);
+
+          const optionsRow = document.createElement("div");
+          optionsRow.className = "options-row";
+          const selected = lineSelections[lineIndex];
+
+          Object.entries(propertyLabels).forEach(([key, text]) => {
+            const chip = document.createElement("label");
+            chip.className = "option-chip";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = key;
+            checkbox.addEventListener("change", () => {
+              if (checkbox.checked) selected.add(key); else selected.delete(key);
+              chip.classList.toggle("is-selected", checkbox.checked);
+            });
+            chip.appendChild(checkbox);
+            chip.appendChild(document.createTextNode(text));
+            optionsRow.appendChild(chip);
+          });
+          card.appendChild(optionsRow);
+        });
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        const validateBtn = document.createElement("button");
+        validateBtn.className = "validate-button";
+        validateBtn.type = "button";
+        validateBtn.textContent = "Vérifier";
+        actions.appendChild(feedback);
+        actions.appendChild(validateBtn);
+        card.appendChild(actions);
+
+        const correction = document.createElement("div");
+        correction.className = "correction";
+        const correctionLines = item.lines.map((line) => `${line.equality} → ${line.correct.map((k) => propertyLabels[k]).join(", ")}`).join("<br>");
+        correction.innerHTML = `<strong>Réponse attendue :</strong>${correctionLines}`;
+        card.appendChild(correction);
+
+        let resolved = false;
+        validateBtn.addEventListener("click", () => {
+          if (resolved) return;
+          if (lineSelections.some((s) => s.size === 0)) {
+            feedback.textContent = "Coche au moins une propriété pour chaque ligne avant de vérifier.";
+            feedback.className = "feedback";
+            return;
+          }
+          resolved = true;
+          markResolved();
+          card.querySelectorAll(".options-row input").forEach((cb) => { cb.disabled = true; });
+          card.querySelectorAll(".option-chip").forEach((c) => c.classList.add("is-disabled"));
+          validateBtn.disabled = true;
+
+          const isCorrect = item.lines.every((line, i) => sameSet([...lineSelections[i]], line.correct));
+          card.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+          feedback.className = `feedback ${isCorrect ? "correct" : "incorrect"}`;
+          feedback.textContent = isCorrect ? "Bonne réponse !" : "Ce n'est pas tout à fait ça, regarde la correction.";
+          if (!isCorrect) correction.classList.add("is-visible");
+          announce(isCorrect ? "Bonne réponse." : "Réponse incorrecte, correction affichée.");
+        });
+
+        container.appendChild(card);
+      });
+
+      return items.length;
+    }
+
+    // ---------- EXERCICE INTRODUCTIF : 3 + (-3) (propriété des opposés) ----------
+    function buildIntroExercise() {
+      const container = document.getElementById("intro-exercise");
+      container.replaceChildren();
+
+      const row = document.createElement("div");
+      row.className = "numeric-row";
+      const label1 = document.createElement("span");
+      label1.className = "equality-part";
+      label1.textContent = "On se retrouve au point";
+      const pointInput = document.createElement("input");
+      pointInput.type = "text";
+      pointInput.inputMode = "numeric";
+      pointInput.className = "numeric-input";
+      pointInput.setAttribute("aria-label", "Point atteint");
+      row.appendChild(label1);
+      row.appendChild(pointInput);
+      container.appendChild(row);
+
+      const row2 = document.createElement("div");
+      row2.className = "numeric-row";
+      const label2 = document.createElement("span");
+      label2.className = "equality-part";
+      label2.textContent = "3 + (-3) =";
+      const resultInput = document.createElement("input");
+      resultInput.type = "text";
+      resultInput.inputMode = "numeric";
+      resultInput.className = "numeric-input";
+      resultInput.setAttribute("aria-label", "Résultat de 3 + (-3)");
+      row2.appendChild(label2);
+      row2.appendChild(resultInput);
+      container.appendChild(row2);
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      const validateBtn = document.createElement("button");
+      validateBtn.className = "validate-button";
+      validateBtn.type = "button";
+      validateBtn.textContent = "Vérifier";
+      actions.appendChild(feedback);
+      actions.appendChild(validateBtn);
+      container.appendChild(actions);
+
+      const pseudoCard = { classList: { add() {}, remove() {} } };
+      const correction = { classList: { add() {} } };
+      const resolvedRef = { done: false };
+      const validate = finalizeCard(pseudoCard, resolvedRef, [pointInput, resultInput], feedback, validateBtn, correction, () => {
+        return parseEntry(pointInput.value) === 0 && parseEntry(resultInput.value) === 0;
+      });
+      validateBtn.addEventListener("click", validate);
+
+      return 1;
+    }
+
+    // ---------- SECTION 2 : calcule en appliquant les propriétés (nombres entiers) ----------
+    // Même écriture que le défi (section 3) : parenthèses à compléter, sommes partielles,
+    // résultat final. "pairs" = groupes de deux nombres à mettre entre parenthèses,
+    // "single" (optionnel) = terme isolé qui ne se regroupe avec aucun autre.
+    const section2Bank = [
+      { expr: "3 + (-2) + 0 + 7 + 2", pairs: [[3, 7], [-2, 2]], single: 0, s: [10, 0], final: 10 },
+      { expr: "-37 + 25 + 125 + 27", pairs: [[-37, 27], [25, 125]], s: [-10, 150], final: 140 },
+      { expr: "322 + 18 + 578 + (-18)", pairs: [[322, 578], [18, -18]], s: [900, 0], final: 900 },
+      { expr: "478 + (-250) + (-28)", pairs: [[-250, -28]], single: 478, s: [-278], final: 200 },
+      { expr: "-3 + 8 + 13 + 22", pairs: [[8, 22], [-3, 13]], s: [30, 10], final: 40 },
+      { expr: "24 + (-5) + (-19) + 34", pairs: [[24, 34], [-5, -19]], s: [58, -24], final: 34 },
+      { expr: "142 + 94 + 58 + 27 + 56 + 33", pairs: [[142, 58], [94, 56], [27, 33]], s: [200, 150, 60], final: 410 },
+      { expr: "-36 + 0 + 44 + 126 + 16", pairs: [[44, 126], [-36, 16]], single: 0, s: [170, -20], final: 150 },
+      { expr: "-45 + 60 + 45 + (-15)", pairs: [[-45, 45], [60, -15]], s: [0, 45], final: 45 },
+      { expr: "125 + (-40) + (-25) + 40", pairs: [[125, -25], [-40, 40]], s: [100, 0], final: 100 },
+      { expr: "-18 + 32 + 18 + (-12)", pairs: [[-18, 18], [32, -12]], s: [0, 20], final: 20 },
+      { expr: "56 + (-100) + 44 + 0", pairs: [[56, 44], [-100, 0]], s: [100, -100], final: 0 }
+    ];
+    const SECTION2_COUNT = 8;
+
+    // Réutilise exactement l'écriture (parenthèses + sommes partielles + résultat) du
+    // défi de la section 3 : buildLevel3Card pour les items sans terme isolé,
+    // buildLevel4Card pour ceux avec un terme isolé ("single").
+    function buildSection2() {
+      const container = document.getElementById("section2-list");
+      const items = pickRandom(section2Bank, SECTION2_COUNT);
+
+      items.forEach((item, index) => {
+        const label = letterLabel(index);
+        if (item.single !== undefined) {
+          buildLevel4Card(container, item, label);
+        } else {
+          buildLevel3Card(container, item, label);
+        }
+      });
+
+      return items.length;
+    }
+
+    // ---------- SECTION 3 (défi) : difficulté croissante, indices décroissants (nombres entiers) ----------
+    // Niveau 1 : structure ET une partie des nombres donnés (le plus guidé)
+    const level1Bank = [
+      { expr: "72 + 46 + (-58) + (-22) + 158 + (-46)", g1a: -58, g1b: 158, g2fixed: 72, g2blank: -22, g3set: [46, -46], s1: 100, s2: 50, s3: 0, final: 150 },
+      { expr: "20 + 45 + (-33) + (-120) + 33 + 55", g1a: 45, g1b: 55, g2fixed: -120, g2blank: 20, g3set: [33, -33], s1: 100, s2: -100, s3: 0, final: 0 },
+      { expr: "84 + (-29) + (-63) + 16 + 163 + 129", g1a: -63, g1b: 163, g2fixed: -29, g2blank: 129, g3set: [84, 16], s1: 100, s2: 100, s3: 100, final: 300 }
+    ];
+
+    // Niveau 2 : structure donnée, moins de nombres pré-remplis (5 termes)
+    const level2Bank = [
+      { expr: "18 + (-47) + 64 + (-118) + 147", num1: -47, blank1: 147, num3: -118, blank2: 18, single: 64, s1: 100, s2: -100, final: 64 },
+      { expr: "-136 + (-40) + (-105) + 36 + 205", num1: 36, blank1: -136, num3: 205, blank2: -105, single: -40, s1: -100, s2: 100, final: -40 },
+      { expr: "150 + (-18) + (-72) + 50 + 72", num1: -72, blank1: 72, num3: 150, blank2: 50, single: -18, s1: 0, s2: 200, final: 182 }
+    ];
+
+    // Niveau 3 : la structure (parenthèses) est donnée mais aucun nombre n'est pré-rempli
+    const level3Bank = [
+      { expr: "64 + (-128) + (-14) + 95 + 28 + (-95)", pairs: [[64, -14], [-128, 28], [95, -95]], s: [50, -100, 0], final: -50 },
+      { expr: "-45 + 63 + 145 + (-82) + 37 + (-18)", pairs: [[-45, 145], [63, 37], [-82, -18]], s: [100, 100, -100], final: 100 },
+      { expr: "125 + (-64) + (-25) + 58 + (-36) + 42", pairs: [[125, -25], [-64, -36], [58, 42]], s: [100, -100, 100], final: 100 }
+    ];
+
+    // Niveau 4 : même structure que le niveau 3 (parenthèses, sommes, résultat), mais 7 termes
+    // (3 paires + 1 terme isolé donné) : plus de termes à suivre, toujours aucun nombre pré-rempli dans les paires
+    const level4Bank = [
+      { expr: "-47 + 64 + 147 + (-18) + (-114) + (-50) + 118", pairs: [[-47, 147], [64, -114], [-18, 118]], single: -50, s: [100, -50, 100], final: 100 },
+      { expr: "36 + (-72) + (-136) + 58 + 172 + 90 + (-8)", pairs: [[36, -136], [-72, 172], [58, -8]], single: 90, s: [-100, 100, 50], final: 140 },
+      { expr: "-63 + 84 + 163 + (-29) + 16 + (-40) + (-71)", pairs: [[-63, 163], [84, 16], [-29, -71]], single: -40, s: [100, 100, -100], final: 60 }
+    ];
+
+    // Niveau 5 : même structure encore (parenthèses, sommes, résultat), mais 8 termes en 4 paires
+    // (le plus de termes à regrouper soi-même, toujours aucun nombre pré-rempli)
+    const level5Bank = [
+      { expr: "64 + (-128) + (-14) + 95 + 28 + 52 + (-95) + 48", pairs: [[64, -14], [-128, 28], [95, -95], [52, 48]], s: [50, -100, 0, 100], final: 50 },
+      { expr: "-45 + 63 + 145 + (-82) + 37 + 26 + (-18) + (-126)", pairs: [[-45, 145], [63, 37], [-82, -18], [26, -126]], s: [100, 100, -100, -100], final: 0 },
+      { expr: "125 + (-64) + (-25) + 58 + (-36) + (-73) + 42 + 73", pairs: [[125, -25], [-64, -36], [58, 42], [-73, 73]], s: [100, -100, 100, 0], final: 100 }
+    ];
+
+    function baseCard(label, expr) {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+      const itemLabel = document.createElement("p");
+      itemLabel.className = "item-label";
+      itemLabel.textContent = label;
+      card.appendChild(itemLabel);
+      const equality = document.createElement("p");
+      equality.className = "equality";
+      equality.textContent = expr;
+      card.appendChild(equality);
+      return card;
+    }
+
+    function cardActions() {
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      const validateBtn = document.createElement("button");
+      validateBtn.className = "validate-button";
+      validateBtn.type = "button";
+      validateBtn.textContent = "Vérifier";
+      actions.appendChild(feedback);
+      actions.appendChild(validateBtn);
+      return { actions, feedback, validateBtn };
+    }
+
+    function finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, isCorrectFn, maxAttempts = 3) {
+      let attempts = 0;
+      const validate = () => {
+        if (resolvedRef.done) return;
+        if (allInputs.some((el) => el.value === "")) {
+          feedback.textContent = "Complète toutes les cases avant de vérifier.";
+          feedback.className = "feedback";
+          return;
+        }
+
+        attempts += 1;
+        const isCorrect = isCorrectFn();
+
+        if (isCorrect) {
+          resolvedRef.done = true;
+          markResolved();
+          allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+          validateBtn.disabled = true;
+          card.classList.add("is-correct");
+          feedback.className = "feedback correct";
+          feedback.textContent = "Bonne réponse !";
+          announce("Bonne réponse.");
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          resolvedRef.done = true;
+          markResolved();
+          allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+          validateBtn.disabled = true;
+          card.classList.add("is-incorrect");
+          feedback.className = "feedback incorrect";
+          feedback.textContent = "Ce n'est pas tout à fait ça, regarde la correction.";
+          correction.classList.add("is-visible");
+          announce("Réponse incorrecte, correction affichée.");
+          return;
+        }
+
+        const remaining = maxAttempts - attempts;
+        feedback.className = "feedback incorrect";
+        feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+        card.classList.remove("is-shaking");
+        void card.offsetWidth;
+        card.classList.add("is-shaking");
+        announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+      };
+      return validate;
+    }
+
+    // ----- Niveau 1 : six termes, structure + une partie des nombres donnés -----
+    function buildLevel1Card(container, config, label) {
+      const card = baseCard(label, config.expr);
+      const steps = document.createElement("div");
+      steps.className = "blank-steps";
+
+      const b1 = makeBlankInput("nombre à regrouper");
+      const b2 = makeBlankInput("premier nombre du dernier groupe");
+      const b3 = makeBlankInput("second nombre du dernier groupe");
+
+      const line1 = document.createElement("div");
+      line1.className = "blank-line";
+      line1.appendChild(fixedSpan(`= (${fmt(config.g1a, true)} + ${fmt(config.g1b)}) + (${fmt(config.g2fixed, true)} + `));
+      line1.appendChild(b1);
+      line1.appendChild(fixedSpan(") + ("));
+      line1.appendChild(b2);
+      line1.appendChild(fixedSpan(" + "));
+      line1.appendChild(b3);
+      line1.appendChild(fixedSpan(")"));
+      steps.appendChild(line1);
+
+      const s1 = makeBlankInput("première somme partielle");
+      const s2 = makeBlankInput("deuxième somme partielle");
+      const s3 = makeBlankInput("troisième somme partielle");
+      const line2 = document.createElement("div");
+      line2.className = "blank-line";
+      line2.appendChild(fixedSpan("= "));
+      line2.appendChild(s1);
+      line2.appendChild(fixedSpan(" + "));
+      line2.appendChild(s2);
+      line2.appendChild(fixedSpan(" + "));
+      line2.appendChild(s3);
+      steps.appendChild(line2);
+
+      const finalInput = makeBlankInput("résultat final");
+      const line3 = document.createElement("div");
+      line3.className = "blank-line";
+      line3.appendChild(fixedSpan("= "));
+      line3.appendChild(finalInput);
+      steps.appendChild(line3);
+
+      card.appendChild(steps);
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong>= (${fmt(config.g1a, true)} + ${fmt(config.g1b)}) + (${fmt(config.g2fixed, true)} + ${fmt(config.g2blank)}) + (${fmt(config.g3set[0], true)} + ${fmt(config.g3set[1])})<br>= ${joinSigned([config.s1, config.s2, config.s3])}<br>= ${config.final}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const allInputs = [b1, b2, b3, s1, s2, s3, finalInput];
+      const validate = finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, () => {
+        const group3Ok = sameSet([parseEntry(b2.value), parseEntry(b3.value)], config.g3set);
+        return parseEntry(b1.value) === config.g2blank && group3Ok &&
+          parseEntry(s1.value) === config.s1 && parseEntry(s2.value) === config.s2 && parseEntry(s3.value) === config.s3 &&
+          parseEntry(finalInput.value) === config.final;
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    }
+
+    // ----- Niveau 2 : cinq termes, structure + un peu moins de nombres donnés -----
+    function buildLevel2Card(container, config, label) {
+      const card = baseCard(label, config.expr);
+      const steps = document.createElement("div");
+      steps.className = "blank-steps";
+
+      const c1 = makeBlankInput("nombre à regrouper avec le premier terme");
+      const c2 = makeBlankInput("nombre à regrouper avec le troisième terme");
+      const line1 = document.createElement("div");
+      line1.className = "blank-line";
+      line1.appendChild(fixedSpan(`= (${fmt(config.num1, true)} + `));
+      line1.appendChild(c1);
+      line1.appendChild(fixedSpan(`) + (${fmt(config.num3, true)} + `));
+      line1.appendChild(c2);
+      line1.appendChild(fixedSpan(`) + ${fmt(config.single)}`));
+      steps.appendChild(line1);
+
+      const d1 = makeBlankInput("première somme partielle");
+      const d2 = makeBlankInput("deuxième somme partielle");
+      const line2 = document.createElement("div");
+      line2.className = "blank-line";
+      line2.appendChild(fixedSpan("= "));
+      line2.appendChild(d1);
+      line2.appendChild(fixedSpan(" + "));
+      line2.appendChild(d2);
+      line2.appendChild(fixedSpan(` + ${fmt(config.single)}`));
+      steps.appendChild(line2);
+
+      const finalInput = makeBlankInput("résultat final");
+      const line3 = document.createElement("div");
+      line3.className = "blank-line";
+      line3.appendChild(fixedSpan("= "));
+      line3.appendChild(finalInput);
+      steps.appendChild(line3);
+
+      card.appendChild(steps);
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong>= (${fmt(config.num1, true)} + ${fmt(config.blank1)}) + (${fmt(config.num3, true)} + ${fmt(config.blank2)}) + ${fmt(config.single)}<br>= ${joinSigned([config.s1, config.s2, config.single])}<br>= ${config.final}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const allInputs = [c1, c2, d1, d2, finalInput];
+      const validate = finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, () => {
+        return parseEntry(c1.value) === config.blank1 && parseEntry(c2.value) === config.blank2 &&
+          parseEntry(d1.value) === config.s1 && parseEntry(d2.value) === config.s2 &&
+          parseEntry(finalInput.value) === config.final;
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    }
+
+    // ----- Niveau 3 : structure (parenthèses) donnée, mais aucun nombre pré-rempli -----
+    function buildLevel3Card(container, config, label) {
+      const card = baseCard(label, config.expr);
+      const steps = document.createElement("div");
+      steps.className = "blank-steps";
+
+      const groupBlanks = config.pairs.map(() => [
+        makeBlankInput("premier nombre du groupe"),
+        makeBlankInput("second nombre du groupe")
+      ]);
+
+      const line1 = document.createElement("div");
+      line1.className = "blank-line";
+      line1.appendChild(fixedSpan("= ("));
+      groupBlanks.forEach((pair, i) => {
+        line1.appendChild(pair[0]);
+        line1.appendChild(fixedSpan(" + "));
+        line1.appendChild(pair[1]);
+        line1.appendChild(fixedSpan(i < groupBlanks.length - 1 ? ") + (" : ")"));
+      });
+      steps.appendChild(line1);
+
+      const sumBlanks = config.pairs.map((p, i) => makeBlankInput(`somme partielle ${i + 1}`));
+      const line2 = document.createElement("div");
+      line2.className = "blank-line";
+      line2.appendChild(fixedSpan("= "));
+      sumBlanks.forEach((b, i) => {
+        line2.appendChild(b);
+        if (i < sumBlanks.length - 1) line2.appendChild(fixedSpan(" + "));
+      });
+      steps.appendChild(line2);
+
+      const finalInput = makeBlankInput("résultat final");
+      const line3 = document.createElement("div");
+      line3.className = "blank-line";
+      line3.appendChild(fixedSpan("= "));
+      line3.appendChild(finalInput);
+      steps.appendChild(line3);
+
+      card.appendChild(steps);
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      const groupsText = config.pairs.map((p) => `(${fmt(p[0], true)} + ${fmt(p[1])})`).join(" + ");
+      const sumsText = joinSigned(config.s);
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong>= ${groupsText}<br>= ${sumsText}<br>= ${config.final}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const allInputs = [...groupBlanks.flat(), ...sumBlanks, finalInput];
+      const validate = finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, () => {
+        // L'élève peut légitimement écrire les groupes dans n'importe quel ordre
+        // (l'ordre des parenthèses n'a pas d'importance) : on accepte donc toute
+        // permutation tant que chaque groupe garde sa propre somme partielle.
+        const n = groupBlanks.length;
+        const perms = permutations(Array.from({ length: n }, (_, i) => i));
+        const matchesSomePermutation = perms.some((perm) => {
+          const groupsOk = groupBlanks.every((pair, i) =>
+            sameSet([parseEntry(pair[0].value), parseEntry(pair[1].value)], config.pairs[perm[i]])
+          );
+          const sumsOk = sumBlanks.every((b, i) => parseEntry(b.value) === config.s[perm[i]]);
+          return groupsOk && sumsOk;
+        });
+        return matchesSomePermutation && parseEntry(finalInput.value) === config.final;
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    }
+
+    // ----- Niveau 4 : comme le niveau 3, mais avec un terme isolé en plus (7 termes) -----
+    function buildLevel4Card(container, config, label) {
+      const card = baseCard(label, config.expr);
+      const steps = document.createElement("div");
+      steps.className = "blank-steps";
+
+      const groupBlanks = config.pairs.map(() => [
+        makeBlankInput("premier nombre du groupe"),
+        makeBlankInput("second nombre du groupe")
+      ]);
+
+      const line1 = document.createElement("div");
+      line1.className = "blank-line";
+      line1.appendChild(fixedSpan("= ("));
+      groupBlanks.forEach((pair, i) => {
+        line1.appendChild(pair[0]);
+        line1.appendChild(fixedSpan(" + "));
+        line1.appendChild(pair[1]);
+        line1.appendChild(fixedSpan(i < groupBlanks.length - 1 ? ") + (" : ")"));
+      });
+      const singleInput1 = makeBlankInput("terme isolé");
+      line1.appendChild(fixedSpan(" + "));
+      line1.appendChild(singleInput1);
+      steps.appendChild(line1);
+
+      const sumBlanks = config.pairs.map((p, i) => makeBlankInput(`somme partielle ${i + 1}`));
+      const line2 = document.createElement("div");
+      line2.className = "blank-line";
+      line2.appendChild(fixedSpan("= "));
+      sumBlanks.forEach((b, i) => {
+        line2.appendChild(b);
+        line2.appendChild(fixedSpan(" + "));
+      });
+      const singleInput2 = makeBlankInput("terme isolé (repris)");
+      line2.appendChild(singleInput2);
+      steps.appendChild(line2);
+
+      const finalInput = makeBlankInput("résultat final");
+      const line3 = document.createElement("div");
+      line3.className = "blank-line";
+      line3.appendChild(fixedSpan("= "));
+      line3.appendChild(finalInput);
+      steps.appendChild(line3);
+
+      card.appendChild(steps);
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      const groupsText = config.pairs.map((p) => `(${fmt(p[0], true)} + ${fmt(p[1])})`).join(" + ");
+      const sumsText = `${joinSigned(config.s)} + ${fmt(config.single)}`;
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong>= ${groupsText} + ${fmt(config.single)}<br>= ${sumsText}<br>= ${config.final}`;
+      card.appendChild(correction);
+
+      const resolvedRef = { done: false };
+      const allInputs = [...groupBlanks.flat(), singleInput1, ...sumBlanks, singleInput2, finalInput];
+      const validate = finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, () => {
+        const n = groupBlanks.length;
+        const perms = permutations(Array.from({ length: n }, (_, i) => i));
+        const matchesSomePermutation = perms.some((perm) => {
+          const groupsOk = groupBlanks.every((pair, i) =>
+            sameSet([parseEntry(pair[0].value), parseEntry(pair[1].value)], config.pairs[perm[i]])
+          );
+          const sumsOk = sumBlanks.every((b, i) => parseEntry(b.value) === config.s[perm[i]]);
+          return groupsOk && sumsOk;
+        });
+        const singleOk = parseEntry(singleInput1.value) === config.single && parseEntry(singleInput2.value) === config.single;
+        return matchesSomePermutation && singleOk && parseEntry(finalInput.value) === config.final;
+      });
+      validateBtn.addEventListener("click", validate);
+      container.appendChild(card);
+    }
+
+    // ----- Niveau 5 : même gabarit que le niveau 3, généralisé à 4 paires (8 termes, le plus difficile) -----
+    function buildLevel5Card(container, config, label) {
+      buildLevel3Card(container, config, label);
+    }
+
+    function buildSection3Defi() {
+      const container = document.getElementById("section4-list");
+      const levels = [
+        { build: buildLevel1Card, config: pickOne(level1Bank) },
+        { build: buildLevel2Card, config: pickOne(level2Bank) },
+        { build: buildLevel3Card, config: pickOne(level3Bank) },
+        { build: buildLevel4Card, config: pickOne(level4Bank) },
+        { build: buildLevel5Card, config: pickOne(level5Bank) }
+      ];
+
+      levels.forEach((level, index) => {
+        level.build(container, level.config, letterLabel(index));
+      });
+
+      return levels.length;
+    }
+
+    function buildAll() {
+      document.getElementById("section1-list").replaceChildren();
+      document.getElementById("section2-list").replaceChildren();
+      document.getElementById("section4-list").replaceChildren();
+      state.resolved = 0;
+
+      const n0 = buildIntroExercise();
+      const n1 = buildSection1();
+      const n2 = buildSection2();
+      const n3 = buildSection3Defi();
+
+      state.total = n0 + n1 + n2 + n3;
+      updateGlobalScore();
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const active = document.activeElement;
+      if (!active || active.tagName !== "INPUT" || active.type === "checkbox") return;
+      const card = active.closest(".exercise-card");
+      if (!card) return;
+      const validateBtn = card.querySelector(".validate-button");
+      if (validateBtn && !validateBtn.disabled) {
+        event.preventDefault();
+        validateBtn.click();
+      }
+    });
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.getElementById("new-exercises-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+    });
+
+    buildAll();
+  </script>
+</body>
+</html>

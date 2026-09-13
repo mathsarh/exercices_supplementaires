@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Priorités des opérations</title>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #16a34a;
+      --success-soft: #ecfdf3;
+      --error: #dc2626;
+      --error-soft: #fff5f5;
+      --line: #dbe3f4;
+      --correction: #fff7e7;
+      --correction-line: #e3a227;
+      --card-radius: 17px;
+      --control-radius: 9px;
+      --score-size: 68px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+    }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.4);
+      outline-offset: 3px;
+    }
+    .app-shell {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 25rem),
+        linear-gradient(180deg, var(--slate) 0 17rem, var(--paper) 17rem 100%);
+    }
+    .main-width { width: min(100% - 2rem, 900px); margin-inline: auto; }
+    .hero { padding: 2.7rem 0 2.2rem; color: white; }
+    .hero-title { margin: 0; letter-spacing: -0.03em; font-weight: 800; font-size: clamp(1.8rem, 4.4vw, 2.5rem); }
+    .hero-subtitle { max-width: 46rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+    .content { padding-bottom: 4rem; }
+
+    .rule-panel {
+      margin-top: -0.6rem;
+      padding: 1.35rem 1.4rem;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    }
+    .rule-heading { margin: 0 0 0.75rem; font-size: 1.1rem; font-weight: 800; }
+    .rule-list { margin: 0; padding-left: 1.3rem; line-height: 1.65; }
+    .rule-list li::marker { color: var(--indigo); font-weight: 800; }
+    .rule-note { margin: 0.7rem 0 0; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: minmax(200px, auto) 1fr;
+      align-items: center;
+      gap: 1.3rem;
+      margin-top: 1.2rem;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 12px 32px rgba(30, 42, 58, 0.09);
+    }
+    .score-values { display: flex; align-items: center; gap: 1rem; }
+    .score-line { color: var(--muted); font-size: 0.88rem; white-space: nowrap; }
+    .score-line strong { display: block; color: var(--indigo); font-size: 1.5rem; font-weight: 800; }
+    .score-percent {
+      display: grid; place-items: center;
+      width: var(--score-size); height: var(--score-size);
+      flex: none;
+      border: 5px solid #dfe5ff;
+      border-radius: 50%;
+      color: var(--indigo-dark);
+      background: #f8f9ff;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+    }
+    .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+    .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+    .score-detail { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.9rem; }
+
+    .section-block { margin-top: 2.4rem; }
+    .section-heading { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .section-number {
+      display: grid; place-items: center;
+      width: 2.15rem; height: 2.15rem; flex: none;
+      border-radius: 10px;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+    }
+    .section-title { margin: 0; font-size: 1.2rem; font-weight: 800; }
+    .section-instructions { margin: 0 0 1.1rem 3.15rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+    .exercise-list { display: grid; gap: 1.15rem; }
+    @media (min-width: 760px) { .exercise-list.two-col { grid-template-columns: repeat(2, 1fr); } }
+
+    .exercise-card {
+      padding: 1.3rem 1.35rem;
+      border: 2px solid transparent;
+      border-radius: var(--card-radius);
+      background: white;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      transition: border-color 180ms ease;
+    }
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-incorrect { border-color: var(--correction-line); }
+    .exercise-card.is-shaking { animation: shake 300ms ease; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+    }
+
+    .item-label { margin: 0 0 0.5rem; color: var(--muted); font-weight: 700; }
+    .expression {
+      margin: 0 0 0.95rem;
+      padding: 0.75rem 0.95rem;
+      overflow-x: auto;
+      border-radius: 10px;
+      background: #f4f6fd;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 1.02rem;
+    }
+
+    .symbol-toolbar { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0 0 0.95rem; }
+    .symbol-button {
+      min-width: 2.5rem;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #eef1fc;
+      color: var(--indigo-dark);
+      font-family: "Courier New", monospace;
+      font-weight: 800;
+      font-size: 1.05rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .symbol-button:hover { background: #e0e5fb; }
+    .symbol-button:active { background: #d3d9f7; }
+
+    .steps-panel { display: grid; gap: 0.7rem; }
+    .step-row { display: grid; grid-template-columns: 1.7rem 1fr; align-items: start; gap: 0.6rem; }
+    .step-number {
+      display: grid; place-items: center;
+      width: 1.65rem; height: 1.65rem;
+      margin-top: 0.15rem;
+      border-radius: 50%;
+      color: var(--indigo-dark);
+      background: #e7ebff;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+    .answer-group { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .step-equals { flex: none; font-size: 1.15rem; font-weight: 800; }
+    .line-input {
+      min-height: 42px;
+      width: min(100%, 340px);
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #ccd6ee;
+      border-radius: var(--control-radius);
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .line-input:disabled { background: #f4f6fd; opacity: 0.86; }
+    .step-status {
+      display: none; flex: none;
+      width: 1.55rem; height: 1.55rem;
+      align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+    .step-row.is-step-error .line-input { border-color: var(--error); background: var(--error-soft); }
+    .step-row.is-step-correct .line-input { border-color: var(--success); background: var(--success-soft); }
+    .step-row.is-step-revealed .line-input { border-color: var(--correction-line); background: var(--correction); }
+    .step-row.is-step-error .step-status { display: flex; color: var(--error); background: var(--error-soft); }
+    .step-row.is-step-correct .step-status { display: flex; color: var(--success); background: var(--success-soft); }
+    .step-row.is-step-revealed .step-status { display: flex; color: var(--correction-line); background: var(--correction); }
+    .step-hint { grid-column: 2; display: none; margin: -0.1rem 0 0; font-size: 0.85rem; line-height: 1.4; }
+    .step-row.is-step-error .step-hint { display: block; color: var(--error); }
+    .step-row.is-step-revealed .step-hint { display: block; color: var(--correction-line); }
+
+    .card-status { margin: 0.9rem 0 0; font-size: 0.9rem; font-weight: 650; min-height: 1.2em; }
+    .card-status.correct { color: var(--success); }
+    .card-status.incorrect { color: var(--correction-line); }
+
+    .correction {
+      display: none;
+      margin-top: 0.85rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      border-left: 4px solid var(--correction-line);
+      background: var(--correction);
+      color: #7a4900;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .correction.is-visible { display: block; }
+    .correction strong { display: block; margin-bottom: 0.25rem; }
+    .correction-lines { font-family: "Courier New", monospace; font-weight: 700; }
+
+    .footer-actions { margin-top: 2.6rem; text-align: center; }
+    .restart-button {
+      min-height: 46px;
+      padding: 0.75rem 1.3rem;
+      border: 0;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    @media (max-width: 680px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .score-values { justify-content: space-between; }
+      .section-instructions { margin-left: 0; }
+      .line-input { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="main-width">
+        <h1 class="hero-title">Priorités des opérations</h1>
+        <p class="hero-subtitle">Parenthèses, crochets, additions et soustractions : calcule chaque expression étape par étape en respectant l'ordre des opérations.</p>
+        <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;background:#4f6ef7;color:white;border:0;">Nouveaux exercices</button>
+      </div>
+    </header>
+    <main class="main-width content">
+      <section class="rule-panel" aria-labelledby="rule-title">
+        <h2 id="rule-title" class="rule-heading">Rappel</h2>
+        <p style="margin:0 0 0.6rem;">Dans une suite d'opérations, il faut effectuer dans l'ordre :</p>
+        <ol class="rule-list">
+          <li>les opérations entre parenthèses, puis entre crochets,</li>
+          <li>les additions et les soustractions, dans l'ordre où elles se présentent.</li>
+        </ol>
+        <p class="rule-note">À l'intérieur des parenthèses (ou des crochets), on respecte le même ordre indiqué ci-dessus.</p>
+      </section>
+
+      <section class="score-panel" aria-labelledby="progress-label">
+        <div class="score-values" aria-live="polite">
+          <div class="score-line"><strong id="score-value">0 / 8</strong>exercices terminés</div>
+          <div id="score-percent" class="score-percent" aria-label="Score : 0 pour cent">0 %</div>
+        </div>
+        <div>
+          <p id="progress-label" class="score-label">Progression</p>
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <p id="score-detail" class="score-detail">0 exercice terminé · 0 réussi</p>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">1</span>
+          <h2 class="section-title">Calcule en respectant les priorités des opérations</h2>
+        </div>
+        <p class="section-instructions">Complète chaque ligne du calcul, étape par étape. Une nouvelle ligne se débloque dès que la précédente est correcte. Tu as 3 essais par ligne avant que la solution ne s'affiche.</p>
+        <div id="section1-list" class="exercise-list two-col"></div>
+      </section>
+
+      <div class="footer-actions">
+        <button id="restart-button" class="restart-button" type="button">Générer d'autres exercices</button>
+      </div>
+    </main>
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const MAX_ATTEMPTS = 3;
+    const EPSILON = 1e-9;
+
+    const state = { total: 0, completed: 0, correct: 0 };
+    const liveRegion = document.getElementById("live-region");
+    const scoreValue = document.getElementById("score-value");
+    const scorePercent = document.getElementById("score-percent");
+    const scoreDetail = document.getElementById("score-detail");
+    const progressTrack = document.getElementById("progress-track");
+    const progressFill = document.getElementById("progress-fill");
+
+    function announce(message) {
+      liveRegion.textContent = "";
+      window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+    }
+
+    function updateScore() {
+      scoreValue.textContent = `${state.completed} / ${state.total}`;
+      const pct = state.total ? Math.round((state.correct / state.total) * 100) : 0;
+      scorePercent.textContent = `${pct} %`;
+      scorePercent.setAttribute("aria-label", `Score : ${pct} pour cent`);
+      progressFill.style.width = `${state.total ? (state.completed / state.total) * 100 : 0}%`;
+      progressTrack.setAttribute("aria-valuemax", String(state.total));
+      progressTrack.setAttribute("aria-valuenow", String(state.completed));
+      scoreDetail.textContent = `${state.completed} exercice${state.completed > 1 ? "s" : ""} terminé${state.completed > 1 ? "s" : ""} · ${state.correct} réussi${state.correct > 1 ? "s" : ""}`;
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function letterLabel(index) {
+      return `${String.fromCharCode(97 + index)})`;
+    }
+
+    // ---------- Évaluateur restreint à + , - , ( ) , [ ] ----------
+    function normalizeExpression(raw) {
+      return String(raw)
+        .trim()
+        .replace(/[\u2212\u2013\u2014]/g, "-") // signes moins typographiques
+        .replace(/\[/g, "(")
+        .replace(/\]/g, ")")
+        .replace(/\s+/g, "");
+    }
+
+    function safeEvaluate(raw) {
+      const expr = normalizeExpression(raw);
+      if (!expr || !/^[0-9+\-().]+$/.test(expr)) throw new Error("Expression non reconnue");
+
+      let pos = 0;
+      function peek() { return expr[pos]; }
+      function parsePrimary() {
+        if (peek() === "+") { pos += 1; return parsePrimary(); }
+        if (peek() === "-") { pos += 1; return -parsePrimary(); }
+        if (peek() === "(") {
+          pos += 1;
+          const value = parseSum();
+          if (peek() !== ")") throw new Error("Parenthèse manquante");
+          pos += 1;
+          return value;
+        }
+        const start = pos;
+        while (pos < expr.length && /[0-9.]/.test(expr[pos])) pos += 1;
+        if (start === pos) throw new Error("Nombre attendu");
+        return Number(expr.slice(start, pos));
+      }
+      function parseSum() {
+        let value = parsePrimary();
+        while (peek() === "+" || peek() === "-") {
+          const op = expr[pos];
+          pos += 1;
+          const right = parsePrimary();
+          value = op === "+" ? value + right : value - right;
+        }
+        return value;
+      }
+      const result = parseSum();
+      if (pos !== expr.length || !Number.isFinite(result)) throw new Error("Expression incomplète");
+      return result;
+    }
+
+    function isBareNumber(raw) {
+      const expr = normalizeExpression(raw);
+      return /^-?[0-9]+$/.test(expr);
+    }
+
+    function nearlyEqual(a, b) {
+      return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < EPSILON;
+    }
+
+    // Compte les opérateurs binaires (+ ou -) d'une expression normalisée :
+    // un signe n'est "binaire" (une vraie opération à effectuer) que s'il est
+    // précédé d'un chiffre ou d'une parenthèse fermante ; sinon c'est le signe
+    // d'un nombre (unaire). Sert à mesurer combien d'opérations il reste à
+    // faire, pour empêcher de sauter plusieurs étapes d'un coup même quand la
+    // VALEUR obtenue est déjà juste (ce qui arrive dès que tous les signes ont
+    // été distribués : la suite n'est plus qu'un réarrangement de la même
+    // somme, dont la valeur ne change plus).
+    function countBinaryOps(raw) {
+      const expr = normalizeExpression(raw);
+      let count = 0;
+      for (let i = 1; i < expr.length; i += 1) {
+        const c = expr[i];
+        if ((c === "+" || c === "-") && /[0-9)]/.test(expr[i - 1])) count += 1;
+      }
+      return count;
+    }
+
+    // Compte les groupes de parenthèses/crochets encore présents dans une
+    // expression normalisée. Sert à repérer une simplification de signes
+    // successifs (ex. "+ (-9)" devient "-9") : ce type d'étape ne change pas
+    // le nombre d'opérations restantes (countBinaryOps), mais fait bien
+    // disparaître une paire de parenthèses — c'est ce qui permet de la
+    // distinguer d'une simple recopie de la ligne précédente.
+    function countParenGroups(raw) {
+      const matches = normalizeExpression(raw).match(/\(/g);
+      return matches ? matches.length : 0;
+    }
+
+    // Fusionne les doubles signes d'une expression : "+ (-9)" devient "- 9",
+    // "- (-9)" devient "+ 9", etc. Ne touche qu'aux parenthèses qui contiennent
+    // un simple nombre signé (pas une sous-expression avec une opération à
+    // effectuer), pour ne fusionner que des signes déjà "prêts".
+    function mergeSigns(text) {
+      return text.replace(/([+-])\s*\(([+-])(\d+(?:[.,]\d+)?)\)/g, (match, outer, inner, num) => {
+        const combined = outer === inner ? "+" : "-";
+        return ` ${combined} ${num}`;
+      });
+    }
+
+    // Reprend la liste des étapes d'un modèle et insère, chaque fois que
+    // nécessaire, une étape intermédiaire de pure fusion de signes entre deux
+    // étapes existantes — sauf si cette étape fusionnée correspond déjà à
+    // l'étape suivante (pas de doublon).
+    function expandSignSteps(steps) {
+      const expanded = [steps[0]];
+      for (let i = 1; i < steps.length; i += 1) {
+        const previous = expanded[expanded.length - 1];
+        const merged = mergeSigns(previous);
+        if (merged !== previous && merged !== steps[i] && !expanded.includes(merged)) {
+          expanded.push(merged);
+        }
+        expanded.push(steps[i]);
+      }
+      return expanded;
+    }
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Formate un terme qui suit un opérateur ("+" ou "-") : un nombre négatif
+    // est entre parenthèses pour éviter une écriture ambiguë du type "+ -6".
+    function neg(n) {
+      return n < 0 ? `(${n})` : `${n}`;
+    }
+
+    // ---------- Pool de modèles d'exercices (nombres aléatoires à chaque génération) ----------
+    const TEMPLATES = [
+      // a + (b - c)
+      () => {
+        const p = randInt(5, 20), q = randInt(3, 15), r = randInt(2, 15);
+        const d = q - r;
+        return { expr: `${p} + (${q} - ${r})`, steps: [`${p} + (${q} - ${r})`, `${p} + ${neg(d)}`, `${p + d}`] };
+      },
+      // a - (b - c)
+      () => {
+        const p = randInt(5, 20), q = randInt(3, 15), r = randInt(2, 15);
+        const d = q - r;
+        return { expr: `${p} - (${q} - ${r})`, steps: [`${p} - (${q} - ${r})`, `${p} - ${neg(d)}`, `${p - d}`] };
+      },
+      // -(a - b) + (c - d) - e
+      () => {
+        const a = randInt(30, 95), b = randInt(5, 29), c = randInt(20, 90), d = randInt(20, 95), e = randInt(2, 20);
+        const x = b - a, y = c - d;
+        return {
+          expr: `-(${a} - ${b}) + (${c} - ${d}) - ${e}`,
+          steps: [`-(${a} - ${b}) + (${c} - ${d}) - ${e}`, `${x} + ${neg(y)} - ${e}`, `${x + y} - ${e}`, `${x + y - e}`]
+        };
+      },
+      // -(a - b + c) + (d - e)
+      () => {
+        const a = randInt(20, 60), b = randInt(20, 60), c = randInt(20, 80), d = randInt(5, 30), e = randInt(2, 20);
+        const x = -(a - b + c), y = d - e;
+        return {
+          expr: `-(${a} - ${b} + ${c}) + (${d} - ${e})`,
+          steps: [`-(${a} - ${b} + ${c}) + (${d} - ${e})`, `${x} + ${neg(y)}`, `${x + y}`]
+        };
+      },
+      // -p - (q - r) + (s - t)
+      () => {
+        const p = randInt(5, 25), q = randInt(5, 25), r = randInt(5, 25), s = randInt(5, 25), t = randInt(2, 25);
+        const y = q - r, z = s - t;
+        return {
+          expr: `-${p} - (${q} - ${r}) + (${s} - ${t})`,
+          steps: [`-${p} - (${q} - ${r}) + (${s} - ${t})`, `-${p} - ${neg(y)} + ${neg(z)}`, `${-p - y} + ${neg(z)}`, `${-p - y + z}`]
+        };
+      },
+      // -p - [q + (-r) - s]
+      () => {
+        const p = randInt(2, 10), q = randInt(2, 10), r = randInt(2, 9), s = randInt(2, 10);
+        const q1 = q - r, bracketVal = q1 - s, finalVal = -p - bracketVal;
+        return {
+          expr: `-${p} - [${q} + (${-r}) - ${s}]`,
+          steps: [
+            `-${p} - [${q} + (${-r}) - ${s}]`,
+            `-${p} - [${q1} - ${s}]`,
+            `-${p} - [${bracketVal}]`,
+            `${finalVal}`
+          ]
+        };
+      },
+      // -p - [-q - (a - b) + (c - d)]
+      () => {
+        const p = randInt(3, 15), q = randInt(2, 10), a = randInt(3, 20), b = randInt(3, 20), c = randInt(3, 20), d = randInt(3, 20);
+        const u = a - b, v = c - d, w1 = -q - u, bracketVal = w1 + v;
+        return {
+          expr: `-${p} - [-${q} - (${a} - ${b}) + (${c} - ${d})]`,
+          steps: [
+            `-${p} - [-${q} - (${a} - ${b}) + (${c} - ${d})]`,
+            `-${p} - [-${q} - ${neg(u)} + ${neg(v)}]`,
+            `-${p} - [${w1} + ${neg(v)}]`,
+            `-${p} - (${bracketVal})`,
+            `${-p - bracketVal}`
+          ]
+        };
+      },
+      // [-p - (-a + b)] + [c - (d - e)]
+      () => {
+        const p = randInt(5, 25), a = randInt(2, 20), b = randInt(2, 20), c = randInt(2, 25), d = randInt(5, 25), e = randInt(2, 25);
+        const u = -a + b, firstBracket = -p - u, v = d - e, secondBracket = c - v;
+        return {
+          expr: `[-${p} - (-${a} + ${b})] + [${c} - (${d} - ${e})]`,
+          steps: [
+            `[-${p} - (-${a} + ${b})] + [${c} - (${d} - ${e})]`,
+            `[-${p} - ${neg(u)}] + [${c} - ${neg(v)}]`,
+            `${firstBracket} + ${neg(secondBracket)}`,
+            `${firstBracket + secondBracket}`
+          ]
+        };
+      },
+      // p - (q + r) + (s - t)
+      () => {
+        const p = randInt(10, 30), q = randInt(3, 20), r = randInt(3, 20), s = randInt(3, 25), t = randInt(2, 25);
+        const u = q + r, v = s - t;
+        return {
+          expr: `${p} - (${q} + ${r}) + (${s} - ${t})`,
+          steps: [`${p} - (${q} + ${r}) + (${s} - ${t})`, `${p} - ${neg(u)} + ${neg(v)}`, `${p - u} + ${neg(v)}`, `${p - u + v}`]
+        };
+      },
+      // -[p - (q - r)] - s
+      () => {
+        const p = randInt(10, 30), q = randInt(5, 25), r = randInt(2, 20), s = randInt(2, 20);
+        const u = q - r, inner = p - u, final = -inner - s;
+        return {
+          expr: `-[${p} - (${q} - ${r})] - ${s}`,
+          steps: [`-[${p} - (${q} - ${r})] - ${s}`, `-[${p} - ${neg(u)}] - ${s}`, `${-inner} - ${s}`, `${final}`]
+        };
+      },
+      // p + (-a - b)  → parenthèse commençant par un nombre négatif, suivi d'une soustraction
+      () => {
+        const p = randInt(5, 25), a = randInt(3, 20), b = randInt(2, 20);
+        const value = -a - b;
+        return {
+          expr: `${p} + (-${a} - ${b})`,
+          steps: [`${p} + (-${a} - ${b})`, `${p} + ${neg(value)}`, `${p + value}`]
+        };
+      },
+      // p - (-a + (-b)) → parenthèse commençant par un nombre négatif, avec un double signe à simplifier
+      () => {
+        const p = randInt(5, 30), a = randInt(2, 20), b = randInt(2, 20);
+        const value = -a - b;
+        return {
+          expr: `${p} - (-${a} + (-${b}))`,
+          steps: [
+            `${p} - (-${a} + (-${b}))`,
+            `${p} - ${neg(value)}`,
+            `${p - value}`
+          ]
+        };
+      }
+    ];
+
+    const GENERIC_HINTS = [
+      "Vérifie que tu as bien effectué l'opération prioritaire (parenthèse ou crochet) avant le reste.",
+      "Recalcule une seule opération à la fois à partir de la ligne précédente."
+    ];
+
+    function buildCard(item, index) {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+
+      const label = document.createElement("p");
+      label.className = "item-label";
+      label.textContent = letterLabel(index);
+      card.appendChild(label);
+
+      const exprEl = document.createElement("p");
+      exprEl.className = "expression";
+      exprEl.textContent = item.expr;
+      card.appendChild(exprEl);
+
+      let focusedInput = null;
+
+      const toolbar = document.createElement("div");
+      toolbar.className = "symbol-toolbar";
+      toolbar.setAttribute("role", "group");
+      toolbar.setAttribute("aria-label", `Insérer un symbole dans la réponse de ${item.expr}`);
+      ["(", ")", "[", "]"].forEach((symbol) => {
+        const symbolButton = document.createElement("button");
+        symbolButton.type = "button";
+        symbolButton.className = "symbol-button";
+        symbolButton.textContent = symbol;
+        symbolButton.setAttribute("aria-label", `Insérer ${symbol}`);
+        symbolButton.addEventListener("pointerdown", (event) => event.preventDefault());
+        symbolButton.addEventListener("mousedown", (event) => event.preventDefault());
+        symbolButton.addEventListener("click", () => {
+          const target = getTargetInput();
+          if (target) insertSymbol(target, symbol);
+        });
+        toolbar.appendChild(symbolButton);
+      });
+      card.appendChild(toolbar);
+
+      function getTargetInput() {
+        if (focusedInput && !focusedInput.disabled) return focusedInput;
+        const next = rows.find((entry) => !entry.input.disabled);
+        return next ? next.input : null;
+      }
+
+      function insertSymbol(input, symbol) {
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? input.value.length;
+        input.value = input.value.slice(0, start) + symbol + input.value.slice(end);
+        input.focus();
+        const cursor = start + symbol.length;
+        input.setSelectionRange(cursor, cursor);
+      }
+
+      const panel = document.createElement("div");
+      panel.className = "steps-panel";
+      card.appendChild(panel);
+
+      const status = document.createElement("p");
+      status.className = "card-status";
+      card.appendChild(status);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong><div class="correction-lines">${item.steps.map((s) => `= ${s}`).slice(1).join("<br>")}</div>`;
+      card.appendChild(correction);
+
+      const targetTexts = item.steps.slice(1);
+      const targetValues = targetTexts.map((t) => safeEvaluate(t));
+      const targetOpCounts = targetTexts.map((t) => countBinaryOps(t));
+      const rows = [];
+      let cardHadReveal = false;
+      let resolvedCount = 0;
+
+      targetTexts.forEach((text, stepIndex) => {
+        const row = document.createElement("div");
+        row.className = "step-row";
+
+        const number = document.createElement("span");
+        number.className = "step-number";
+        number.textContent = String(stepIndex + 1);
+        number.setAttribute("aria-hidden", "true");
+
+        const group = document.createElement("div");
+        group.className = "answer-group";
+
+        const equals = document.createElement("span");
+        equals.className = "step-equals";
+        equals.textContent = "=";
+        equals.setAttribute("aria-hidden", "true");
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "line-input";
+        input.setAttribute("aria-label", `Étape ${stepIndex + 1} du calcul de ${item.expr}`);
+        input.autocomplete = "off";
+        if (stepIndex > 0) input.disabled = true;
+        input.addEventListener("focus", () => { focusedInput = input; });
+
+        const statusIcon = document.createElement("span");
+        statusIcon.className = "step-status";
+
+        const hint = document.createElement("p");
+        hint.className = "step-hint";
+
+        group.append(equals, input, statusIcon);
+        row.append(number, group, hint);
+        panel.appendChild(row);
+
+        rows.push({ row, input, statusIcon, hint, attempts: 0, state: "pending" });
+      });
+
+      function finishCard() {
+        if (cardHadReveal) {
+          card.classList.add("is-incorrect");
+          status.className = "card-status incorrect";
+          status.textContent = "Certaines étapes ont été révélées. Regarde la correction complète ci-dessous.";
+          correction.classList.add("is-visible");
+          announce(status.textContent);
+        } else {
+          state.correct += 1;
+          card.classList.add("is-correct");
+          status.className = "card-status correct";
+          status.textContent = "Bravo, tout le calcul est correct !";
+          announce(`Exercice ${index + 1} réussi.`);
+        }
+        state.completed += 1;
+        updateScore();
+      }
+
+      function unlockRow(nextIndex) {
+        if (nextIndex >= rows.length) { finishCard(); return; }
+        const next = rows[nextIndex];
+        next.input.disabled = false;
+        window.setTimeout(() => next.input.focus({ preventScroll: true }), 200);
+      }
+
+      function revealRow(entry, stepIndex) {
+        cardHadReveal = true;
+        entry.state = "revealed";
+        entry.input.value = targetTexts[stepIndex];
+        entry.input.disabled = true;
+        entry.row.classList.remove("is-step-error");
+        entry.row.classList.add("is-step-revealed");
+        entry.statusIcon.textContent = "!";
+        entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} révélée`);
+        entry.hint.textContent = "Solution révélée pour débloquer la suite.";
+        announce(`Étape ${stepIndex + 1} révélée : ${targetTexts[stepIndex]}.`);
+        unlockRow(stepIndex + 1);
+      }
+
+      function validateRow(stepIndex) {
+        const entry = rows[stepIndex];
+        if (entry.state !== "pending") return;
+        if (!entry.input.value.trim()) return;
+
+        let studentValue;
+        try {
+          studentValue = safeEvaluate(entry.input.value);
+        } catch (err) {
+          studentValue = NaN;
+        }
+
+        const isLast = stepIndex === rows.length - 1;
+        const isReduced = !isLast || isBareNumber(entry.input.value);
+        const studentOpCount = Number.isFinite(studentValue) ? countBinaryOps(entry.input.value) : NaN;
+        const valueCorrect = nearlyEqual(studentValue, targetValues[stepIndex]);
+        // La valeur seule ne suffit pas : une fois tous les signes distribués,
+        // n'importe quel regroupement restant de la même somme donne déjà la
+        // bonne valeur. On exige donc aussi que le nombre d'opérations encore
+        // écrites corresponde exactement à cette étape, pour empêcher de
+        // sauter directement au résultat final.
+        const opsMatchTarget = studentOpCount === targetOpCounts[stepIndex];
+        // Certaines étapes sont de pures simplifications de signes successifs
+        // (ex. "+ (-9)" devient "-9") : le nombre d'opérations à effectuer ne
+        // change pas par rapport à la ligne précédente, seule l'écriture se
+        // simplifie. Dans ce cas précis, on exige en plus que le nombre de
+        // parenthèses/crochets diminue réellement, pour ne pas accepter une
+        // simple recopie de la ligne précédente comme si c'était un progrès.
+        const previousText = stepIndex === 0 ? item.expr : targetTexts[stepIndex - 1];
+        const isSignSimplificationStep = targetOpCounts[stepIndex] === countBinaryOps(previousText);
+        let paceCorrect = opsMatchTarget;
+        if (isSignSimplificationStep) {
+          const previousParenCount = countParenGroups(previousText);
+          const studentParenCount = countParenGroups(entry.input.value);
+          paceCorrect = opsMatchTarget && studentParenCount < previousParenCount;
+        }
+
+        entry.attempts += 1;
+
+        if (valueCorrect && isReduced && paceCorrect) {
+          entry.state = "correct";
+          entry.row.classList.remove("is-step-error");
+          entry.row.classList.add("is-step-correct");
+          entry.statusIcon.textContent = "✓";
+          entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} correcte`);
+          entry.hint.textContent = "";
+          entry.input.disabled = true;
+          unlockRow(stepIndex + 1);
+          return;
+        }
+
+        entry.row.classList.remove("is-step-error");
+        void entry.row.offsetWidth;
+        entry.row.classList.add("is-step-error");
+        entry.statusIcon.textContent = "✗";
+        entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} à revoir`);
+
+        if (entry.attempts >= MAX_ATTEMPTS) {
+          revealRow(entry, stepIndex);
+          return;
+        }
+
+        if (valueCorrect && !isReduced) {
+          entry.hint.textContent = "Ta valeur est juste, mais cette dernière ligne doit contenir uniquement le résultat final (un seul nombre).";
+        } else if (valueCorrect && isSignSimplificationStep && !paceCorrect) {
+          entry.hint.textContent = "Simplifie d'abord les signes successifs (par exemple \"+ (-9)\" devient \"- 9\") avant de calculer.";
+        } else if (valueCorrect && paceCorrect === false && studentOpCount < targetOpCounts[stepIndex]) {
+          entry.hint.textContent = "Ta valeur finale est correcte, mais tu es allé trop vite : n'effectue qu'une seule opération prioritaire à la fois sur cette ligne.";
+        } else {
+          entry.hint.textContent = GENERIC_HINTS[Math.min(entry.attempts - 1, GENERIC_HINTS.length - 1)];
+        }
+        announce(entry.hint.textContent);
+      }
+
+      rows.forEach((entry, stepIndex) => {
+        entry.input.addEventListener("blur", () => validateRow(stepIndex));
+        entry.input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") { event.preventDefault(); entry.input.blur(); }
+        });
+      });
+
+      return card;
+    }
+
+    const EXERCISE_COUNT = 8;
+
+    function buildAll() {
+      const container = document.getElementById("section1-list");
+      container.replaceChildren();
+
+      const chosenTemplates = shuffle(TEMPLATES).slice(0, Math.min(EXERCISE_COUNT, TEMPLATES.length));
+      while (chosenTemplates.length < EXERCISE_COUNT) {
+        chosenTemplates.push(TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)]);
+      }
+      const items = chosenTemplates.map((template) => {
+        const item = template();
+        item.steps = expandSignSteps(item.steps);
+        return item;
+      });
+
+      state.total = items.length;
+      state.completed = 0;
+      state.correct = 0;
+      updateScore();
+
+      items.forEach((item, index) => {
+        container.appendChild(buildCard(item, index));
+      });
+    }
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.getElementById("new-exercises-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+    });
+
+    buildAll();
+  </script>
+</body>
+</html>

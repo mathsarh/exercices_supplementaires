@@ -1,0 +1,1173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La distributivité de la multiplication dans ℤ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --slate: #1e2a3a;
+    --paper: #f0f4ff;
+    --ink: #172033;
+    --muted: #64748b;
+    --indigo: #4f6ef7;
+    --indigo-dark: #3f57d9;
+    --success: #22c55e;
+    --error: #ef4444;
+    --amber: #f59e0b;
+    --line: #dbe3f4;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--ink);
+  }
+  button, select, input { font: inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid rgba(79, 110, 247, 0.4);
+    outline-offset: 3px;
+  }
+  .app-shell {
+    min-height: 100%;
+    background:
+      radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 24rem),
+      linear-gradient(180deg, var(--slate) 0 15rem, var(--paper) 15rem 100%);
+  }
+  .main-width { width: min(100% - 2rem, 780px); margin-inline: auto; }
+  .hero { padding: 2.6rem 0 2rem; color: white; }
+  .hero-title { margin: 0; font-family: "Syne", sans-serif; letter-spacing: -0.02em; font-weight: 800; font-size: clamp(1.6rem, 4.4vw, 2.2rem); }
+  .hero-subtitle { max-width: 42rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+  .content { padding-bottom: 4rem; }
+
+  .score-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: -0.6rem;
+    padding: 1.25rem;
+  }
+  .score-values { min-width: 150px; }
+  .score-line { font-size: 0.88rem; color: var(--muted); }
+  .score-line strong { display: block; font-family: "Syne", sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--indigo); }
+  .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+  .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+  .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+  .example-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(30, 42, 58, 0.08);
+    padding: 1.4rem 1.5rem;
+    margin-top: 1.4rem;
+  }
+  .example-title { margin: 0 0 0.7rem; font-family: "Syne", sans-serif; font-weight: 800; font-size: 1.05rem; }
+  .example-grid { display: grid; gap: 1.2rem; grid-template-columns: 1fr 1fr; }
+  .example-item p { margin: 0 0 0.5rem; line-height: 1.55; font-size: 0.92rem; color: var(--muted); }
+  .example-math { font-family: "Courier New", monospace; font-size: 0.95rem; line-height: 2; background: #f4f6fd; border-radius: 10px; padding: 0.7rem 0.9rem; }
+  .rule-box {
+    margin-top: 1.1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    background: #fff7e7;
+    color: #8a5200;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .rule-box strong { display: block; margin-bottom: 0.3rem; }
+  .rule-box .ok { color: var(--success); font-weight: 700; }
+  .rule-box .no { color: var(--error); font-weight: 700; }
+
+  @media (max-width: 620px) {
+    .example-grid { grid-template-columns: 1fr; }
+  }
+
+  .section-block { margin-top: 2.6rem; }
+  .section-heading-row { display: flex; align-items: baseline; gap: 0.9rem; }
+  .section-kicker {
+    margin: 0;
+    font-family: "Syne", sans-serif;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--indigo-dark);
+  }
+  .section-title { margin: 0.25rem 0 0; font-family: "Syne", sans-serif; font-size: 1.2rem; font-weight: 800; }
+  .section-rule { border: none; border-top: 1px solid var(--line); margin: 0.8rem 0 1.1rem; }
+  .section-instructions { margin: 0 0 1.1rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+  .exercise-list { display: grid; gap: 1rem; }
+  .exercise-card {
+    background: white;
+    padding: 1.25rem 1.3rem;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 420ms ease, transform 420ms ease, border-color 180ms ease;
+  }
+  .exercise-card.is-visible { opacity: 1; transform: translateY(0); }
+  .exercise-card:nth-child(2) { transition-delay: 60ms; }
+  .exercise-card:nth-child(3) { transition-delay: 120ms; }
+  .exercise-card:nth-child(4) { transition-delay: 180ms; }
+  .exercise-card:nth-child(5) { transition-delay: 240ms; }
+  .exercise-card:nth-child(6) { transition-delay: 300ms; }
+
+  .exercise-card.is-correct { border-color: var(--success); }
+  .exercise-card.is-incorrect { border-color: var(--amber); }
+  .exercise-card.is-shaking { animation: shake 340ms ease; }
+  .exercise-card.is-success-pop { animation: pop 340ms ease; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-3px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+  }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+  .card-label-wrap { display: flex; align-items: center; gap: 0.6rem; }
+  .item-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 0; }
+  .level-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--indigo-dark);
+    background: #eef2ff;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+  }
+  .attempt-dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #dbe3f4; transition: background 150ms ease; }
+  .dot.is-wrong { background: var(--error); }
+  .dot.is-success { background: var(--success); }
+  .sign-input { width: 2.4em; min-width: 40px; }
+
+  .equality {
+    font-family: "Courier New", monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #192238;
+    background: #f4f6fd;
+    padding: 0.7rem 0.9rem;
+    border-radius: 10px;
+    margin: 0 0 0.9rem;
+    overflow-x: auto;
+  }
+
+  .options-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.9rem; }
+  .option-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 999px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    user-select: none;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  }
+  .option-chip.is-selected { border-color: var(--indigo); background: #eef2ff; color: var(--indigo-dark); font-weight: 700; }
+  .option-chip.is-disabled { cursor: default; opacity: 0.75; }
+
+  .numeric-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+  .numeric-row .equality-part { font-family: "Courier New", monospace; font-weight: 700; }
+  .numeric-input {
+    width: 140px;
+    min-height: 40px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 8px;
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+    text-align: center;
+  }
+  .numeric-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+  .blank-steps { display: grid; gap: 0.55rem; margin-bottom: 0.9rem; }
+  .blank-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: "Courier New", monospace;
+    font-size: 0.95rem;
+    line-height: 2.1;
+  }
+  .blank-line .fixed { white-space: pre; }
+  .blank-input {
+    width: 4.6em;
+    min-width: 62px;
+    min-height: 34px;
+    padding: 0.2rem 0.3rem;
+    border: 1px solid #ccd6ee;
+    border-radius: 7px;
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+  .blank-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+  .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .feedback { margin: 0; font-size: 0.9rem; font-weight: 650; flex: 1; min-width: 200px; }
+  .feedback.correct { color: var(--success); }
+  .feedback.incorrect { color: var(--error); }
+
+  .validate-button {
+    min-height: 40px;
+    padding: 0.6rem 1.1rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--indigo);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+  .correction {
+    display: none;
+    margin-top: 0.9rem;
+    padding: 0.85rem;
+    border-radius: 10px;
+    background: #fff7e7;
+    color: #8a5200;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+  .correction.is-visible { display: block; }
+  .correction strong { display: block; margin-bottom: 0.25rem; }
+  .correction .steps-line { font-family: "Courier New", monospace; display: block; }
+
+  .footer-actions { margin-top: 2.6rem; text-align: center; }
+  .restart-button {
+    min-height: 46px;
+    padding: 0.75rem 1.3rem;
+    border-radius: 12px;
+    background: #4f6ef7;
+    border: 0;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  @media (max-width: 620px) {
+    .score-panel { grid-template-columns: 1fr; }
+    .card-actions { flex-direction: column; align-items: stretch; }
+    .validate-button { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="hero">
+    <div class="main-width">
+      <h1 class="hero-title">La distributivité de la multiplication dans ℤ</h1>
+      <p class="hero-subtitle">Reconnaître quand on peut distribuer, décomposer un facteur en une somme ou une différence, puis calculer astucieusement avec des nombres entiers (positifs et négatifs) — sans poser d'opération.</p>
+      <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;">Nouveaux exercices</button>
+    </div>
+  </header>
+  <main class="main-width content">
+
+    <section class="score-panel" aria-labelledby="score-caption">
+      <div class="score-values" aria-live="polite">
+        <div class="score-line"><strong id="resolved-score">0 / 0</strong>corrigés</div>
+      </div>
+      <div>
+        <p id="score-caption" class="score-label">Progression</p>
+        <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="example-panel">
+      <p class="example-title">Rappel de la méthode</p>
+      <div class="example-grid">
+        <div class="example-item">
+          <p>Cette propriété vue avec les nombres naturels reste vraie avec les nombres entiers. Pour calculer <strong>-26 . 101</strong>, on décompose le facteur « 101 » en une somme « 100 + 1 » puis on applique la distributivité.</p>
+          <div class="example-math">-26 . 101 = -26 . (100 + 1)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -26 . 100 + (-26) . 1<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -2600 + (-26)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -2600 - 26<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -2626</div>
+        </div>
+        <div class="example-item">
+          <p>Pour calculer <strong>-26 . 9</strong>, on décompose le facteur « 9 » en une différence « 10 − 1 » puis on applique la distributivité.</p>
+          <div class="example-math">-26 . 9 = -26 . (10 − 1)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -26 . 10 − (-26) . 1<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -260 − (-26)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -260 + 26<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -234</div>
+        </div>
+      </div>
+      <div class="rule-box">
+        <strong>On ne peut appliquer la distributivité que lorsqu'on effectue un PRODUIT dont au moins un des facteurs est une somme (ou une différence). La règle reste la même avec des nombres négatifs.</strong>
+        Pour calculer « -2 . (3 + 5) », on peut appliquer la distributivité <span class="ok">(Oui)</span>.
+        Mais pour calculer « -2 . (3 . 5) » ou « -2 + (3 . 5) », on ne peut pas <span class="no">(Non)</span>.
+        <br><br>
+        <strong>N'oublie pas de simplifier les doubles signes avant de calculer.</strong>
+        « + (-26) » se simplifie en « - 26 », et « − (-26) » se simplifie en « + 26 ».
+      </div>
+    </section>
+
+    <!-- SECTION 1 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Section 1</p>
+          <h2 class="section-title">Peut-on appliquer la distributivité ?</h2>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Pour chaque expression, indique si on peut appliquer la distributivité (un produit dont un facteur est une somme ou une différence) ou non.</p>
+      <div id="section1-list" class="exercise-list"></div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section class="section-block">
+      <div class="section-heading-row">
+        <div>
+          <p class="section-kicker">Section 2</p>
+          <h2 class="section-title">Complète toutes les étapes du calcul</h2>
+        </div>
+      </div>
+      <hr class="section-rule">
+      <p class="section-instructions">Calcule en utilisant la distributivité. Attention aux signes des nombres entiers ! Tu as 3 essais avant que la correction ne s'affiche.</p>
+      <div id="section2-list" class="exercise-list"></div>
+    </section>
+
+  </main>
+  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+</div>
+
+<script>
+  const state = { resolved: 0, total: 0 };
+  const liveRegion = document.getElementById("live-region");
+  const resolvedScore = document.getElementById("resolved-score");
+  const progressTrack = document.getElementById("progress-track");
+  const progressFill = document.getElementById("progress-fill");
+
+  function announce(message) {
+    liveRegion.textContent = "";
+    window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+  }
+
+  function updateGlobalScore() {
+    resolvedScore.textContent = `${state.resolved} / ${state.total}`;
+    const pct = state.total ? (state.resolved / state.total) * 100 : 0;
+    progressFill.style.width = `${pct}%`;
+    progressTrack.setAttribute("aria-valuemax", String(state.total));
+    progressTrack.setAttribute("aria-valuenow", String(state.resolved));
+  }
+
+  function markResolved() {
+    state.resolved += 1;
+    updateGlobalScore();
+  }
+
+  function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function randChoice(arr) { return arr[randInt(0, arr.length - 1)]; }
+  function shuffle(items) {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+  function pickRandom(bank, count) { return shuffle(bank).slice(0, count); }
+  function letterLabel(index) { return `${String.fromCharCode(97 + index)})`; }
+
+  // Un nombre négatif écrit juste après un opérateur (., +, -) doit être entre parenthèses
+  // pour rester lisible (ex : "-26 . (-9)", "-260 - (-26)"). En tête de ligne, pas besoin.
+  function wrap(n) { return n < 0 ? `(${n})` : `${n}`; }
+
+  function fixedSpan(text) {
+    const span = document.createElement("span");
+    span.className = "fixed";
+    span.textContent = text;
+    return span;
+  }
+  function makeBlankInput(ariaLabel) {
+    const input = document.createElement("input");
+    input.className = "blank-input";
+    input.type = "number";
+    input.setAttribute("aria-label", ariaLabel);
+    return input;
+  }
+  function makeSignInput(ariaLabel) {
+    const input = document.createElement("input");
+    input.className = "blank-input sign-input";
+    input.type = "text";
+    input.maxLength = 1;
+    input.setAttribute("aria-label", ariaLabel);
+    return input;
+  }
+  function normalizeSign(v) {
+    return (v || "").trim().replace(/[–—−]/g, "-");
+  }
+
+  // Évalue une expression arithmétique tapée par l'élève (le "." représente une multiplication,
+  // comme dans le reste de l'exercice). Retourne NaN si l'expression contient autre chose que des
+  // chiffres, parenthèses et opérateurs, ou si elle ne peut pas être évaluée.
+  function safeEvalExpr(str) {
+    const cleaned = (str || "").replace(/\./g, "*").trim();
+    if (!cleaned || !/^[0-9+\-*()\s]+$/.test(cleaned)) return NaN;
+    try {
+      const val = Function(`"use strict"; return (${cleaned});`)();
+      return typeof val === "number" && Number.isFinite(val) ? val : NaN;
+    } catch (e) {
+      return NaN;
+    }
+  }
+
+  function cardHeader(label, levelText) {
+    const header = document.createElement("div");
+    header.className = "card-header";
+    const labelWrap = document.createElement("div");
+    labelWrap.className = "card-label-wrap";
+    const itemLabel = document.createElement("p");
+    itemLabel.className = "item-label";
+    itemLabel.textContent = label;
+    labelWrap.appendChild(itemLabel);
+    if (levelText) {
+      const level = document.createElement("span");
+      level.className = "level-tag";
+      level.textContent = levelText;
+      labelWrap.appendChild(level);
+    }
+    header.appendChild(labelWrap);
+    const dots = document.createElement("div");
+    dots.className = "attempt-dots";
+    const dotEls = [];
+    for (let i = 0; i < 3; i += 1) {
+      const d = document.createElement("span");
+      d.className = "dot";
+      dots.appendChild(d);
+      dotEls.push(d);
+    }
+    header.appendChild(dots);
+    return { header, dotEls };
+  }
+
+  function cardActions() {
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+    const feedback = document.createElement("p");
+    feedback.className = "feedback";
+    const validateBtn = document.createElement("button");
+    validateBtn.className = "validate-button";
+    validateBtn.type = "button";
+    validateBtn.textContent = "Vérifier";
+    actions.appendChild(feedback);
+    actions.appendChild(validateBtn);
+    return { actions, feedback, validateBtn };
+  }
+
+  // Gère les 3 essais, les pastilles de tentative et la correction finale.
+  function finalizeCard(card, dotEls, allInputs, feedback, validateBtn, correction, isCorrectFn, maxAttempts = 3) {
+    let attempts = 0;
+    let done = false;
+    const validate = () => {
+      if (done) return;
+      if (allInputs.some((el) => el.value === "")) {
+        feedback.textContent = "Complète toutes les cases avant de vérifier.";
+        feedback.className = "feedback";
+        return;
+      }
+
+      const isCorrect = isCorrectFn();
+      const dot = dotEls[attempts];
+      attempts += 1;
+
+      if (isCorrect) {
+        done = true;
+        if (dot) dot.classList.add("is-success");
+        markResolved();
+        allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+        validateBtn.disabled = true;
+        card.classList.add("is-correct", "is-success-pop");
+        feedback.className = "feedback correct";
+        feedback.textContent = "Bonne réponse !";
+        announce("Bonne réponse.");
+        return;
+      }
+
+      if (dot) dot.classList.add("is-wrong");
+
+      if (attempts >= maxAttempts) {
+        done = true;
+        markResolved();
+        allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+        validateBtn.disabled = true;
+        card.classList.add("is-incorrect");
+        feedback.className = "feedback incorrect";
+        feedback.textContent = "Ce n'est pas tout à fait ça, regarde la correction.";
+        correction.classList.add("is-visible");
+        announce("Réponse incorrecte, correction affichée.");
+        return;
+      }
+
+      const remaining = maxAttempts - attempts;
+      feedback.className = "feedback incorrect";
+      feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+      card.classList.remove("is-shaking");
+      void card.offsetWidth;
+      card.classList.add("is-shaking");
+      announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+    };
+    return validate;
+  }
+
+  // ---------- Génération des paires "à décomposer" (nombres entiers) ----------
+  // On travaille d'abord sur des GRANDEURS (valeurs absolues) pour éviter les pièges du modulo
+  // avec des nombres négatifs, puis on attribue un signe à chaque facteur séparément.
+  function isEasyMag(n) { return n % 10 === 0 || n % 10 === 5; }
+  function pickDecomposableMag(min, max) {
+    let n;
+    do { n = randInt(min, max); } while (isEasyMag(n));
+    return n;
+  }
+  function diffToTenMag(n) { return n - Math.round(n / 10) * 10; }
+  // Décompose vers le multiple de dix le plus proche, y compris pour un nombre négatif
+  // (ex : -67 -> -70 + 3 ; -19 -> -20 + 1).
+  function diffToTen(n) {
+    const round = Math.round(n / 10) * 10;
+    return { round, diff: n - round };
+  }
+
+  // Construit un item complet : deux facteurs signés, lequel est décomposé (gauche ou droite),
+  // le nombre rond, le reste, le signe, et toutes les valeurs intermédiaires.
+  // multMin/multMax bornent la grandeur du facteur "multiplicateur" : plus il est grand, plus le
+  // calcul mental est exigeant, ce qui permet de graduer la difficulté.
+  function makeItem(multMin = 6, multMax = 99) {
+    const decomposedMagCandidate = pickDecomposableMag(6, 99);
+    const otherMagCandidate = randInt(multMin, multMax);
+    const otherValid = otherMagCandidate >= 6 && !isEasyMag(otherMagCandidate);
+
+    let decomposedMag, multiplierMag;
+    if (otherValid && Math.abs(diffToTenMag(otherMagCandidate)) < Math.abs(diffToTenMag(decomposedMagCandidate))) {
+      decomposedMag = otherMagCandidate;
+      multiplierMag = decomposedMagCandidate;
+    } else {
+      decomposedMag = decomposedMagCandidate;
+      multiplierMag = otherMagCandidate;
+    }
+
+    // Au moins un des deux facteurs doit être négatif (on ne régénère pas le cas "tout positif",
+    // déjà traité dans le chapitre sur les nombres naturels).
+    const signCombos = [[1, -1], [-1, 1], [-1, -1]];
+    const [signD, signM] = randChoice(signCombos);
+    const decomposedVal = signD * decomposedMag;
+    const multiplier = signM * multiplierMag;
+
+    const decomposeIndex = Math.random() < 0.5 ? 0 : 1;
+    const a = decomposeIndex === 0 ? decomposedVal : multiplier;
+    const b = decomposeIndex === 0 ? multiplier : decomposedVal;
+
+    const { round, diff } = diffToTen(decomposedVal);
+    const sign = diff >= 0 ? "+" : "-";
+    const absDiff = Math.abs(diff);
+    const product1 = multiplier * round;
+    const product2 = multiplier * absDiff;
+    const final = sign === "+" ? product1 + product2 : product1 - product2;
+
+    return { a, b, decomposeIndex, round, diff: absDiff, sign, multiplier, product1, product2, final };
+  }
+
+  function makeUniqueItems(count, poolSize, multMin = 6, multMax = 99) {
+    const pool = [];
+    const seen = new Set();
+    let guard = 0;
+    while (pool.length < poolSize && guard < poolSize * 8) {
+      guard += 1;
+      const item = makeItem(multMin, multMax);
+      const key = `${item.a}_${item.b}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pool.push(item);
+    }
+    return pickRandom(pool, count);
+  }
+
+  // Quand le second produit est négatif, l'écriture "sign (product2)" contient un double signe
+  // (ex : "+ (-26)" ou "- (-26)") qu'il faut simplifier avant de calculer.
+  function needsSignSimplification(item) { return item.product2 < 0; }
+  function simplifiedSign(item) { return item.sign === "+" ? "-" : "+"; }
+
+  function stepsHtml(item) {
+    const { a, b, decomposeIndex, round, diff, sign, product1, product2, final } = item;
+    const simplifyLine = needsSignSimplification(item)
+      ? `\n<span class="steps-line">= ${product1} ${simplifiedSign(item)} ${Math.abs(product2)}</span>`
+      : "";
+    if (decomposeIndex === 1) {
+      return `
+<span class="steps-line">${a} . ${wrap(b)} = ${a} . (${round} ${sign} ${diff})</span>
+<span class="steps-line">= ${a} . ${wrap(round)} ${sign} ${wrap(a)} . ${diff}</span>
+<span class="steps-line">= ${product1} ${sign} ${wrap(product2)}</span>${simplifyLine}
+<span class="steps-line">= ${final}</span>`;
+    }
+    return `
+<span class="steps-line">${a} . ${wrap(b)} = (${round} ${sign} ${diff}) . ${wrap(b)}</span>
+<span class="steps-line">= ${b} . ${wrap(round)} ${sign} ${wrap(b)} . ${diff}</span>
+<span class="steps-line">= ${product1} ${sign} ${wrap(product2)}</span>${simplifyLine}
+<span class="steps-line">= ${final}</span>`;
+  }
+
+  // ---------- Analyse structurelle des réponses "texte libre" du niveau 3 ----------
+  // L'élève a le droit de décomposer soit le 1er facteur, soit le 2e : ces fonctions
+  // n'imposent donc pas la décomposition choisie par le générateur (item.decomposeIndex),
+  // elles valident la cohérence entre les étapes que l'élève a réellement écrites.
+  const NUM_TOKEN = "(\\(-?\\d+\\)|-?\\d+)";
+
+  function parseNumTok(tok) {
+    if (tok == null) return NaN;
+    const t = tok.trim();
+    const wrapped = t.match(/^\(\s*(-?\d+)\s*\)$/);
+    if (wrapped) return parseInt(wrapped[1], 10);
+    if (/^-?\d+$/.test(t)) return parseInt(t, 10);
+    return NaN;
+  }
+
+  // Étape 1 : reconnaît "multiplicateur . (round signe diff)" ou "(round signe diff) . multiplicateur",
+  // et vérifie que le multiplicateur est bien un des deux facteurs et que la décomposition redonne l'autre.
+  function parseDecomposition(expr, a, b) {
+    const s = (expr || "").trim();
+    let m = s.match(new RegExp(`^${NUM_TOKEN}\\s*\\.\\s*\\(\\s*(-?\\d+)\\s*([+-])\\s*(\\d+)\\s*\\)$`));
+    let multiplier, round, diffSign, diff;
+    if (m) {
+      multiplier = parseNumTok(m[1]);
+      round = parseInt(m[2], 10);
+      diffSign = m[3];
+      diff = parseInt(m[4], 10);
+    } else {
+      m = s.match(new RegExp(`^\\(\\s*(-?\\d+)\\s*([+-])\\s*(\\d+)\\s*\\)\\s*\\.\\s*${NUM_TOKEN}$`));
+      if (!m) return null;
+      round = parseInt(m[1], 10);
+      diffSign = m[2];
+      diff = parseInt(m[3], 10);
+      multiplier = parseNumTok(m[4]);
+    }
+    if ([multiplier, round, diff].some((v) => Number.isNaN(v))) return null;
+    const decomposedValue = diffSign === "+" ? round + diff : round - diff;
+    const matchesAB = multiplier === a && decomposedValue === b;
+    const matchesBA = multiplier === b && decomposedValue === a;
+    if (!matchesAB && !matchesBA) return null;
+    return { multiplier, round, diffSign, diff };
+  }
+
+  // Étape 2 : reconnaît "n1 . n2 signe n3 . n4" (ordre des facteurs libre dans chaque terme)
+  // et vérifie que chaque terme correspond bien au multiplicateur multiplié par round, puis par diff.
+  function parseDistribution(expr, expected) {
+    const s = (expr || "").trim();
+    const m = s.match(new RegExp(`^${NUM_TOKEN}\\s*\\.\\s*${NUM_TOKEN}\\s*([+-])\\s*${NUM_TOKEN}\\s*\\.\\s*${NUM_TOKEN}$`));
+    if (!m) return false;
+    const n1a = parseNumTok(m[1]), n1b = parseNumTok(m[2]), op = m[3], n2a = parseNumTok(m[4]), n2b = parseNumTok(m[5]);
+    if ([n1a, n1b, n2a, n2b].some((v) => Number.isNaN(v))) return false;
+    const term1Ok = (n1a === expected.multiplier && n1b === expected.round) || (n1b === expected.multiplier && n1a === expected.round);
+    const term2Ok = (n2a === expected.multiplier && n2b === expected.diff) || (n2b === expected.multiplier && n2a === expected.diff);
+    return term1Ok && term2Ok && op === expected.diffSign;
+  }
+
+  // Étape 3 : reconnaît "produit1 signe produit2" (sous forme brute, avant simplification des doubles signes).
+  function parseRawProducts(expr, expected) {
+    const s = (expr || "").trim();
+    const m = s.match(new RegExp(`^${NUM_TOKEN}\\s*([+-])\\s*${NUM_TOKEN}$`));
+    if (!m) return false;
+    const p1 = parseNumTok(m[1]), op = m[2], p2 = parseNumTok(m[3]);
+    if ([p1, p2].some((v) => Number.isNaN(v))) return false;
+    const expectedP1 = expected.multiplier * expected.round;
+    const expectedP2Raw = expected.multiplier * expected.diff;
+    return p1 === expectedP1 && op === expected.diffSign && p2 === expectedP2Raw;
+  }
+
+  // Étape facultative : simplification du double signe ("+ (-x)" -> "- x", ou "- (-x)" -> "+ x").
+  function parseSimplifiedLine(expr, expected) {
+    const s = (expr || "").trim();
+    const m = s.match(new RegExp(`^${NUM_TOKEN}\\s*([+-])\\s*${NUM_TOKEN}$`));
+    if (!m) return false;
+    const p1 = parseNumTok(m[1]), op = m[2], p2 = parseNumTok(m[3]);
+    if ([p1, p2].some((v) => Number.isNaN(v))) return false;
+    const expectedP1 = expected.multiplier * expected.round;
+    const rawP2 = expected.multiplier * expected.diff;
+    const newSign = expected.diffSign === "+" ? "-" : "+";
+    return p1 === expectedP1 && op === newSign && p2 === Math.abs(rawP2);
+  }
+
+  // ---------- SECTION 1 : reconnaître si la distributivité s'applique ----------
+  function randSmall() {
+    const mag = randInt(2, 12);
+    return Math.random() < 0.5 ? mag : -mag;
+  }
+  function randOp() { return Math.random() < 0.5 ? "+" : "-"; }
+
+  // Génère une expression "Oui" (distributivité applicable) ou "Non" (pas applicable),
+  // en variant les gabarits et en mélangeant nombres positifs et négatifs.
+  function genSection1Item() {
+    if (Math.random() < 0.5) {
+      const trueTemplates = [
+        () => `${randSmall()} . (${randSmall()} ${randOp()} ${wrap(randSmall())})`,
+        () => `(${randSmall()} ${randOp()} ${wrap(randSmall())}) . ${wrap(randSmall())}`
+      ];
+      return { expr: randChoice(trueTemplates)(), canApply: true };
+    }
+    const falseTemplates = [
+      () => `${randSmall()} . (${randSmall()} . ${wrap(randSmall())})`,
+      () => `${randSmall()} + (${randSmall()} . ${wrap(randSmall())})`,
+      () => `${randSmall()} - (${randSmall()} . ${wrap(randSmall())})`,
+      () => `(${randSmall()} . ${wrap(randSmall())}) . ${wrap(randSmall())}`,
+      () => `(${randSmall()} ${randOp()} ${wrap(randSmall())}) + ${wrap(randSmall())}`
+    ];
+    return { expr: randChoice(falseTemplates)(), canApply: false };
+  }
+
+  const SECTION1_POOL = 50;
+  const SECTION1_COUNT = 5;
+
+  function buildSection1Pool() {
+    const pool = [];
+    const seen = new Set();
+    let guard = 0;
+    while (pool.length < SECTION1_POOL && guard < SECTION1_POOL * 10) {
+      guard += 1;
+      const item = genSection1Item();
+      if (seen.has(item.expr)) continue;
+      seen.add(item.expr);
+      pool.push(item);
+    }
+    return pool;
+  }
+
+  function buildSection1() {
+    const container = document.getElementById("section1-list");
+    const items = pickRandom(buildSection1Pool(), SECTION1_COUNT);
+    items.forEach((item, index) => {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+
+      const { header, dotEls } = cardHeader(letterLabel(index));
+      card.appendChild(header);
+
+      const equality = document.createElement("p");
+      equality.className = "equality";
+      equality.textContent = item.expr;
+      card.appendChild(equality);
+
+      const optionsRow = document.createElement("div");
+      optionsRow.className = "options-row";
+      let selected = null;
+      const chips = {};
+      ["Oui", "Non"].forEach((label) => {
+        const chip = document.createElement("span");
+        chip.className = "option-chip";
+        chip.textContent = label;
+        chip.setAttribute("role", "button");
+        chip.setAttribute("tabindex", "0");
+        function activate() {
+          if (chip.classList.contains("is-disabled")) return;
+          selected = label;
+          Object.values(chips).forEach((c) => c.classList.remove("is-selected"));
+          chip.classList.add("is-selected");
+        }
+        chip.addEventListener("click", activate);
+        chip.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); } });
+        chips[label] = chip;
+        optionsRow.appendChild(chip);
+      });
+      card.appendChild(optionsRow);
+
+      const { actions, feedback, validateBtn } = cardActions();
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Réponse :</strong>${item.canApply ? "Oui" : "Non"} — il ${item.canApply ? "s'agit bien" : "ne s'agit pas"} d'un produit dont un facteur est une somme ou une différence.`;
+      card.appendChild(correction);
+
+      const fakeInput = { get value() { return selected || ""; }, disabled: false, classList: { add: () => {} } };
+      const validate = finalizeCard(card, dotEls, [fakeInput], feedback, validateBtn, correction, () => {
+        return (selected === "Oui") === item.canApply;
+      });
+      validateBtn.addEventListener("click", () => {
+        validate();
+        if (validateBtn.disabled) Object.values(chips).forEach((c) => c.classList.add("is-disabled"));
+      });
+
+      container.appendChild(card);
+    });
+    return items.length;
+  }
+
+  // ---------- SECTION 2 : compléter toutes les étapes (difficulté croissante) ----------
+  // Palier 1 (facile)   : parenthèses ET signe donnés, l'élève ne fait que les calculs.
+  // Palier 2 (moyen)    : parenthèses données, mais le signe (+ ou -) n'est pas indiqué :
+  //                       l'élève doit le déterminer lui-même en observant les deux nombres.
+  // Palier 3 (difficile): rien n'est donné, ni le facteur à décomposer ni le signe :
+  //                       l'élève calcule tout mentalement et ne donne que le résultat final.
+  const SECTION2_POOL = 100;
+  const TIER1_COUNT = 3, TIER2_COUNT = 4, TIER3_COUNT = 3;
+
+  function buildTier1Card(item, label) {
+    const { a, b, decomposeIndex, round, diff, sign } = item;
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label, "Niveau 1");
+    card.appendChild(header);
+
+    const equality = document.createElement("p");
+    equality.className = "equality";
+    equality.textContent = `${a} . ${wrap(b)} =`;
+    card.appendChild(equality);
+
+    const steps = document.createElement("div");
+    steps.className = "blank-steps";
+    const rInput = makeBlankInput("nombre rond de la décomposition");
+    const dInput = makeBlankInput("reste de la décomposition");
+    const r2Input = makeBlankInput("nombre rond répété");
+    const d2Input = makeBlankInput("reste répété");
+    const p1Input = makeBlankInput("premier produit");
+    const p2Input = makeBlankInput("second produit");
+    const simplifyNeeded = needsSignSimplification(item);
+    const magInput = simplifyNeeded ? makeBlankInput("nombre simplifié après suppression du double signe") : null;
+    const finalInput = makeBlankInput("résultat final");
+
+    const line1 = document.createElement("div");
+    line1.className = "blank-line";
+    if (decomposeIndex === 1) {
+      line1.append(fixedSpan(`${a} . (`), rInput, fixedSpan(` ${sign} `), dInput, fixedSpan(")"));
+    } else {
+      line1.append(fixedSpan("("), rInput, fixedSpan(` ${sign} `), dInput, fixedSpan(`) . ${wrap(b)}`));
+    }
+    steps.appendChild(line1);
+
+    const line2 = document.createElement("div");
+    line2.className = "blank-line";
+    if (decomposeIndex === 1) {
+      line2.append(fixedSpan(`= ${a} . `), r2Input, fixedSpan(` ${sign} ${wrap(a)} . `), d2Input);
+    } else {
+      line2.append(fixedSpan(`= ${b} . `), r2Input, fixedSpan(` ${sign} ${wrap(b)} . `), d2Input);
+    }
+    steps.appendChild(line2);
+
+    const line3 = document.createElement("div");
+    line3.className = "blank-line";
+    line3.append(fixedSpan("= "), p1Input, fixedSpan(` ${sign} `), p2Input);
+    steps.appendChild(line3);
+
+    if (simplifyNeeded) {
+      const line3b = document.createElement("div");
+      line3b.className = "blank-line";
+      line3b.append(fixedSpan(`= ${item.product1} ${simplifiedSign(item)} `), magInput);
+      steps.appendChild(line3b);
+    }
+
+    const line4 = document.createElement("div");
+    line4.className = "blank-line";
+    line4.append(fixedSpan("= "), finalInput);
+    steps.appendChild(line4);
+    card.appendChild(steps);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = `<strong>Correction :</strong>${stepsHtml(item)}`;
+    card.appendChild(correction);
+
+    const allInputs = [rInput, dInput, r2Input, d2Input, p1Input, p2Input, finalInput];
+    if (simplifyNeeded) allInputs.push(magInput);
+    const validate = finalizeCard(card, dotEls, allInputs, feedback, validateBtn, correction, () => {
+      const simplifyOk = simplifyNeeded ? Number(magInput.value) === Math.abs(item.product2) : true;
+      return simplifyOk &&
+        Number(rInput.value) === round &&
+        Number(dInput.value) === diff &&
+        Number(r2Input.value) === round &&
+        Number(d2Input.value) === diff &&
+        Number(p1Input.value) === item.product1 &&
+        Number(p2Input.value) === item.product2 &&
+        Number(finalInput.value) === item.final;
+    });
+    validateBtn.addEventListener("click", validate);
+    return card;
+  }
+
+  function buildTier2Card(item, label) {
+    const { a, b, decomposeIndex, round, diff, sign } = item;
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label, "Niveau 2");
+    card.appendChild(header);
+
+    const equality = document.createElement("p");
+    equality.className = "equality";
+    equality.textContent = `${a} . ${wrap(b)} =`;
+    card.appendChild(equality);
+
+    const steps = document.createElement("div");
+    steps.className = "blank-steps";
+    const rInput = makeBlankInput("nombre rond de la décomposition");
+    const s1Input = makeSignInput("signe de la décomposition");
+    const dInput = makeBlankInput("reste de la décomposition");
+    const r2Input = makeBlankInput("nombre rond répété");
+    const s2Input = makeSignInput("signe répété");
+    const d2Input = makeBlankInput("reste répété");
+    const p1Input = makeBlankInput("premier produit");
+    const s3Input = makeSignInput("signe entre les deux produits");
+    const p2Input = makeBlankInput("second produit");
+    const simplifyNeeded = needsSignSimplification(item);
+    const s4Input = simplifyNeeded ? makeSignInput("signe après simplification du double signe") : null;
+    const magInput = simplifyNeeded ? makeBlankInput("nombre simplifié après suppression du double signe") : null;
+    const finalInput = makeBlankInput("résultat final");
+
+    const line1 = document.createElement("div");
+    line1.className = "blank-line";
+    if (decomposeIndex === 1) {
+      line1.append(fixedSpan(`${a} . (`), rInput, s1Input, dInput, fixedSpan(")"));
+    } else {
+      line1.append(fixedSpan("("), rInput, s1Input, dInput, fixedSpan(`) . ${wrap(b)}`));
+    }
+    steps.appendChild(line1);
+
+    const line2 = document.createElement("div");
+    line2.className = "blank-line";
+    if (decomposeIndex === 1) {
+      line2.append(fixedSpan(`= ${a} . `), r2Input, s2Input, fixedSpan(`${wrap(a)} . `), d2Input);
+    } else {
+      line2.append(fixedSpan(`= ${b} . `), r2Input, s2Input, fixedSpan(`${wrap(b)} . `), d2Input);
+    }
+    steps.appendChild(line2);
+
+    const line3 = document.createElement("div");
+    line3.className = "blank-line";
+    line3.append(fixedSpan("= "), p1Input, s3Input, p2Input);
+    steps.appendChild(line3);
+
+    if (simplifyNeeded) {
+      const line3b = document.createElement("div");
+      line3b.className = "blank-line";
+      line3b.append(fixedSpan(`= ${item.product1} `), s4Input, magInput);
+      steps.appendChild(line3b);
+    }
+
+    const line4 = document.createElement("div");
+    line4.className = "blank-line";
+    line4.append(fixedSpan("= "), finalInput);
+    steps.appendChild(line4);
+    card.appendChild(steps);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = `<strong>Correction :</strong>${stepsHtml(item)}`;
+    card.appendChild(correction);
+
+    const baseSignInputs = [s1Input, s2Input, s3Input];
+    const numberInputs = [rInput, dInput, r2Input, d2Input, p1Input, p2Input, finalInput];
+    if (simplifyNeeded) numberInputs.push(magInput);
+    const allInputs = simplifyNeeded ? [...numberInputs, ...baseSignInputs, s4Input] : [...numberInputs, ...baseSignInputs];
+    const validate = finalizeCard(card, dotEls, allInputs, feedback, validateBtn, correction, () => {
+      const signsOk = baseSignInputs.every((el) => normalizeSign(el.value) === sign);
+      const simplifyOk = simplifyNeeded
+        ? normalizeSign(s4Input.value) === simplifiedSign(item) && Number(magInput.value) === Math.abs(item.product2)
+        : true;
+      return signsOk && simplifyOk &&
+        Number(rInput.value) === round &&
+        Number(dInput.value) === diff &&
+        Number(r2Input.value) === round &&
+        Number(d2Input.value) === diff &&
+        Number(p1Input.value) === item.product1 &&
+        Number(p2Input.value) === item.product2 &&
+        Number(finalInput.value) === item.final;
+    });
+    validateBtn.addEventListener("click", validate);
+    return card;
+  }
+
+  function buildTier3Card(item, label) {
+    const card = document.createElement("article");
+    card.className = "exercise-card";
+    const { header, dotEls } = cardHeader(label, "Niveau 3");
+    card.appendChild(header);
+
+    const equality = document.createElement("p");
+    equality.className = "equality";
+    equality.textContent = `${item.a} . ${wrap(item.b)} =`;
+    card.appendChild(equality);
+
+    const steps = document.createElement("div");
+    steps.className = "blank-steps";
+
+    const step1Input = document.createElement("input");
+    step1Input.type = "text";
+    step1Input.className = "blank-input";
+    step1Input.style.width = "100%";
+    step1Input.placeholder = "";
+    step1Input.setAttribute("aria-label", "Étape 1 : décomposition du facteur");
+
+    const step2Input = document.createElement("input");
+    step2Input.type = "text";
+    step2Input.className = "blank-input";
+    step2Input.style.width = "100%";
+    step2Input.placeholder = "";
+    step2Input.setAttribute("aria-label", "Étape 2 : distributivité appliquée");
+
+    const step3Input = document.createElement("input");
+    step3Input.type = "text";
+    step3Input.className = "blank-input";
+    step3Input.style.width = "100%";
+    step3Input.placeholder = "";
+    step3Input.setAttribute("aria-label", "Étape 3 : calcul des deux produits");
+
+    const simplifyNeeded = needsSignSimplification(item);
+    const step3bInput = document.createElement("input");
+    step3bInput.type = "text";
+    step3bInput.className = "blank-input";
+    step3bInput.style.width = "100%";
+    step3bInput.placeholder = "";
+    step3bInput.setAttribute("aria-label", "Étape supplémentaire si nécessaire : simplification du double signe");
+
+    const finalInput = makeBlankInput("résultat final");
+
+    const line1 = document.createElement("div");
+    line1.className = "blank-line";
+    line1.append(fixedSpan("= "), step1Input);
+    steps.appendChild(line1);
+
+    const line2 = document.createElement("div");
+    line2.className = "blank-line";
+    line2.append(fixedSpan("= "), step2Input);
+    steps.appendChild(line2);
+
+    const line3 = document.createElement("div");
+    line3.className = "blank-line";
+    line3.append(fixedSpan("= "), step3Input);
+    steps.appendChild(line3);
+
+    const line3b = document.createElement("div");
+    line3b.className = "blank-line";
+    line3b.append(fixedSpan("= "), step3bInput);
+    steps.appendChild(line3b);
+
+    const line4 = document.createElement("div");
+    line4.className = "blank-line";
+    line4.append(fixedSpan("= "), finalInput);
+    steps.appendChild(line4);
+    card.appendChild(steps);
+
+    const { actions, feedback, validateBtn } = cardActions();
+    card.appendChild(actions);
+
+    const correction = document.createElement("div");
+    correction.className = "correction";
+    correction.innerHTML = `<strong>Étapes possibles :</strong>${stepsHtml(item)}`;
+    card.appendChild(correction);
+
+    // L'élève choisit librement quel facteur il décompose : on retrouve sa décomposition à
+    // partir de sa propre étape 1, puis on vérifie que les étapes suivantes en découlent
+    // correctement (la case de simplification des signes n'est obligatoire que si sa
+    // décomposition produit réellement un double signe).
+    const allInputs = [step1Input, step2Input, step3Input, finalInput];
+    const validate = finalizeCard(card, dotEls, allInputs, feedback, validateBtn, correction, () => {
+      const decomp = parseDecomposition(step1Input.value, item.a, item.b);
+      if (!decomp) return false;
+      if (!parseDistribution(step2Input.value, decomp)) return false;
+      if (!parseRawProducts(step3Input.value, decomp)) return false;
+      const rawProduct2 = decomp.multiplier * decomp.diff;
+      if (rawProduct2 < 0 && !parseSimplifiedLine(step3bInput.value, decomp)) return false;
+      return Number(finalInput.value) === item.final;
+    });
+    validateBtn.addEventListener("click", () => {
+      validate();
+      if (card.classList.contains("is-correct") || card.classList.contains("is-incorrect")) {
+        step3bInput.disabled = true;
+        step3bInput.classList.add("is-disabled");
+      }
+    });
+    return card;
+  }
+
+  function buildSection2() {
+    const container = document.getElementById("section2-list");
+    const tier1Items = makeUniqueItems(TIER1_COUNT, 20, 2, 9);
+    const tier2Items = makeUniqueItems(TIER2_COUNT, 40, 6, 30);
+    const tier3Items = makeUniqueItems(TIER3_COUNT, SECTION2_POOL, 15, 80);
+
+    let index = 0;
+    tier1Items.forEach((item) => { container.appendChild(buildTier1Card(item, letterLabel(index))); index += 1; });
+    tier2Items.forEach((item) => { container.appendChild(buildTier2Card(item, letterLabel(index))); index += 1; });
+    tier3Items.forEach((item) => { container.appendChild(buildTier3Card(item, letterLabel(index))); index += 1; });
+
+    return index;
+  }
+
+  function buildAll() {
+    document.getElementById("section1-list").replaceChildren();
+    document.getElementById("section2-list").replaceChildren();
+    state.resolved = 0;
+
+    const n1 = buildSection1();
+    const n2 = buildSection2();
+
+    state.total = n1 + n2;
+    updateGlobalScore();
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".exercise-card").forEach((card) => card.classList.add("is-visible"));
+      });
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const active = document.activeElement;
+    if (!active) return;
+    if (active.tagName !== "INPUT" && active.getAttribute("role") !== "button") return;
+    if (active.type === "checkbox") return;
+    const card = active.closest(".exercise-card");
+    if (!card) return;
+    const validateBtn = card.querySelector(".validate-button");
+    if (validateBtn && !validateBtn.disabled) {
+      event.preventDefault();
+      validateBtn.click();
+    }
+  });
+
+  document.getElementById("new-exercises-button").addEventListener("click", () => {
+    buildAll();
+    announce("De nouveaux exercices ont été générés.");
+  });
+
+  buildAll();
+</script>
+</body>
+</html>

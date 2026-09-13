@@ -1,0 +1,1580 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Somme de Nombres Entiers Relatifs</title>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #22c55e;
+      --error: #ef4444;
+      --amber: #f59e0b;
+      --line: #dbe3f4;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      width: 100%;
+      margin: 0;
+      min-height: 100%;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+    }
+
+    button, select, input { font: inherit; }
+
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.4);
+      outline-offset: 3px;
+    }
+
+    .display-font {
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .app-shell {
+      width: 100%;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.14), transparent 24rem),
+        linear-gradient(180deg, var(--slate) 0 18.5rem, var(--paper) 18.5rem 100%);
+    }
+
+    .main-width {
+      width: min(100% - 2rem, 800px);
+      margin-inline: auto;
+    }
+
+    .hero { padding: 3rem 0 2.2rem; color: white; }
+    .hero-copy { max-width: 42rem; }
+
+    .hero-title {
+      margin: 0;
+      line-height: 0.98;
+      letter-spacing: -0.045em;
+      font-size: clamp(1.9rem, 5vw, 2.6rem);
+    }
+
+    .hero-subtitle {
+      max-width: 36rem;
+      margin: 1rem 0 0;
+      line-height: 1.65;
+    }
+
+    .new-button, .secondary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0.75rem 1rem;
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+    }
+
+    .new-button {
+      margin-top: 1.4rem;
+      background: var(--indigo);
+      color: white;
+      box-shadow: 0 10px 24px rgba(9, 16, 31, 0.22);
+    }
+
+    .secondary-button {
+      background: white;
+      color: var(--indigo-dark);
+      border: 1px solid var(--line);
+    }
+
+    .new-button:hover, .secondary-button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.04);
+    }
+
+    .content { padding-bottom: 4rem; }
+
+    .settings-panel, .score-panel, .rule-panel, .exercise-card, .task-card {
+      background: white;
+      border: 1px solid rgba(219, 227, 244, 0.9);
+      border-radius: 20px;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    }
+
+    .settings-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: -0.2rem;
+      padding: 1.2rem;
+    }
+
+    .field-group { display: grid; gap: 0.45rem; }
+    .field-label { font-weight: 700; }
+    .field-help { margin: 0; line-height: 1.45; font-size: 0.85rem; color: var(--muted); }
+
+    .select-control {
+      width: 100%;
+      min-height: 44px;
+      padding: 0.65rem 2.4rem 0.65rem 0.8rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 11px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: 1rem;
+      padding: 1.25rem;
+    }
+
+    .score-values { display: grid; gap: 0.25rem; min-width: 185px; }
+    .score-line { font-size: 0.88rem; color: var(--muted); }
+
+    .score-line strong {
+      display: inline-block;
+      min-width: 3.5rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--indigo);
+    }
+
+    .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #4f6ef7, #7890ff);
+      transition: width 350ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .score-helper { margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--muted); }
+
+    /* Rappel de cours */
+    .rule-panel {
+      margin-top: 1.15rem;
+      padding: 1.3rem 1.4rem;
+      border-left: 4px solid var(--indigo);
+      border-radius: 0 20px 20px 0;
+    }
+
+    .rule-title { margin: 0 0 0.6rem; font-size: 1.15rem; }
+    .rule-intro { margin: 0 0 0.9rem; line-height: 1.6; }
+
+    .rule-list { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.75rem; }
+    .rule-list li { line-height: 1.55; }
+
+    .rule-example {
+      display: inline-block;
+      margin-top: 0.15rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 8px;
+      background: #eef2ff;
+      color: var(--indigo-dark);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+    }
+
+    .section-heading { display: flex; align-items: center; gap: 1rem; margin: 2.25rem 0 1rem; }
+
+    .section-title {
+      flex: none;
+      margin: 0;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.95rem;
+      color: var(--slate);
+    }
+
+    .section-line { width: 100%; height: 1px; background: #cdd7eb; }
+    .section-intro { margin: -0.4rem 0 1rem; color: var(--muted); line-height: 1.55; }
+
+    .exercise-list { display: grid; gap: 1rem; }
+
+    .exercise-card {
+      position: relative;
+      overflow: hidden;
+      padding: 1.3rem;
+      border: 2px solid transparent;
+      animation: fadeUp 480ms both;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .exercise-card:focus-within { box-shadow: 0 12px 34px rgba(79, 110, 247, 0.14); }
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-corrected { border-color: var(--amber); }
+    .exercise-card.is-shaking { animation: shake 340ms ease; }
+
+    .card-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+
+    .exercise-index {
+      margin: 0;
+      font-size: 0.83rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .attempt-dots { display: flex; gap: 0.42rem; }
+
+    .attempt-dot {
+      width: 11px;
+      height: 11px;
+      border: 2px solid #c7d0e3;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .attempt-dot.is-error { border-color: var(--error); background: var(--error); }
+    .attempt-dot.is-success { border-color: var(--success); background: var(--success); transform: scale(1.2); }
+    .attempt-dot.is-hidden { display: none; }
+
+    .sum-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .number-value {
+      font-family: "Courier New", monospace;
+      font-size: clamp(1.05rem, 4vw, 1.42rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: 0.02em;
+      color: #192238;
+      text-align: left;
+      overflow-wrap: anywhere;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .fill-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-top: 0.4rem; }
+
+    .fill-input {
+      width: 6rem;
+      min-height: 44px;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 11px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .fill-input.is-correct { border-color: var(--success); background: #f0fdf4; }
+    .fill-input.is-wrong { border-color: var(--error); background: #fef2f2; }
+
+    .answer-zone { display: flex; gap: 0.38rem; padding: 0.35rem; border-radius: 13px; background: #eef2ff; }
+
+    .symbol-button {
+      min-width: 58px;
+      height: 42px;
+      padding: 0 0.7rem;
+      border: 1px solid #d4dcf3;
+      border-radius: 10px;
+      background: white;
+      color: #34405a;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 150ms ease, color 150ms ease, background 150ms ease;
+    }
+
+    .symbol-button:hover:not(:disabled) { color: var(--indigo); transform: translateY(-1px); }
+
+    .symbol-button.is-selected {
+      border-color: var(--indigo);
+      background: var(--indigo) !important;
+      color: white !important;
+      box-shadow: 0 5px 13px rgba(79, 110, 247, 0.25);
+    }
+
+    .symbol-button:disabled { cursor: default; opacity: 0.72; }
+
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.1rem; }
+    .feedback-slot { min-height: 1.5rem; flex: 1; }
+    .feedback { display: none; margin: 0; font-size: 0.9rem; font-weight: 650; }
+    .feedback.is-visible { display: block; }
+
+    .select-symbol-message { color: var(--muted); }
+    .wrong-message { color: var(--error); }
+    .success-message { color: var(--success); }
+    .test-recorded-message { color: var(--indigo-dark); }
+
+    .validate-button {
+      flex: none;
+      min-height: 42px;
+      padding: 0.65rem 1rem;
+      border: 0;
+      border-radius: 11px;
+      background: var(--indigo);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+    .correction {
+      display: none;
+      margin-top: 0.9rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      background: #fff7e7;
+      color: #8a5200;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .correction.is-visible { display: block; }
+    .correction-value { display: block; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .correction-explanation { display: block; margin-top: 0.35rem; }
+
+    .completion-message, .test-results-panel {
+      display: none;
+      margin-top: 1.2rem;
+      padding: 1.1rem 1.2rem;
+      border-radius: 15px;
+      text-align: center;
+      background: #f0fdf4;
+      color: #15803d;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(34, 197, 94, 0.12);
+      animation: pop 400ms ease;
+    }
+
+    .test-results-panel { background: white; color: var(--ink); }
+    .completion-message.is-visible, .test-results-panel.is-visible { display: block; }
+
+    .test-result-value { margin: 0.35rem 0 0; font-size: 1.35rem; font-weight: 800; color: var(--indigo); }
+
+    .end-actions { display: none; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 1rem; }
+    .end-actions.is-visible { display: grid; }
+    .review-button.is-hidden { display: none; }
+
+    .task-card { padding: 1.3rem; margin-bottom: 1rem; animation: fadeUp 480ms both; }
+    .task-question { margin: 0 0 1rem; font-weight: 700; line-height: 1.5; }
+
+    /* Section relie */
+    .match-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .match-badge {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--slate);
+      color: white;
+      font-size: 0.78rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+    }
+
+    .match-expr {
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .match-left { display: flex; align-items: center; gap: 0.6rem; }
+    .match-arrow { color: var(--muted); font-weight: 800; }
+
+    .match-select.result-correct { border-color: var(--success); background: #f0fdf4; }
+    .match-select.result-wrong { border-color: var(--error); background: #fef2f2; }
+
+    /* Section pyramides */
+    .pyramid { display: grid; gap: 0.55rem; justify-items: center; margin: 0.5rem 0 0.2rem; }
+    .pyramid-row { display: flex; gap: 0.5rem; justify-content: center; }
+
+    .pyramid-cell {
+      width: 62px;
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.95rem;
+    }
+
+    .pyramid-cell.is-given {
+      background: #eef2ff;
+      color: var(--indigo-dark);
+      border: 1px solid #d4dcf3;
+    }
+
+    .pyramid-cell input {
+      width: 100%;
+      height: 100%;
+      min-height: 46px;
+      text-align: center;
+      border: 1px solid #ccd6ee;
+      border-radius: 10px;
+      font-family: "Courier New", monospace;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pyramid-cell input.is-correct { border-color: var(--success); background: #f0fdf4; }
+    .pyramid-cell input.is-wrong { border-color: var(--error); background: #fef2f2; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 0.9rem; margin: 0.2rem 0 1rem; font-size: 0.82rem; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .legend .dot-given { background: var(--slate); }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-3px); }
+    }
+    @keyframes pop { 0% { transform: scale(0.94); } 65% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+    @media (max-width: 620px) {
+      .app-shell {
+        background:
+          radial-gradient(circle at 12% 3%, rgba(79, 110, 247, 0.16), transparent 18rem),
+          linear-gradient(180deg, var(--slate) 0 24rem, var(--paper) 24rem 100%);
+      }
+      .hero { padding-top: 2.35rem; }
+      .settings-panel, .score-panel { grid-template-columns: 1fr; }
+      .exercise-card, .task-card { padding: 1.05rem; }
+      .sum-row { grid-template-columns: 1fr; }
+      .fill-row { justify-content: center; }
+      .card-actions { align-items: stretch; flex-direction: column; }
+      .validate-button { width: 100%; }
+      .end-actions { grid-template-columns: 1fr; }
+      .match-row { grid-template-columns: 1fr; text-align: center; }
+      .match-arrow { transform: rotate(90deg); }
+      .pyramid-cell { width: 52px; font-size: 0.85rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="main-width">
+        <div class="hero-copy">
+          <h1 class="display-font hero-title">Somme de nombres entiers relatifs</h1>
+          <p class="hero-subtitle">Entraîne-toi à calculer la somme de deux nombres entiers, positifs ou négatifs.</p>
+          <button id="new-exercises-button" class="new-button" type="button">Nouveaux exercices</button>
+        </div>
+      </div>
+    </header>
+    <main class="main-width content">
+
+      <section class="rule-panel" aria-labelledby="rule-title">
+        <h2 id="rule-title" class="display-font rule-title">Rappel — Règles pour calculer la somme de 2 nombres entiers</h2>
+        <ol class="rule-list">
+          <li>Si les deux entiers sont <strong>positifs</strong>, il s'agit de la somme de 2 nombres naturels. <span class="rule-example">5 + 3 = 8</span></li>
+          <li>Si les deux entiers sont <strong>négatifs</strong>, on additionne leurs distances à zéro et on donne à la somme le signe −. <span class="rule-example">−5 + (−3) = −8</span></li>
+          <li>Si les deux entiers sont de <strong>signes contraires</strong>, on soustrait leurs distances à zéro et on prend le signe de celui qui est le plus éloigné de zéro. <span class="rule-example">−7 + 3 = −4</span>  <span class="rule-example">7 + (−3) = 4</span></li>
+        </ol>
+      </section>
+
+      <section class="settings-panel" aria-labelledby="settings-title">
+        <h2 id="settings-title" class="sr-only">Paramètres de l'exercice</h2>
+        <div class="field-group">
+          <label class="field-label" for="mode-select">Mode</label>
+          <select id="mode-select" class="select-control">
+            <option value="training">Entraînement (avec correction)</option>
+            <option value="test">Test (sans correction)</option>
+          </select>
+          <p class="field-help">En entraînement, tu as 3 essais et une explication en cas d'erreur. En test, une seule tentative est enregistrée.</p>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="level-select">Niveau</label>
+          <select id="level-select" class="select-control">
+            <option value="all">Tous les niveaux</option>
+            <option value="1">Niveau 1 — Deux nombres positifs</option>
+            <option value="2">Niveau 2 — Deux nombres négatifs</option>
+            <option value="3">Niveau 3 — Signes contraires</option>
+          </select>
+          <p class="field-help">Choisis un niveau pour cibler une difficulté précise, ou garde « Tous les niveaux » pour un mélange.</p>
+        </div>
+      </section>
+
+      <section class="score-panel" aria-labelledby="score-caption">
+        <div class="score-values" aria-live="polite">
+          <div class="score-line"><strong id="immediate-score">0 / 10</strong> <span>réussites du premier coup</span></div>
+          <div class="score-line"><strong id="resolved-score">0 / 10</strong> <span>exercices résolus</span></div>
+        </div>
+        <div>
+          <p id="score-caption" class="score-label">Progression</p>
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression des exercices résolus" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <p class="score-helper">La barre se remplit au fur et à mesure que tu résous les exercices.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="calc-section-title">
+        <div class="section-heading">
+          <h2 id="calc-section-title" class="display-font section-title">1 · Calcule la somme</h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <div id="exercise-list" class="exercise-list"></div>
+        <p id="completion-message" class="completion-message" role="status">Bravo, tu as terminé la série !</p>
+        <section id="test-results-panel" class="test-results-panel" aria-labelledby="test-results-title">
+          <h2 id="test-results-title" class="display-font">Résultat du test</h2>
+          <p id="test-result-value" class="test-result-value" aria-live="polite"></p>
+        </section>
+        <div id="end-actions" class="end-actions">
+          <button id="review-errors-button" class="secondary-button review-button" type="button">Revoir les exercices manqués</button>
+          <button id="restart-button" class="secondary-button" type="button">Recommencer une série</button>
+        </div>
+      </section>
+
+      <section aria-labelledby="match-section-title">
+        <div class="section-heading">
+          <h2 id="match-section-title" class="display-font section-title">2 · Relie les sommes égales</h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <p class="section-intro">Pour chaque somme de gauche, choisis dans la liste déroulante la somme de droite qui donne le même résultat, puis vérifie.</p>
+        <div id="match-tasks"></div>
+      </section>
+
+      <section aria-labelledby="pyramid-section-title">
+        <div class="section-heading">
+          <h2 id="pyramid-section-title" class="display-font section-title">3 · Complète la pyramide</h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <p class="section-intro">Chaque brique est la somme des deux briques situées juste en-dessous.</p>
+        <div class="legend"><span><i class="dot-given"></i> Valeur donnée</span></div>
+        <div id="pyramid-tasks"></div>
+      </section>
+
+      <section aria-labelledby="truefalse-section-title">
+        <div class="section-heading">
+          <h2 id="truefalse-section-title" class="display-font section-title">4 · Vrai ou faux ?</h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <p class="section-intro">Si c'est faux, un contre-exemple sera affiché dans la correction.</p>
+        <div id="truefalse-tasks"></div>
+      </section>
+
+    </main>
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <template id="exercise-card-template">
+    <article class="exercise-card">
+      <div class="card-top">
+        <div class="exercise-meta"><p class="exercise-index"></p></div>
+        <div class="attempt-dots" aria-label="Essais disponibles">
+          <span class="attempt-dot" aria-hidden="true"></span>
+          <span class="attempt-dot" aria-hidden="true"></span>
+          <span class="attempt-dot" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="sum-row">
+        <span class="number-value expr-text"></span>
+        <div class="fill-row">
+          <input type="text" inputmode="numeric" class="fill-input answer-input" aria-label="Ta réponse">
+        </div>
+      </div>
+      <div class="card-actions">
+        <div class="feedback-slot" aria-live="polite">
+          <p class="feedback select-symbol-message">Écris ta réponse avant de valider.</p>
+          <p class="feedback wrong-message">Ce n'est pas la bonne réponse, réessaie.</p>
+          <p class="feedback success-message">Bonne réponse !</p>
+          <p class="feedback test-recorded-message">Réponse enregistrée.</p>
+        </div>
+        <button class="validate-button" type="button">Valider</button>
+      </div>
+      <div class="correction"><span>Correction :</span> <span class="correction-value"></span> <span class="correction-explanation"></span></div>
+    </article>
+  </template>
+
+  <script>
+    /* ========================= OUTILS COMMUNS ========================= */
+    function formatNumber(value) {
+      return value < 0 ? `−${Math.abs(value)}` : `${value}`;
+    }
+
+    function formatOperand(value) {
+      return value < 0 ? `(−${Math.abs(value)})` : `${value}`;
+    }
+
+    function formatExpression(a, b) {
+      return `${formatNumber(a)} + ${formatOperand(b)}`;
+    }
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let index = copy.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [copy[index], copy[randomIndex]] = [copy[randomIndex], copy[index]];
+      }
+      return copy;
+    }
+
+    function announce(message) {
+      liveRegion.textContent = "";
+      window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+    }
+
+    const liveRegion = document.getElementById("live-region");
+
+    function explainSum(a, b) {
+      if (a === 0 || b === 0) {
+        return "Ajouter 0 ne change pas la valeur de l'autre nombre.";
+      }
+      if (a > 0 && b > 0) {
+        return "Les deux entiers sont positifs : il s'agit de la somme de 2 nombres naturels.";
+      }
+      if (a < 0 && b < 0) {
+        return "Les deux entiers sont négatifs : on additionne leurs distances à zéro et on donne à la somme le signe −.";
+      }
+      return "Les deux entiers sont de signes contraires : on soustrait leurs distances à zéro et on prend le signe de celui qui est le plus éloigné de zéro.";
+    }
+
+    /* ========================= 1. CALCULE LA SOMME ========================= */
+    // Pool de 100 exercices générés (≈34 par niveau), régénéré à chaque chargement de page.
+    function makeKey(a, b) { return `${a}_${b}`; }
+
+    function buildExercisePool(targetSize) {
+      const perLevel = Math.ceil(targetSize / 3);
+      const pool = [];
+      const seen = new Set();
+
+      function addUnique(a, b, level, skill) {
+        const key = makeKey(a, b);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        pool.push({ a, b, level, skill });
+        return true;
+      }
+
+      // Niveau 1 — deux positifs
+      let count = 0;
+      while (count < perLevel) {
+        const a = randInt(1, 65);
+        const b = randInt(1, 65);
+        if (addUnique(a, b, 1, "Deux positifs")) count += 1;
+      }
+
+      // Niveau 2 — deux négatifs
+      count = 0;
+      while (count < perLevel) {
+        const a = -randInt(1, 65);
+        const b = -randInt(1, 65);
+        if (addUnique(a, b, 2, "Deux négatifs")) count += 1;
+      }
+
+      // Niveau 3 — signes contraires (avec quelques cas incluant 0)
+      count = 0;
+      while (count < perLevel) {
+        let a; let b;
+        if (Math.random() < 0.12) {
+          // un des deux termes est nul
+          const other = randInt(1, 60) * (Math.random() < 0.5 ? 1 : -1);
+          if (Math.random() < 0.5) { a = 0; b = other; } else { a = other; b = 0; }
+        } else {
+          const positive = randInt(1, 65);
+          const negative = -randInt(1, 65);
+          if (Math.random() < 0.5) { a = positive; b = negative; } else { a = negative; b = positive; }
+        }
+        if (addUnique(a, b, 3, "Signes contraires")) count += 1;
+      }
+
+      return shuffle(pool);
+    }
+
+    const EXERCISE_POOL = buildExercisePool(100);
+
+    const session = {
+      exercises: [],
+      immediateCount: 0,
+      resolvedCount: 0,
+      correctTotal: 0,
+      activeCard: null,
+      mode: "training",
+      reviewSource: []
+    };
+
+    const listElement = document.getElementById("exercise-list");
+    const immediateScore = document.getElementById("immediate-score");
+    const resolvedScore = document.getElementById("resolved-score");
+    const progressTrack = document.getElementById("progress-track");
+    const progressFill = document.getElementById("progress-fill");
+    const completionMessage = document.getElementById("completion-message");
+    const testResultsPanel = document.getElementById("test-results-panel");
+    const testResultValue = document.getElementById("test-result-value");
+    const endActions = document.getElementById("end-actions");
+    const reviewButton = document.getElementById("review-errors-button");
+    const modeSelect = document.getElementById("mode-select");
+    const levelSelect = document.getElementById("level-select");
+
+    function toSessionExercise(source, index) {
+      return {
+        ...source,
+        id: `exercise-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`,
+        answer: source.a + source.b,
+        attempts: 0,
+        resolved: false,
+        correct: false,
+        immediate: false
+      };
+    }
+
+    function selectRandomExercises(count, level) {
+      const pool = level === "all" ? EXERCISE_POOL : EXERCISE_POOL.filter((exercise) => exercise.level === Number(level));
+      return shuffle(pool).slice(0, count).map(toSessionExercise);
+    }
+
+    function setFeedback(card, feedbackClass) {
+      card.querySelectorAll(".feedback").forEach((element) => {
+        element.classList.toggle("is-visible", element.classList.contains(feedbackClass));
+      });
+    }
+
+    function clearFeedback(card) {
+      card.querySelectorAll(".feedback").forEach((element) => element.classList.remove("is-visible"));
+    }
+
+    function updateScore() {
+      const total = session.exercises.length || 10;
+      immediateScore.textContent = `${session.immediateCount} / ${total}`;
+      resolvedScore.textContent = `${session.resolvedCount} / ${total}`;
+
+      const percentage = total ? (session.resolvedCount / total) * 100 : 0;
+      progressFill.style.width = `${percentage}%`;
+      progressTrack.setAttribute("aria-valuemax", String(total));
+      progressTrack.setAttribute("aria-valuenow", String(session.resolvedCount));
+
+      const complete = session.resolvedCount === total;
+      completionMessage.classList.toggle("is-visible", complete);
+      endActions.classList.toggle("is-visible", complete);
+
+      if (!complete) {
+        testResultsPanel.classList.remove("is-visible");
+        return;
+      }
+
+      session.reviewSource = session.exercises.filter((exercise) => !exercise.immediate);
+      reviewButton.classList.toggle("is-hidden", session.reviewSource.length === 0);
+
+      if (session.mode === "test") {
+        testResultValue.textContent = `${session.correctTotal} / ${total}`;
+        testResultsPanel.classList.add("is-visible");
+      } else {
+        testResultsPanel.classList.remove("is-visible");
+      }
+    }
+
+    function disableCard(card) {
+      card.querySelector(".answer-input").disabled = true;
+      card.querySelector(".validate-button").disabled = true;
+    }
+
+    function showCorrection(card, exercise) {
+      const correction = card.querySelector(".correction");
+      correction.querySelector(".correction-value").textContent =
+        `${formatExpression(exercise.a, exercise.b)} = ${formatNumber(exercise.answer)}`;
+      correction.querySelector(".correction-explanation").textContent = explainSum(exercise.a, exercise.b);
+      correction.classList.add("is-visible");
+    }
+
+    function resolveTrainingCard(card, exercise, wasCorrect) {
+      exercise.resolved = true;
+      exercise.correct = wasCorrect;
+      exercise.immediate = wasCorrect && exercise.attempts === 1;
+      session.resolvedCount += 1;
+
+      if (exercise.immediate) session.immediateCount += 1;
+      if (wasCorrect) session.correctTotal += 1;
+
+      disableCard(card);
+
+      if (wasCorrect) {
+        card.classList.add("is-correct");
+        card.querySelector(".answer-input").classList.add("is-correct");
+        setFeedback(card, "success-message");
+        announce("Bonne réponse.");
+      } else {
+        card.classList.add("is-corrected");
+        card.querySelector(".answer-input").classList.add("is-wrong");
+        clearFeedback(card);
+        showCorrection(card, exercise);
+        announce("La correction et l'explication sont affichées.");
+      }
+      updateScore();
+    }
+
+    function resolveTestCard(card, exercise, wasCorrect) {
+      exercise.resolved = true;
+      exercise.correct = wasCorrect;
+      exercise.immediate = wasCorrect;
+      session.resolvedCount += 1;
+
+      if (wasCorrect) {
+        session.immediateCount += 1;
+        session.correctTotal += 1;
+      }
+
+      disableCard(card);
+      setFeedback(card, "test-recorded-message");
+      announce("Réponse enregistrée.");
+      updateScore();
+    }
+
+    function parseAnswer(raw) {
+      const cleaned = raw.trim().replace(/\s+/g, "").replace(/−/g, "-");
+      if (cleaned === "" || Number.isNaN(Number.parseInt(cleaned, 10))) return null;
+      return Number.parseInt(cleaned, 10);
+    }
+
+    function validateExercise(card, exercise) {
+      if (exercise.resolved) return;
+      session.activeCard = card;
+      const input = card.querySelector(".answer-input");
+      const parsed = parseAnswer(input.value);
+
+      if (parsed === null) {
+        setFeedback(card, "select-symbol-message");
+        announce("Écris ta réponse avant de valider.");
+        return;
+      }
+
+      exercise.attempts += 1;
+      const currentDot = card.querySelectorAll(".attempt-dot")[exercise.attempts - 1];
+      const isCorrect = parsed === exercise.answer;
+
+      if (session.mode === "test") {
+        currentDot.classList.add(isCorrect ? "is-success" : "is-error");
+        resolveTestCard(card, exercise, isCorrect);
+        return;
+      }
+
+      if (isCorrect) {
+        currentDot.classList.add("is-success");
+        resolveTrainingCard(card, exercise, true);
+        return;
+      }
+
+      currentDot.classList.add("is-error");
+      card.classList.remove("is-shaking");
+      void card.offsetWidth;
+      card.classList.add("is-shaking");
+
+      if (exercise.attempts >= 3) {
+        resolveTrainingCard(card, exercise, false);
+      } else {
+        setFeedback(card, "wrong-message");
+        const remaining = 3 - exercise.attempts;
+        announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+      }
+    }
+
+    function createExerciseCard(exercise, index) {
+      const template = document.getElementById("exercise-card-template");
+      const fragment = template.content.cloneNode(true);
+      const card = fragment.querySelector(".exercise-card");
+
+      card.dataset.exerciseId = exercise.id;
+      card.style.animationDelay = `${index * 55}ms`;
+      card.querySelector(".exercise-index").textContent = `Exercice ${index + 1}`;
+      card.querySelector(".expr-text").textContent = `${formatExpression(exercise.a, exercise.b)} =`;
+
+      if (session.mode === "test") {
+        const dots = card.querySelectorAll(".attempt-dot");
+        dots[1].classList.add("is-hidden");
+        dots[2].classList.add("is-hidden");
+      }
+
+      const input = card.querySelector(".answer-input");
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          validateExercise(card, exercise);
+        }
+      });
+      input.addEventListener("focus", () => { session.activeCard = card; });
+
+      card.querySelector(".validate-button").addEventListener("click", () => validateExercise(card, exercise));
+      card.addEventListener("focusin", () => { session.activeCard = card; });
+
+      return fragment;
+    }
+
+    function renderExercises(exercises) {
+      session.exercises = exercises;
+      session.immediateCount = 0;
+      session.resolvedCount = 0;
+      session.correctTotal = 0;
+      session.activeCard = null;
+
+      listElement.replaceChildren();
+      const fragment = document.createDocumentFragment();
+      session.exercises.forEach((exercise, index) => fragment.appendChild(createExerciseCard(exercise, index)));
+      listElement.appendChild(fragment);
+
+      completionMessage.classList.remove("is-visible");
+      testResultsPanel.classList.remove("is-visible");
+      endActions.classList.remove("is-visible");
+      updateScore();
+
+      window.setTimeout(() => {
+        const firstInput = listElement.querySelector(".answer-input");
+        if (firstInput) firstInput.focus();
+      }, 80);
+    }
+
+    function regenerateExercises() {
+      session.mode = modeSelect.value;
+      const exercises = selectRandomExercises(10, levelSelect.value);
+      renderExercises(exercises);
+    }
+
+    function reviewErrors() {
+      if (!session.reviewSource.length) return;
+      session.mode = "training";
+      modeSelect.value = "training";
+      const reviewExercises = shuffle(session.reviewSource).map((exercise, index) =>
+        toSessionExercise({ a: exercise.a, b: exercise.b, level: exercise.level, skill: exercise.skill }, index)
+      );
+      renderExercises(reviewExercises);
+      announce("La série de révision des erreurs est prête.");
+    }
+
+    function getExerciseForCard(card) {
+      return session.exercises.find((exercise) => exercise.id === card.dataset.exerciseId);
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" || event.repeat) return;
+      if (event.target.matches("input")) return;
+      if (event.target.matches("button, select")) return;
+
+      let card = event.target.closest ? event.target.closest(".exercise-card") : null;
+      if (!card || getExerciseForCard(card)?.resolved) {
+        card = session.activeCard && !getExerciseForCard(session.activeCard)?.resolved
+          ? session.activeCard
+          : [...listElement.querySelectorAll(".exercise-card")].find((candidate) => {
+              const exercise = getExerciseForCard(candidate);
+              return exercise && !exercise.resolved;
+            });
+      }
+      if (!card) return;
+      event.preventDefault();
+      const exercise = getExerciseForCard(card);
+      if (exercise) validateExercise(card, exercise);
+    });
+
+    reviewButton.addEventListener("click", reviewErrors);
+
+    modeSelect.addEventListener("change", () => {
+      regenerateExercises();
+      announce("Le mode a été modifié et une nouvelle série a commencé.");
+    });
+
+    levelSelect.addEventListener("change", () => {
+      regenerateExercises();
+      announce("Le niveau a été modifié et une nouvelle série a commencé.");
+    });
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      regenerateExercises();
+      announce("Une nouvelle série a commencé.");
+    });
+
+    /* ========================= 2. RELIE LES SOMMES ÉGALES ========================= */
+    // Pool de 50 sommes-cibles distinctes, régénéré à chaque chargement de page.
+    function buildMatchSumPool(targetSize) {
+      const sums = new Set();
+      while (sums.size < targetSize) {
+        sums.add(randInt(-35, 35));
+      }
+      return shuffle([...sums]);
+    }
+
+    const MATCH_SUM_POOL = buildMatchSumPool(50);
+
+    function makeDecomposition(sum) {
+      const shift = randInt(3, 14) * (Math.random() < 0.5 ? 1 : -1);
+      return [sum - shift, shift];
+    }
+
+    function pickMatchingSet(rowCount) {
+      const sumList = shuffle(MATCH_SUM_POOL).slice(0, rowCount);
+
+      const rows = sumList.map((sum) => {
+        let left = makeDecomposition(sum);
+        let right = makeDecomposition(sum);
+        let guard = 0;
+        while ((left[0] === right[0] && left[1] === right[1]) && guard < 10) {
+          right = makeDecomposition(sum);
+          guard += 1;
+        }
+        return { sum, left, right };
+      });
+
+      return rows;
+    }
+
+    function buildMatchTask() {
+      const rows = pickMatchingSet(5);
+      const rightOrder = shuffle(rows.map((row, index) => index));
+
+      const card = document.createElement("article");
+      card.className = "task-card";
+
+      const question = document.createElement("p");
+      question.className = "task-question";
+      question.textContent = "Associe chaque somme de gauche à la somme de droite qui donne le même résultat.";
+      card.appendChild(question);
+
+      const selects = [];
+
+      rows.forEach((row, rowIndex) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "match-row";
+
+        const leftEl = document.createElement("div");
+        leftEl.className = "match-left";
+        const badge = document.createElement("span");
+        badge.className = "match-badge";
+        badge.textContent = String(rowIndex + 1);
+        const leftExpr = document.createElement("span");
+        leftExpr.className = "match-expr";
+        leftExpr.textContent = formatExpression(row.left[0], row.left[1]);
+        leftEl.appendChild(badge);
+        leftEl.appendChild(leftExpr);
+
+        const arrow = document.createElement("span");
+        arrow.className = "match-arrow";
+        arrow.textContent = "→";
+        arrow.setAttribute("aria-hidden", "true");
+
+        const select = document.createElement("select");
+        select.className = "select-control match-select";
+        select.setAttribute("aria-label", `Choix pour la ligne ${rowIndex + 1}`);
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "— choisis —";
+        select.appendChild(placeholder);
+
+        rightOrder.forEach((originalIndex, letterIndex) => {
+          const option = document.createElement("option");
+          option.value = String(originalIndex);
+          const letter = String.fromCharCode(65 + letterIndex);
+          option.textContent = `${letter}. ${formatExpression(rows[originalIndex].right[0], rows[originalIndex].right[1])}`;
+          select.appendChild(option);
+        });
+
+        select.dataset.rowIndex = String(rowIndex);
+        selects.push(select);
+
+        rowEl.appendChild(leftEl);
+        rowEl.appendChild(arrow);
+        rowEl.appendChild(select);
+        card.appendChild(rowEl);
+      });
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedbackSlot = document.createElement("div");
+      feedbackSlot.className = "feedback-slot";
+      feedbackSlot.setAttribute("aria-live", "polite");
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedbackSlot.appendChild(feedback);
+      const validate = document.createElement("button");
+      validate.className = "validate-button";
+      validate.type = "button";
+      validate.textContent = "Vérifier";
+      actions.appendChild(feedbackSlot);
+      actions.appendChild(validate);
+      card.appendChild(actions);
+
+      let attempts = 0;
+      validate.addEventListener("click", () => {
+        const allChosen = selects.every((select) => select.value !== "");
+        if (!allChosen) {
+          feedback.className = "feedback is-visible select-symbol-message";
+          feedback.textContent = "Choisis une réponse pour chaque ligne avant de vérifier.";
+          return;
+        }
+
+        attempts += 1;
+        let allGood = true;
+        selects.forEach((select) => {
+          const rowIndex = Number(select.dataset.rowIndex);
+          const chosenIndex = Number(select.value);
+          const correct = chosenIndex === rowIndex;
+          select.classList.remove("result-correct", "result-wrong");
+          select.classList.add(correct ? "result-correct" : "result-wrong");
+          if (!correct) allGood = false;
+        });
+
+        feedback.className = "feedback is-visible";
+        if (allGood) {
+          feedback.classList.add("success-message");
+          feedback.textContent = "Bravo, toutes les paires sont correctes !";
+          selects.forEach((select) => { select.disabled = true; });
+          validate.disabled = true;
+        } else if (attempts >= 3) {
+          feedback.classList.add("wrong-message");
+          feedback.textContent = "Voici les bonnes réponses en vert ; celles en rouge étaient incorrectes.";
+          selects.forEach((select) => {
+            const rowIndex = Number(select.dataset.rowIndex);
+            select.value = String(rowIndex);
+            select.classList.remove("result-wrong");
+            select.classList.add("result-correct");
+            select.disabled = true;
+          });
+          validate.disabled = true;
+        } else {
+          feedback.classList.add("wrong-message");
+          const remaining = 3 - attempts;
+          feedback.textContent = `Certaines paires ne sont pas correctes (en rouge). Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+        }
+      });
+
+      return card;
+    }
+
+    const matchTasksContainer = document.getElementById("match-tasks");
+
+    function renderMatchTasks() {
+      matchTasksContainer.replaceChildren();
+      matchTasksContainer.appendChild(buildMatchTask());
+    }
+
+    /* ========================= 3. PYRAMIDES ========================= */
+    // Pool de 30 pyramides (jeux de 4 briques de base), régénéré à chaque chargement de page.
+    function buildPyramidPool(targetSize) {
+      const pool = [];
+      const seen = new Set();
+      while (pool.length < targetSize) {
+        const base = [randInt(-14, 15), randInt(-14, 15), randInt(-14, 15), randInt(-14, 15)];
+        // On garantit qu'il y ait toujours au moins un nombre négatif et un positif dans la base.
+        if (!base.some((value) => value < 0)) {
+          base[randInt(0, 3)] = -randInt(1, 14);
+        }
+        if (!base.some((value) => value > 0)) {
+          base[randInt(0, 3)] = randInt(1, 15);
+        }
+        const key = base.join("_");
+        if (seen.has(key)) continue;
+        seen.add(key);
+        pool.push(base);
+      }
+      return shuffle(pool);
+    }
+
+    const PYRAMID_POOL = buildPyramidPool(30);
+    let pyramidPoolIndex = 0;
+
+    function buildPyramidTask() {
+      pyramidPoolIndex = (pyramidPoolIndex + 1) % PYRAMID_POOL.length;
+      const base = PYRAMID_POOL[pyramidPoolIndex];
+      const row3 = [base[0] + base[1], base[1] + base[2], base[2] + base[3]];
+      const row2 = [row3[0] + row3[1], row3[1] + row3[2]];
+      const row1 = [row2[0] + row2[1]];
+
+      const cells = [];
+      const registerCell = (value, level, posInLevel) => {
+        cells.push({ value, level, posInLevel });
+      };
+      base.forEach((value, index) => registerCell(value, 4, index));
+      row3.forEach((value, index) => registerCell(value, 3, index));
+      row2.forEach((value, index) => registerCell(value, 2, index));
+      row1.forEach((value, index) => registerCell(value, 1, index));
+
+      const card = document.createElement("article");
+      card.className = "task-card";
+
+      const question = document.createElement("p");
+      question.className = "task-question";
+      question.textContent = "Complète la pyramide : chaque brique est la somme des deux briques situées juste en-dessous.";
+      card.appendChild(question);
+
+      const pyramid = document.createElement("div");
+      pyramid.className = "pyramid";
+
+      const inputs = [];
+      [1, 2, 3, 4].forEach((level) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "pyramid-row";
+        cells.filter((cell) => cell.level === level).forEach((cell) => {
+          const cellEl = document.createElement("div");
+          if (level === 4) {
+            cellEl.className = "pyramid-cell is-given";
+            cellEl.textContent = formatNumber(cell.value);
+          } else {
+            cellEl.className = "pyramid-cell";
+            const input = document.createElement("input");
+            input.type = "text";
+            input.inputMode = "numeric";
+            input.setAttribute("aria-label", `Brique niveau ${level}, position ${cell.posInLevel + 1}`);
+            input.dataset.level = String(level);
+            input.dataset.pos = String(cell.posInLevel);
+            input.dataset.answer = String(cell.value);
+            cellEl.appendChild(input);
+            inputs.push(input);
+          }
+          rowEl.appendChild(cellEl);
+        });
+        pyramid.appendChild(rowEl);
+      });
+
+      card.appendChild(pyramid);
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedbackSlot = document.createElement("div");
+      feedbackSlot.className = "feedback-slot";
+      feedbackSlot.setAttribute("aria-live", "polite");
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedbackSlot.appendChild(feedback);
+      const validate = document.createElement("button");
+      validate.className = "validate-button";
+      validate.type = "button";
+      validate.textContent = "Vérifier";
+      actions.appendChild(feedbackSlot);
+      actions.appendChild(validate);
+      card.appendChild(actions);
+
+      let attempts = 0;
+      validate.addEventListener("click", () => {
+        const allFilled = inputs.every((input) => parseAnswer(input.value) !== null);
+        if (!allFilled) {
+          feedback.className = "feedback is-visible select-symbol-message";
+          feedback.textContent = "Remplis toutes les briques avant de vérifier.";
+          return;
+        }
+
+        attempts += 1;
+        let allGood = true;
+        inputs.forEach((input) => {
+          const parsed = parseAnswer(input.value);
+          const correct = parsed === Number(input.dataset.answer);
+          input.classList.remove("is-correct", "is-wrong");
+          input.classList.add(correct ? "is-correct" : "is-wrong");
+          if (!correct) allGood = false;
+        });
+
+        feedback.className = "feedback is-visible";
+        if (allGood) {
+          feedback.classList.add("success-message");
+          feedback.textContent = "Bravo, la pyramide est complète !";
+          inputs.forEach((input) => { input.disabled = true; });
+          validate.disabled = true;
+        } else if (attempts >= 3) {
+          feedback.classList.add("wrong-message");
+          feedback.textContent = "Voici la pyramide complétée.";
+          inputs.forEach((input) => {
+            input.value = input.dataset.answer;
+            input.classList.remove("is-wrong");
+            input.classList.add("is-correct");
+            input.disabled = true;
+          });
+          validate.disabled = true;
+        } else {
+          feedback.classList.add("wrong-message");
+          const remaining = 3 - attempts;
+          feedback.textContent = `Certaines briques sont incorrectes (en rouge). Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+        }
+      });
+
+      return card;
+    }
+
+    const pyramidTasksContainer = document.getElementById("pyramid-tasks");
+
+    function renderPyramidTasks() {
+      pyramidTasksContainer.replaceChildren();
+      pyramidTasksContainer.appendChild(buildPyramidTask());
+    }
+
+    /* ========================= 4. VRAI OU FAUX ========================= */
+    // Pool d'environ 40 affirmations générées à partir de modèles paramétrés,
+    // régénéré à chaque chargement de page.
+    const trueFalseTemplates = [
+      () => {
+        const a = randInt(2, 60);
+        const b = randInt(2, 60);
+        return {
+          statement: "Si les deux nombres sont positifs, alors leur somme est positive.",
+          answer: "V",
+          explanation: "Vrai : la somme de deux nombres positifs est toujours positive.",
+          example: `${a} + ${b} = ${a + b}`
+        };
+      },
+      () => {
+        const a = randInt(2, 60);
+        const b = randInt(2, 60);
+        return {
+          statement: "Si les deux nombres sont négatifs, alors leur somme est négative.",
+          answer: "V",
+          explanation: "Vrai : la somme de deux nombres négatifs est toujours négative.",
+          example: `${formatNumber(-a)} + (${formatNumber(-b)}) = ${formatNumber(-a - b)}`
+        };
+      },
+      () => {
+        const big = randInt(6, 40);
+        const small = randInt(1, big - 1);
+        return {
+          statement: "Si la somme de deux nombres est positive, alors ces deux nombres sont positifs.",
+          answer: "F",
+          explanation: "Faux : un nombre positif et un nombre négatif peuvent donner une somme positive.",
+          example: `${big} + (${formatNumber(-small)}) = ${big - small}`
+        };
+      },
+      () => {
+        const big = randInt(6, 40);
+        const small = randInt(1, big - 1);
+        return {
+          statement: "Si la somme de deux nombres est négative, alors ces deux nombres sont négatifs.",
+          answer: "F",
+          explanation: "Faux : un nombre positif et un nombre négatif peuvent donner une somme négative.",
+          example: `${formatNumber(-big)} + ${small} = ${formatNumber(small - big)}`
+        };
+      },
+      () => {
+        const big = randInt(6, 40);
+        const small = randInt(1, big - 1);
+        return {
+          statement: "Si deux nombres sont de signes contraires, alors leur somme est négative.",
+          answer: "F",
+          explanation: "Faux : le signe de la somme dépend de celui des deux nombres qui est le plus éloigné de zéro.",
+          example: `${big} + (${formatNumber(-small)}) = ${big - small}`
+        };
+      },
+      () => {
+        const n = randInt(2, 50);
+        return {
+          statement: "La somme de deux entiers n'est jamais égale à zéro.",
+          answer: "F",
+          explanation: "Faux : deux nombres opposés ont toujours une somme égale à zéro.",
+          example: `${n} + (${formatNumber(-n)}) = 0`
+        };
+      },
+      () => {
+        const n = randInt(2, 60) * (Math.random() < 0.5 ? 1 : -1);
+        return {
+          statement: "Ajouter 0 à un nombre ne change pas sa valeur.",
+          answer: "V",
+          explanation: "Vrai : 0 est l'élément neutre de l'addition.",
+          example: `${formatNumber(n)} + 0 = ${formatNumber(n)}`
+        };
+      },
+      () => {
+        const n = randInt(2, 60);
+        return {
+          statement: "La somme de deux nombres opposés est toujours égale à zéro.",
+          answer: "V",
+          explanation: "Vrai : par définition, deux nombres opposés ont des distances à zéro égales mais des signes contraires.",
+          example: `${n} + (${formatNumber(-n)}) = 0`
+        };
+      },
+      () => {
+        const a = randInt(3, 30);
+        const b = randInt(3, 30);
+        return {
+          statement: "Plus les deux nombres additionnés sont éloignés de zéro, plus leur somme est grande.",
+          answer: "F",
+          explanation: "Faux : cela dépend des signes. Deux grands nombres de signes contraires peuvent donner une petite somme.",
+          example: `${a} + (${formatNumber(-a - b)}) = ${formatNumber(-b)}, une somme plus petite que ${a}`
+        };
+      },
+      () => {
+        const a = randInt(2, 50);
+        return {
+          statement: "La somme d'un nombre et de son opposé est toujours nulle.",
+          answer: "V",
+          explanation: "Vrai : c'est la définition même de deux nombres opposés.",
+          example: `${formatNumber(-a)} + ${a} = 0`
+        };
+      }
+    ];
+
+    function buildTrueFalsePool(targetSize) {
+      const pool = [];
+      let templateIndex = 0;
+      while (pool.length < targetSize) {
+        pool.push(trueFalseTemplates[templateIndex % trueFalseTemplates.length]());
+        templateIndex += 1;
+      }
+      return shuffle(pool);
+    }
+
+    const TRUEFALSE_POOL = buildTrueFalsePool(40);
+
+    function buildTrueFalseTask(item, index) {
+      const card = document.createElement("article");
+      card.className = "task-card";
+
+      const question = document.createElement("p");
+      question.className = "task-question";
+      question.textContent = `${index + 1}. ${item.statement}`;
+      card.appendChild(question);
+
+      const zone = document.createElement("div");
+      zone.className = "answer-zone";
+      const buttons = ["V", "F"].map((label) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "symbol-button";
+        button.dataset.value = label;
+        button.textContent = label === "V" ? "Vrai" : "Faux";
+        button.setAttribute("aria-pressed", "false");
+        zone.appendChild(button);
+        return button;
+      });
+      card.appendChild(zone);
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedbackSlot = document.createElement("div");
+      feedbackSlot.className = "feedback-slot";
+      feedbackSlot.setAttribute("aria-live", "polite");
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedbackSlot.appendChild(feedback);
+      const validate = document.createElement("button");
+      validate.className = "validate-button";
+      validate.type = "button";
+      validate.textContent = "Valider";
+      actions.appendChild(feedbackSlot);
+      actions.appendChild(validate);
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<span class="correction-label">Correction :</span> <span class="correction-value"></span> <span class="correction-explanation"></span>`;
+      card.appendChild(correction);
+
+      let selected = null;
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+          if (button.disabled) return;
+          selected = button.dataset.value;
+          buttons.forEach((b) => {
+            b.classList.toggle("is-selected", b === button);
+            b.setAttribute("aria-pressed", String(b === button));
+          });
+          feedback.className = "feedback";
+        });
+      });
+
+      validate.addEventListener("click", () => {
+        if (!selected) {
+          feedback.className = "feedback is-visible select-symbol-message";
+          feedback.textContent = "Choisis Vrai ou Faux avant de valider.";
+          return;
+        }
+
+        buttons.forEach((b) => { b.disabled = true; });
+        validate.disabled = true;
+
+        const isCorrect = selected === item.answer;
+
+        if (isCorrect) {
+          feedback.className = "feedback is-visible success-message";
+          feedback.textContent = "Bonne réponse !";
+        } else {
+          feedback.className = "feedback is-visible wrong-message";
+          feedback.textContent = "Ce n'est pas la bonne réponse.";
+        }
+
+        if (!isCorrect) {
+          // L'élève s'est trompé : on affiche la correction complète (bonne réponse + explication).
+          correction.querySelector(".correction-label").textContent = "Correction :";
+          correction.querySelector(".correction-value").textContent = item.answer === "V" ? "Vrai" : "Faux";
+          correction.querySelector(".correction-explanation").textContent = `${item.explanation} ${item.example}`;
+          correction.classList.add("is-visible");
+        } else if (item.answer === "F") {
+          // L'élève a bien répondu « Faux » : on donne simplement le contre-exemple, sans parler de correction.
+          correction.querySelector(".correction-label").textContent = "Contre-exemple :";
+          correction.querySelector(".correction-value").textContent = "";
+          correction.querySelector(".correction-explanation").textContent = item.example;
+          correction.classList.add("is-visible");
+        }
+      });
+
+      return card;
+    }
+
+    const trueFalseContainer = document.getElementById("truefalse-tasks");
+
+    function renderTrueFalseTasks() {
+      trueFalseContainer.replaceChildren();
+      shuffle(TRUEFALSE_POOL).slice(0, 5).forEach((item, index) => {
+        trueFalseContainer.appendChild(buildTrueFalseTask(item, index));
+      });
+    }
+
+    /* ========================= INITIALISATION ========================= */
+    document.getElementById("new-exercises-button").addEventListener("click", () => {
+      regenerateExercises();
+      renderMatchTasks();
+      renderPyramidTasks();
+      renderTrueFalseTasks();
+      announce("De nouveaux exercices ont été générés.");
+    });
+
+    regenerateExercises();
+    renderMatchTasks();
+    renderPyramidTasks();
+    renderTrueFalseTasks();
+  </script>
+</body>
+</html>

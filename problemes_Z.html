@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="fr">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Problèmes sur les nombres entiers (ℤ) - Grande banque ultra-variée</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #16a34a;
+      --error: #dc2626;
+      --line: #dbe3f4;
+      --hint: #eef6ff;
+      --hint-line: #60a5fa;
+      --correction: #fff7e7;
+      --correction-line: #e3a227;
+      --card-radius: 17px;
+      --control-radius: 9px;
+      --progress-height: 11px;
+      --score-size: 68px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Source Sans Pro", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.48);
+      outline-offset: 3px;
+    }
+
+    .app-shell {
+      position: relative;
+      width: 100%;
+      min-height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 25rem), linear-gradient(180deg, var(--slate) 0 17rem, var(--paper) 17rem 100%);
+    }
+
+    .main-width {
+      width: min(calc(100% - 2rem), 900px);
+      margin-inline: auto;
+    }
+
+    .hero { padding: 2.5rem 0 2.2rem; color: #fff; }
+    .hero-title { margin: 0; font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.1; font-weight: 800; }
+    .hero-subtitle { max-width: 48rem; margin: 0.8rem 0 0; font-size: 1.05rem; line-height: 1.6; opacity: 0.92; }
+    .hero-actions { display: flex; margin-top: 1.2rem; }
+    .content { padding-bottom: 4rem; }
+
+    .restart-button, .validate-button {
+      border: 0; border-radius: 11px; font-weight: 700; cursor: pointer; transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+    .restart-button:hover, .validate-button:hover:not(:disabled) { transform: translateY(-1px); }
+
+    .hero .restart-button {
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.72rem 1.15rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.16); background: #fff; color: var(--slate);
+    }
+
+    .advice-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1.35rem;
+      padding: 1.05rem 1.25rem;
+      border: 1px solid #c7d2fe;
+      border-radius: 16px;
+      background: #eef2ff;
+      color: #312e81;
+      font-size: 1rem;
+      box-shadow: 0 6px 18px rgba(79, 110, 247, 0.08);
+    }
+    .advice-banner svg {
+      flex: none;
+      color: var(--indigo);
+      width: 24px;
+      height: 24px;
+    }
+
+    .score-panel {
+      display: grid; grid-template-columns: minmax(200px, auto) 1fr; align-items: center; gap: 1.35rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 20px; background: #fff; box-shadow: 0 12px 32px rgba(30, 42, 58, 0.09);
+    }
+    .score-values { display: flex; align-items: center; gap: 1rem; }
+    .score-line { color: var(--muted); white-space: nowrap; }
+    .score-line strong { display: block; color: var(--indigo); font-size: 1.55rem; line-height: 1; font-weight: 800; }
+    
+    .score-percent {
+      display: grid; place-items: center; width: var(--score-size); height: var(--score-size); flex: none; border: 5px solid #dfe5ff; border-radius: 50%; color: var(--indigo-dark); font-family: "Space Mono", monospace; font-weight: 700;
+    }
+
+    .score-label { margin: 0 0 0.25rem; font-weight: 700; }
+    .exercise-position { margin: 0 0 0.6rem; color: var(--indigo-dark); font-size: 1.08rem; font-weight: 800; }
+    .score-detail { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.92rem; }
+    
+    .progress-track { height: var(--progress-height); overflow: hidden; border-radius: 99px; background: #e5eaf6; }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+    .completion-panel {
+      display: none; align-items: center; gap: 1rem; margin-top: 1rem; padding: 1.15rem 1.25rem; border: 1px solid #86d9a4; border-radius: 18px; background: #fff; box-shadow: 0 12px 28px rgba(22, 163, 74, 0.12);
+    }
+    .completion-panel.is-visible { display: flex; animation: success-pop 500ms ease both; }
+    .completion-icon { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 14px; color: var(--success); background: #dcfce7; }
+    .completion-title { margin: 0; font-size: 1.25rem; font-weight: 800; }
+    .completion-text { margin: 0.15rem 0 0; }
+    .final-score { margin: 0.3rem 0 0; color: #166534; font-family: "Space Mono", monospace; font-size: 1.05rem; font-weight: 700; }
+
+    .exercise-list { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
+    .exercise-card { padding: 1.35rem 1.4rem; border: 2px solid transparent; border-radius: var(--card-radius); background: #fff; box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08); transition: border-color 180ms ease, transform 180ms ease; animation: card-in 350ms both; }
+    
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-incorrect { border-color: var(--error); }
+    .exercise-card.is-shaking { animation: gentle-shake 260ms ease; }
+
+    .item-label { margin: 0 0 0.45rem; color: var(--indigo); font-weight: 800; }
+    .prompt { margin: 0 0 0.75rem; font-weight: 700; line-height: 1.5; font-size: 1.08rem; }
+    .prompt ul { margin: 0.5rem 0; padding-left: 1.3rem; font-weight: 600; }
+    .prompt li { margin-bottom: 0.25rem; }
+    
+    .context-box { margin: 0 0 0.95rem; padding: 0.85rem 1.1rem; border-radius: 12px; background: #f4f6fd; border-left: 4px solid var(--indigo); font-size: 0.98rem; line-height: 1.6; }
+    .input-label { display: block; margin-bottom: 0.38rem; color: var(--muted); font-weight: 600; }
+
+    .answer-input { min-height: 44px; padding: 0.56rem 0.72rem; border: 1px solid #ccd6ee; border-radius: var(--control-radius); color: var(--ink); background: #fff; font-family: "Space Mono", monospace; font-weight: 700; width: min(100%, 360px); }
+    .answer-input:disabled { background: #f4f6fd; opacity: 0.86; }
+
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.1rem; }
+    .feedback { flex: 1; min-width: 210px; margin: 0; font-weight: 600; }
+    .feedback.correct { color: var(--success); }
+    .feedback.incorrect { color: var(--error); }
+
+    .validate-button { min-height: 41px; padding: 0.6rem 1.05rem; color: #fff; background: var(--indigo); }
+    .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+    .hint-panel, .correction { display: none; margin-top: 0.95rem; padding: 0.9rem; border-radius: 10px; line-height: 1.6; }
+    .hint-panel { border-left: 4px solid var(--hint-line); color: #174675; background: var(--hint); }
+    .correction { border-left: 4px solid var(--correction-line); color: #7a4900; background: var(--correction); }
+    .hint-panel.is-visible, .correction.is-visible { display: block; animation: reveal-panel 240ms ease both; }
+
+    .answer-review { display: grid; gap: 0.45rem; margin-bottom: 0.7rem; }
+    .student-answer { color: #991b1b; }
+    .correct-answer { color: #166534; }
+    .correction-lines { font-weight: 600; margin-top: 0.5rem; }
+    .correction-lines ul { margin: 0; padding-left: 1.2rem; }
+
+    .footer-actions { margin-top: 2.5rem; text-align: center; }
+    .footer-actions .restart-button { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; border: 1px solid var(--line); background: #fff; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    @keyframes card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes success-pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes reveal-panel { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes gentle-shake { 0%, 100% { transform: translateX(0); } 33% { transform: translateX(-2px); } 66% { transform: translateX(2px); } }
+
+    @media (max-width: 680px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .score-values { justify-content: space-between; }
+      .card-actions { align-items: stretch; flex-direction: column; }
+      .validate-button, .answer-input { width: 100%; }
+    }
+  </style>
+ </head>
+ <body>
+  <div class="app-shell">
+   <header class="hero">
+    <div class="main-width">
+     <h1 class="hero-title">Banque de Problèmes Aléatoires - Nombres entiers (ℤ)</h1>
+     <p class="hero-subtitle">Mise en équation et calculs sur les nombres entiers (positifs et négatifs). Génération entièrement dynamique et variée à chaque réinitialisation.</p>
+     <div class="hero-actions">
+      <button id="new-exercises-button" class="restart-button" type="button" onclick="initApp()">
+       <i data-lucide="shuffle" aria-hidden="true"></i>
+       <span>Tirer 5 nouveaux problèmes</span>
+      </button>
+     </div>
+    </div>
+   </header>
+
+   <main class="main-width content">
+    <div class="advice-banner">
+     <i data-lucide="pen-tool" aria-hidden="true"></i>
+     <span><strong>Conseil de travail :</strong> Sur ton brouillon, écris d'abord une seule expression mathématique avec parenthèses si nécessaire, puis calcule-la étape par étape avant d'encoder ta réponse finale.</span>
+    </div>
+
+    <section class="score-panel">
+     <div class="score-values" aria-live="polite">
+      <div class="score-line">
+       <strong id="score-value">0 / 5</strong> <span>problèmes réussis</span>
+      </div>
+      <div id="score-percent" class="score-percent">0 %</div>
+     </div>
+     <div>
+      <p class="score-label">Progression de la série</p>
+      <p id="exercise-position" class="exercise-position">En attente de démarrage</p>
+      <div id="progress-track" class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+       <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <p id="score-detail" class="score-detail">0 terminé(s) · 0 réussi(s)</p>
+     </div>
+    </section>
+
+    <section id="completion-panel" class="completion-panel">
+     <div class="completion-icon">
+      <i data-lucide="trophy"></i>
+     </div>
+     <div>
+      <h2 class="completion-title">Série terminée !</h2>
+      <p class="completion-text">Tu as traité les 5 problèmes tirés au sort.</p>
+      <p id="final-score" class="final-score"></p>
+     </div>
+    </section>
+
+    <div id="exercise-list" class="exercise-list"></div>
+
+    <div class="footer-actions">
+     <button id="restart-button" class="restart-button" type="button" onclick="initApp()">
+      <i data-lucide="refresh-cw" aria-hidden="true"></i>
+      <span>Nouveau tirage de 5 problèmes</span>
+     </button>
+    </div>
+   </main>
+
+   <template id="card-template">
+    <article class="exercise-card">
+     <p class="item-label"></p>
+     <div class="context-box prompt"></div>
+     <div class="exercise-controls"></div>
+     <div class="card-actions">
+      <p class="feedback" aria-live="assertive"></p>
+      <button class="validate-button" type="button">Vérifier</button>
+     </div>
+     <div class="hint-panel">
+      <strong>Indice :</strong> <span class="hint-content"></span>
+     </div>
+     <div class="correction">
+      <div class="answer-review">
+       <p class="student-answer"><strong>Ton expression :</strong> <span class="student-expression-value"></span></p>
+       <p class="student-answer"><strong>Ta réponse finale :</strong> <span class="student-answer-value"></span></p>
+       <p class="correct-answer"><strong>Exemple d'expression correcte :</strong> <span class="correct-expression-value"></span></p>
+       <p class="correct-answer"><strong>Réponse attendue :</strong> <span class="correct-answer-value"></span></p>
+      </div>
+      <strong>Explication & Raisonnement :</strong>
+      <div class="correction-lines"></div>
+     </div>
+    </article>
+   </template>
+
+   <div id="live-region" class="sr-only" aria-live="polite"></div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const TOTAL_EXERCISES = 5;
+    const MAX_ATTEMPTS = 3;
+
+    let state = {
+        completed: 0,
+        correct: 0,
+        exercises: [] 
+    };
+
+    const elements = {
+      list: document.getElementById("exercise-list"),
+      score: document.getElementById("score-value"),
+      percent: document.getElementById("score-percent"),
+      detail: document.getElementById("score-detail"),
+      position: document.getElementById("exercise-position"),
+      fill: document.getElementById("progress-fill"),
+      completion: document.getElementById("completion-panel"),
+      finalScore: document.getElementById("final-score")
+    };
+
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const choice = arr => arr[randInt(0, arr.length - 1)];
+    const fmtSigned = n => (n > 0 ? `+${n}` : `${n}`);
+    const instruction = `<br><br><strong>ÉCRIS une seule expression mathématique permettant de calculer le résultat, puis CALCULE-le en détaillant les étapes.</strong>`;
+
+    // -------------------------------------------------------------------------
+    // RÉSERVOIR ÉTENDU DE MODÈLES DE SITUATIONS (NOMBRES ENTIERS)
+    // -------------------------------------------------------------------------
+    const ALL_TEMPLATES = [
+      // 1. Jeu de société (score dans le rouge, bonus/malus/amnistie)
+      {
+        generate: () => {
+          const player = choice(["Bilal", "Léa", "Younes", "Chloé", "Adam", "Inès"]);
+          const start = -randInt(10, 35);
+          const bonus = randInt(8, 20);
+          const malus = randInt(5, 20);
+          const amnesty = randInt(10, 25);
+          const expected = start + bonus - malus + amnesty;
+          return {
+            prompt: `Lors d'une partie d'un jeu de société, le score de ${player} est dans le rouge : il est de ${start} points. Lors de son tour de jeu, il/elle pioche plusieurs cartes "Action" d'affilée :<br>` +
+                    `<ul>` +
+                    `<li>Il/elle tire une carte "bonus" qui lui fait gagner ${bonus} points (${fmtSigned(bonus)}).</li>` +
+                    `<li>Il/elle tire une carte "malus" qui lui fait perdre ${malus} points (${fmtSigned(-malus)}).</li>` +
+                    `<li>Coup de chance ! Il/elle joue sa carte spéciale "amnistie" qui lui permet d'annuler un ancien malus de ${amnesty} points qu'il/elle traînait depuis le début de la partie.</li>` +
+                    `</ul>` +
+                    `Quel est le nouveau score de ${player} ?${instruction}`,
+            hint: `Expression : ${start} ${fmtSigned(bonus)} ${fmtSigned(-malus)} ${fmtSigned(amnesty)}. L'amnistie annule un malus, donc elle s'ajoute au score.`,
+            expected,
+            expression: `${start} ${fmtSigned(bonus)} ${fmtSigned(-malus)} ${fmtSigned(amnesty)}`,
+            reasoning: `<ul><li>Expression : ${start} ${fmtSigned(bonus)} ${fmtSigned(-malus)} ${fmtSigned(amnesty)}</li><li>Après le bonus : ${start} + ${bonus} = ${start + bonus}</li><li>Après le malus : ${start + bonus} - ${malus} = ${start + bonus - malus}</li><li>Après l'amnistie : ${start + bonus - malus} + ${amnesty} = <strong>${expected}</strong> points</li></ul>`
+          };
+        }
+      },
+      // 2. Robot sous-marin (position dans le passé, vitesse constante négative)
+      {
+        generate: () => {
+          const rate = -randInt(10, 25);
+          const elapsed = randInt(4, 15);
+          const current = -randInt(150, 600);
+          const expected = current - (rate * elapsed);
+          return {
+            prompt: `Un robot sous-marin s'enfonce dans une fosse océanique. Sa vitesse de descente est constante : sa position varie de ${rate} mètres par minute.<br>` +
+                    `À l'heure actuelle, le robot se trouve à une profondeur de ${current} mètres.<br><br>` +
+                    `On cherche à déterminer à quelle profondeur il se trouvait ${elapsed} minutes plus tôt.${instruction}`,
+            hint: `Pour "remonter le temps", retire le trajet parcouru depuis : position antérieure = position actuelle − (vitesse × temps écoulé).`,
+            expected,
+            expression: `${current} − (${rate} × ${elapsed})`,
+            reasoning: `<ul><li>Expression : ${current} − (${rate} × ${elapsed})</li><li>Trajet parcouru en ${elapsed} minutes : ${rate} × ${elapsed} = ${rate * elapsed} m</li><li>Position ${elapsed} min plus tôt : ${current} − (${rate * elapsed}) = <strong>${expected}</strong> m</li></ul>`
+          };
+        }
+      },
+      // 3. Tournoi jeux vidéo (corrections d'arbitre puis doublement du score)
+      {
+        generate: () => {
+          const team = choice(["Titans", "Phénix", "Loups", "Griffons", "Spectres"]);
+          const start = -randInt(20, 60);
+          const n1 = randInt(3, 6);
+          const val1 = randInt(10, 25);
+          const n2 = randInt(2, 4);
+          const val2 = randInt(10, 20);
+          const afterCorrections = start - (n1 * val1) + (n2 * val2);
+          const expected = afterCorrections * 2;
+          return {
+            prompt: `Lors de la finale d'un tournoi de jeux vidéo, l'écran d'affichage indique un score temporaire dans le rouge pour l'équipe des "${team}" : ${start} points.<br>` +
+                    `Avant d'officialiser le résultat, l'arbitre vidéo revoit la partie et applique les corrections suivantes :<br>` +
+                    `<ul>` +
+                    `<li>l'équipe a commis ${n1} fautes légères oubliées pendant le match, valant chacune une pénalité de ${val1} points ;</li>` +
+                    `<li>l'arbitre constate une erreur des juges et retire ${n2} pénalités graves attribuées à tort, qui faisaient perdre ${val2} points chacune ;</li>` +
+                    `<li>pour finir, grâce à une ultime épreuve bonus réussie, l'arbitre double le nouveau score obtenu après corrections.</li>` +
+                    `</ul>` +
+                    `Quel est le score final de l'équipe des "${team}" ?${instruction}`,
+            hint: `Applique d'abord les deux corrections entre parenthèses, puis multiplie le tout par 2 : (${start} − ${n1} × ${val1} + ${n2} × ${val2}) × 2.`,
+            expected,
+            expression: `(${start} − ${n1} × ${val1} + ${n2} × ${val2}) × 2`,
+            reasoning: `<ul><li>Expression : (${start} − ${n1} × ${val1} + ${n2} × ${val2}) × 2</li><li>Fautes oubliées : ${n1} × ${val1} = ${n1 * val1} points retirés</li><li>Pénalités annulées à tort : ${n2} × ${val2} = ${n2 * val2} points rendus</li><li>Score après corrections : ${start} − ${n1 * val1} + ${n2 * val2} = ${afterCorrections}</li><li>Score final doublé : ${afterCorrections} × 2 = <strong>${expected}</strong> points</li></ul>`
+          };
+        }
+      },
+      // 4. Station météo (relevés de température au fil de la journée)
+      {
+        generate: () => {
+          const start = randInt(-15, 5);
+          const rise = randInt(4, 12);
+          const drop1 = randInt(3, 9);
+          const drop2 = randInt(4, 12);
+          const expected = start + rise - drop1 - drop2;
+          return {
+            prompt: `Une station météo relève une température de ${start} °C à 6h du matin. La température grimpe ensuite de ${rise} °C jusqu'à midi grâce au soleil.<br>` +
+                    `En début d'après-midi, un front froid fait chuter la température de ${drop1} °C. Enfin, à la tombée de la nuit, la température rechute encore de ${drop2} °C.<br><br>` +
+                    `Quelle est la température en soirée ?${instruction}`,
+            hint: `Additionne la hausse du matin puis soustrais successivement les deux chutes de température.`,
+            expected,
+            expression: `${start} + ${rise} − ${drop1} − ${drop2}`,
+            reasoning: `<ul><li>Expression : ${start} + ${rise} − ${drop1} − ${drop2}</li><li>À midi : ${start} + ${rise} = ${start + rise} °C</li><li>Après le front froid : ${start + rise} − ${drop1} = ${start + rise - drop1} °C</li><li>En soirée : ${start + rise - drop1} − ${drop2} = <strong>${expected}</strong> °C</li></ul>`
+          };
+        }
+      },
+      // 5. Compte bancaire (découvert, retrait, dépôt, frais)
+      {
+        generate: () => {
+          const start = -randInt(50, 300);
+          const retrait = randInt(20, 150);
+          const depot = randInt(150, 450);
+          const frais = randInt(5, 25);
+          const expected = start - retrait + depot - frais;
+          return {
+            prompt: `Le compte bancaire de M. Dupont est à découvert : son solde affiche ${start} €. Il retire ${retrait} € au distributeur pour ses courses.<br>` +
+                    `Le lendemain, son employeur lui verse son salaire : un dépôt de ${depot} € est crédité sur le compte. Mais la banque prélève aussi des frais liés au découvert, de ${frais} €.<br><br>` +
+                    `Quel est le nouveau solde du compte ?${instruction}`,
+            hint: `Soustrais le retrait, ajoute le dépôt du salaire, puis soustrais les frais bancaires.`,
+            expected,
+            expression: `${start} − ${retrait} + ${depot} − ${frais}`,
+            reasoning: `<ul><li>Expression : ${start} − ${retrait} + ${depot} − ${frais}</li><li>Après le retrait : ${start} − ${retrait} = ${start - retrait} €</li><li>Après le dépôt : ${start - retrait} + ${depot} = ${start - retrait + depot} €</li><li>Après les frais : ${start - retrait + depot} − ${frais} = <strong>${expected}</strong> €</li></ul>`
+          };
+        }
+      },
+      // 6. Parking souterrain / ascenseur (étages sous le sol)
+      {
+        generate: () => {
+          const start = -randInt(1, 4);
+          const up1 = randInt(3, 7);
+          const down1 = randInt(2, 5);
+          const up2 = randInt(2, 6);
+          const expected = start + up1 - down1 + up2;
+          return {
+            prompt: `Une voiture est garée au niveau ${start} d'un parking souterrain (${Math.abs(start)} étage(s) sous le rez-de-chaussée). Le conducteur reprend l'ascenseur du parking et monte de ${up1} étages pour aller récupérer un colis à un autre niveau.<br>` +
+                    `Il redescend ensuite de ${down1} étages, puis remonte encore de ${up2} étages pour rejoindre la sortie.<br><br>` +
+                    `À quel étage se trouve-t-il finalement ?${instruction}`,
+            hint: `Additionne les montées et soustrais les descentes, en partant de l'étage de départ (négatif car sous le sol).`,
+            expected,
+            expression: `${start} + ${up1} − ${down1} + ${up2}`,
+            reasoning: `<ul><li>Expression : ${start} + ${up1} − ${down1} + ${up2}</li><li>Après la 1re montée : ${start} + ${up1} = ${start + up1}</li><li>Après la descente : ${start + up1} − ${down1} = ${start + up1 - down1}</li><li>Après la 2e montée : ${start + up1 - down1} + ${up2} = <strong>${expected}</strong></li></ul>`
+          };
+        }
+      },
+      // 7. Montgolfière (altitude, montée/descente à vitesse constante)
+      {
+        generate: () => {
+          const start = randInt(-20, 40);
+          const rateUp = randInt(4, 10);
+          const tUp = randInt(6, 15);
+          const rateDown = randInt(5, 12);
+          const tDown = randInt(3, 9);
+          const expected = start + (rateUp * tUp) - (rateDown * tDown);
+          return {
+            prompt: `Une montgolfière décolle depuis un terrain situé à une altitude de ${start} m par rapport au niveau de la mer. Elle monte ensuite à une vitesse constante de ${rateUp} m par minute pendant ${tUp} minutes.<br>` +
+                    `Le pilote fait ensuite redescendre la montgolfière à une vitesse de ${rateDown} m par minute pendant ${tDown} minutes pour observer le paysage.<br><br>` +
+                    `À quelle altitude se trouve la montgolfière à ce moment-là ?${instruction}`,
+            hint: `Calcule d'abord la distance montée et la distance descendue (vitesse × temps), puis combine-les avec l'altitude de départ.`,
+            expected,
+            expression: `${start} + (${rateUp} × ${tUp}) − (${rateDown} × ${tDown})`,
+            reasoning: `<ul><li>Expression : ${start} + (${rateUp} × ${tUp}) − (${rateDown} × ${tDown})</li><li>Montée : ${rateUp} × ${tUp} = ${rateUp * tUp} m</li><li>Descente : ${rateDown} × ${tDown} = ${rateDown * tDown} m</li><li>Altitude finale : ${start} + ${rateUp * tUp} − ${rateDown * tDown} = <strong>${expected}</strong> m</li></ul>`
+          };
+        }
+      },
+      // 8. Jeu de fléchettes électronique (score sur plusieurs manches + pénalité)
+      {
+        generate: () => {
+          const player = choice(["Marc", "Sarah", "Yanis", "Emma", "Noah"]);
+          const rounds = [randInt(-3, 3), randInt(-3, 3), randInt(-3, 3), randInt(-3, 3)];
+          const penalty = randInt(1, 3);
+          const sumRounds = rounds.reduce((a, b) => a + b, 0);
+          const expected = sumRounds - penalty;
+          return {
+            prompt: `Au jeu de fléchettes électronique, ${player} joue 4 manches. Voici les points qu'il/elle gagne ou perd à chaque manche : ${rounds.map(h => fmtSigned(h)).join(", ")}.<br>` +
+                    `Sur la 5e manche, une règle spéciale lui fait perdre encore ${penalty} points (${fmtSigned(-penalty)}).<br><br>` +
+                    `Quel est le score total de ${player} après ces 5 manches ?${instruction}`,
+            hint: `Additionne d'abord les points des 4 manches entre eux, puis soustrais la perte de la 5e manche.`,
+            expected,
+            expression: `(${rounds.join(" + ")}) − ${penalty}`,
+            reasoning: `<ul><li>Expression : (${rounds.map(h => fmtSigned(h)).join(" ")}) − ${penalty}</li><li>Somme des 4 manches : ${rounds.join(" + ").replace(/\+ -/g, "− ")} = ${sumRounds}</li><li>Avec la perte de la 5e manche : ${sumRounds} − ${penalty} = <strong>${expected}</strong></li></ul>`
+          };
+        }
+      },
+      // 9. Congélateur (température, panne, dégel, correction technicien)
+      {
+        generate: () => {
+          const start = -randInt(8, 20);
+          const baisse = randInt(3, 9);
+          const degel = randInt(5, 12);
+          const correction = randInt(2, 6);
+          const expected = start - baisse + degel + correction;
+          return {
+            prompt: `Le thermostat d'un congélateur affiche une température de ${start} °C. Une panne électrique fait encore chuter la température de ${baisse} °C.<br>` +
+                    `Peu après, une porte mal fermée provoque un dégel accidentel qui fait remonter la température de ${degel} °C. Enfin, un technicien détecte une erreur de réglage et corrige l'affichage en ajoutant ${correction} °C.<br><br>` +
+                    `Quelle température le thermostat affiche-t-il finalement ?${instruction}`,
+            hint: `Soustrais la chute due à la panne, puis ajoute la remontée du dégel et la correction du technicien.`,
+            expected,
+            expression: `${start} − ${baisse} + ${degel} + ${correction}`,
+            reasoning: `<ul><li>Expression : ${start} − ${baisse} + ${degel} + ${correction}</li><li>Après la panne : ${start} − ${baisse} = ${start - baisse} °C</li><li>Après le dégel : ${start - baisse} + ${degel} = ${start - baisse + degel} °C</li><li>Après la correction : ${start - baisse + degel} + ${correction} = <strong>${expected}</strong> °C</li></ul>`
+          };
+        }
+      },
+      // 10. Drone (altitude, montée, rafale de vent, descente manuelle)
+      {
+        generate: () => {
+          const start = randInt(-10, 30);
+          const montee = randInt(15, 40);
+          const rafale = randInt(5, 15);
+          const descente = randInt(10, 25);
+          const expected = start + montee - rafale - descente;
+          return {
+            prompt: `Un drone décolle depuis une zone en léger contrebas, à une altitude de ${start} m par rapport au point de référence. Le pilote le fait monter de ${montee} m pour effectuer des prises de vue.<br>` +
+                    `Une rafale de vent fait perdre au drone ${rafale} m d'altitude d'un coup. Le pilote entame ensuite une descente manuelle de ${descente} m pour se rapprocher du sol.<br><br>` +
+                    `À quelle altitude se trouve le drone à la fin de la manœuvre ?${instruction}`,
+            hint: `Ajoute la montée à l'altitude de départ, puis soustrais la perte due à la rafale et la descente manuelle.`,
+            expected,
+            expression: `${start} + ${montee} − ${rafale} − ${descente}`,
+            reasoning: `<ul><li>Expression : ${start} + ${montee} − ${rafale} − ${descente}</li><li>Après la montée : ${start} + ${montee} = ${start + montee} m</li><li>Après la rafale : ${start + montee} − ${rafale} = ${start + montee - rafale} m</li><li>Après la descente : ${start + montee - rafale} − ${descente} = <strong>${expected}</strong> m</li></ul>`
+          };
+        }
+      }
+    ];
+
+    // -------------------------------------------------------------------------
+    // INITIALISATION ET AFFICHAGE
+    // -------------------------------------------------------------------------
+    function initApp() {
+      state.completed = 0;
+      state.correct = 0;
+      state.exercises = [];
+      
+      elements.list.innerHTML = "";
+      elements.completion.classList.remove("is-visible");
+      updateScoreboard();
+      
+      let shuffledPool = [...ALL_TEMPLATES].sort(() => Math.random() - 0.5);
+      let selectedTemplates = shuffledPool.slice(0, TOTAL_EXERCISES);
+      
+      const templateContent = document.getElementById("card-template").content;
+      
+      for (let i = 0; i < TOTAL_EXERCISES; i++) {
+        const tplObj = selectedTemplates[i];
+        const data = tplObj.generate();
+        
+        state.exercises.push({
+            expected: data.expected,
+            attempts: 0,
+            solved: false
+        });
+
+        const clone = document.importNode(templateContent, true);
+        const card = clone.querySelector(".exercise-card");
+        
+        clone.querySelector(".item-label").textContent = `Problème ${i + 1} / ${TOTAL_EXERCISES}`;
+        clone.querySelector(".prompt").innerHTML = data.prompt;
+        clone.querySelector(".hint-content").innerHTML = data.hint;
+        clone.querySelector(".correction-lines").innerHTML = data.reasoning;
+        clone.querySelector(".correct-answer-value").textContent = data.expected;
+        clone.querySelector(".correct-expression-value").textContent = data.expression;
+
+        const inputDiv = clone.querySelector(".exercise-controls");
+
+        const exprLabel = document.createElement("label");
+        exprLabel.className = "input-label";
+        exprLabel.textContent = "Ton expression mathématique complète (avec parenthèses si besoin) — utilise × , * ou . pour une multiplication :";
+
+        const exprInput = document.createElement("input");
+        exprInput.type = "text";
+        exprInput.className = "answer-input expr-input";
+        exprInput.placeholder = "Ex : -18 + 12 - 8 + 15";
+
+        const resultLabel = document.createElement("label");
+        resultLabel.className = "input-label result-label";
+        resultLabel.textContent = "Résultat final :";
+
+        const resultInput = document.createElement("input");
+        resultInput.type = "number";
+        resultInput.className = "answer-input result-input";
+        resultInput.placeholder = "Ta réponse (nombre entier)...";
+
+        inputDiv.appendChild(exprLabel);
+        inputDiv.appendChild(exprInput);
+        inputDiv.appendChild(resultLabel);
+        inputDiv.appendChild(resultInput);
+
+        const btn = clone.querySelector(".validate-button");
+        btn.addEventListener("click", () => validateAnswer(i, card, exprInput, resultInput, btn, data));
+
+        resultInput.addEventListener("keypress", (e) => {
+            if(e.key === "Enter") btn.click();
+        });
+
+        elements.list.appendChild(clone);
+      }
+      lucide.createIcons();
+    }
+
+    // -------------------------------------------------------------------------
+    // ÉVALUATEUR SÉCURISÉ D'EXPRESSION (chiffres, + - * / ( ) uniquement)
+    // -------------------------------------------------------------------------
+    function safeEvalExpression(expr) {
+      const cleaned = expr.trim();
+      if (cleaned === "") return null;
+      // Autorise uniquement : chiffres, espaces, + - * / ( )
+      // Signes de multiplication acceptés : × · * et aussi le point "."
+      // (notation courante en Belgique, ex. 5.20 pour 5×20 ; comme il s'agit
+      // de nombres entiers, aucun point décimal n'est nécessaire)
+      const normalized = cleaned
+        .replace(/×/g, "*")
+        .replace(/·/g, "*")
+        .replace(/÷/g, "/")
+        .replace(/−/g, "-")
+        .replace(/\./g, "*");
+      if (!/^[0-9+\-*/().\s]+$/.test(normalized)) return null;
+      try {
+        const val = Function('"use strict"; return (' + normalized + ')')();
+        if (typeof val !== "number" || !isFinite(val)) return null;
+        return val;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // LOGIQUE DE VALIDATION
+    // -------------------------------------------------------------------------
+    function validateAnswer(index, card, exprInput, resultInput, btn, problemData) {
+      if (state.exercises[index].solved) return;
+
+      const exprValue = exprInput.value;
+      const userAnswer = parseFloat(resultInput.value);
+      const feedback = card.querySelector(".feedback");
+      const exe = state.exercises[index];
+
+      const exprGiven = exprValue.trim() !== "";
+      const resultGiven = resultInput.value.trim() !== "" && !isNaN(userAnswer);
+
+      if (!exprGiven && !resultGiven) {
+        feedback.textContent = "Complète au moins ton expression ou ton résultat final avant de vérifier.";
+        feedback.className = "feedback incorrect";
+        return;
+      }
+
+      const evalResult = exprGiven ? safeEvalExpression(exprValue) : null;
+      const exprValid = exprGiven && evalResult !== null && Math.abs(evalResult - exe.expected) < 1e-9;
+      const resultValid = resultGiven && userAnswer === exe.expected;
+
+      if (exprGiven && resultGiven && exprValid && resultValid) {
+        exe.solved = true;
+        state.correct++;
+        state.completed++;
+        
+        card.classList.add("is-correct");
+        exprInput.disabled = true;
+        resultInput.disabled = true;
+        btn.disabled = true;
+        
+        feedback.textContent = "✅ Expression correcte et résultat juste, bravo !";
+        feedback.className = "feedback correct";
+        
+        checkCompletion();
+      } else {
+        exe.attempts++;
+        card.classList.add("is-shaking");
+        setTimeout(() => card.classList.remove("is-shaking"), 300);
+
+        if (exe.attempts >= MAX_ATTEMPTS) {
+          exe.solved = true;
+          state.completed++;
+          
+          card.classList.add("is-incorrect");
+          exprInput.disabled = true;
+          resultInput.disabled = true;
+          btn.disabled = true;
+          
+          feedback.textContent = "❌ Essais épuisés. Voici la solution :";
+          feedback.className = "feedback incorrect";
+          
+          card.querySelector(".student-expression-value").textContent = exprGiven ? exprValue : "(non renseigné)";
+          card.querySelector(".student-answer-value").textContent = resultGiven ? resultInput.value : "(non renseigné)";
+          card.querySelector(".hint-panel").classList.add("is-visible");
+          card.querySelector(".correction").classList.add("is-visible");
+          
+          checkCompletion();
+        } else {
+          const restants = MAX_ATTEMPTS - exe.attempts;
+          let msg;
+          if (exprGiven && !resultGiven) {
+            msg = exprValid
+              ? `✅ Ton expression est correcte ! Il te manque encore ton résultat final. Il te reste ${restants} essai(s).`
+              : `❌ Ton expression ne correspond pas au calcul (ou contient une erreur d'écriture), et il te manque aussi ton résultat final. Il te reste ${restants} essai(s).`;
+          } else if (!exprGiven && resultGiven) {
+            msg = resultValid
+              ? `✅ Ton résultat final est correct ! Il te manque encore ton expression mathématique. Il te reste ${restants} essai(s).`
+              : `❌ Ton résultat final ne correspond pas à ce calcul, et il te manque aussi ton expression. Il te reste ${restants} essai(s).`;
+          } else if (!exprValid && resultValid) {
+            msg = `❌ Ton résultat final est correct, mais ton expression ne correspond pas au calcul (ou contient une erreur d'écriture). Il te reste ${restants} essai(s).`;
+          } else if (exprValid && !resultValid) {
+            msg = `❌ Ton expression est correcte, mais ton résultat final ne correspond pas à ce calcul. Il te reste ${restants} essai(s).`;
+          } else {
+            msg = `❌ Expression et/ou résultat incorrects. Il te reste ${restants} essai(s).`;
+          }
+          feedback.textContent = msg;
+          feedback.className = "feedback incorrect";
+        }
+      }
+      updateScoreboard();
+    }
+
+    function updateScoreboard() {
+      elements.score.textContent = `${state.correct} / ${TOTAL_EXERCISES}`;
+      const pct = Math.round((state.correct / TOTAL_EXERCISES) * 100);
+      elements.percent.textContent = `${pct} %`;
+      
+      elements.position.textContent = `Progression : ${state.completed} / ${TOTAL_EXERCISES}`;
+      elements.detail.textContent = `${state.completed} problème(s) traité(s) · ${state.correct} réussi(s)`;
+      
+      const fillPct = (state.completed / TOTAL_EXERCISES) * 100;
+      elements.fill.style.width = `${fillPct}%`;
+    }
+
+    function checkCompletion() {
+      if (state.completed >= TOTAL_EXERCISES) {
+        elements.completion.classList.add("is-visible");
+        elements.finalScore.textContent = `Score final : ${state.correct} sur ${TOTAL_EXERCISES}`;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        initApp();
+        lucide.createIcons();
+    });
+  </script>
+ </body>
+</html>

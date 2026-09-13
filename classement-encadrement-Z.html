@@ -1,0 +1,1567 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classer et encadrer des nombres entiers</title>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #22c55e;
+      --error: #ef4444;
+      --amber: #f59e0b;
+      --line: #dbe3f4;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      width: 100%;
+      margin: 0;
+      min-height: 100%;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+    }
+
+    button, select, input { font: inherit; }
+
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.4);
+      outline-offset: 3px;
+    }
+
+    .display-font {
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .app-shell {
+      width: 100%;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.14), transparent 24rem),
+        linear-gradient(180deg, var(--slate) 0 18.5rem, var(--paper) 18.5rem 100%);
+    }
+
+    .main-width {
+      width: min(100% - 2rem, 800px);
+      margin-inline: auto;
+    }
+
+    .hero { padding: 3rem 0 2.2rem; color: white; }
+    .hero-copy { max-width: 42rem; }
+
+    .hero-title {
+      margin: 0;
+      line-height: 0.98;
+      letter-spacing: -0.045em;
+      font-size: clamp(1.9rem, 5vw, 2.6rem);
+    }
+
+    .hero-subtitle {
+      max-width: 36rem;
+      margin: 1rem 0 0;
+      line-height: 1.65;
+    }
+
+    .new-button, .secondary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0.75rem 1rem;
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+    }
+
+    .new-button {
+      margin-top: 1.4rem;
+      background: var(--indigo);
+      color: white;
+      box-shadow: 0 10px 24px rgba(9, 16, 31, 0.22);
+    }
+
+    .secondary-button {
+      background: white;
+      color: var(--indigo-dark);
+      border: 1px solid var(--line);
+    }
+
+    .new-button:hover, .secondary-button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.04);
+    }
+
+    .content { padding-bottom: 4rem; }
+
+    .settings-panel, .score-panel, .rule-panel, .exercise-card, .task-card {
+      background: white;
+      border: 1px solid rgba(219, 227, 244, 0.9);
+      border-radius: 20px;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    }
+
+    .settings-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: -0.2rem;
+      padding: 1.2rem;
+    }
+
+    .field-group { display: grid; gap: 0.45rem; }
+    .field-label { font-weight: 700; }
+    .field-help { margin: 0; line-height: 1.45; font-size: 0.85rem; color: var(--muted); }
+
+    .select-control {
+      width: 100%;
+      min-height: 44px;
+      padding: 0.65rem 2.4rem 0.65rem 0.8rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 11px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: 1rem;
+      padding: 1.25rem;
+    }
+
+    .score-values { display: grid; gap: 0.25rem; min-width: 185px; }
+    .score-line { font-size: 0.88rem; color: var(--muted); }
+
+    .score-line strong {
+      display: inline-block;
+      min-width: 3.5rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--indigo);
+    }
+
+    .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #4f6ef7, #7890ff);
+      transition: width 350ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .score-helper { margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--muted); }
+
+    /* Rappel de cours */
+    .rule-panel {
+      margin-top: 1.15rem;
+      padding: 1.3rem 1.4rem;
+      border-left: 4px solid var(--indigo);
+      border-radius: 0 20px 20px 0;
+    }
+
+    .rule-title { margin: 0 0 0.6rem; font-size: 1.15rem; }
+    .rule-intro { margin: 0 0 0.9rem; line-height: 1.6; }
+    .rule-intro:last-child { margin-bottom: 0; }
+
+    .rule-list { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.6rem; }
+    .rule-list li { line-height: 1.55; }
+
+    .rule-example {
+      display: inline-block;
+      margin-top: 0.15rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 8px;
+      background: #eef2ff;
+      color: var(--indigo-dark);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+    }
+
+    .section-heading { display: flex; align-items: center; gap: 1rem; margin: 2.25rem 0 1rem; }
+
+    .section-title {
+      flex: none;
+      margin: 0;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.95rem;
+      color: var(--slate);
+    }
+
+    .section-line { width: 100%; height: 1px; background: #cdd7eb; }
+    .section-intro { margin: -0.4rem 0 1rem; color: var(--muted); line-height: 1.55; }
+
+    .exercise-list { display: grid; gap: 1rem; }
+
+    .exercise-card {
+      position: relative;
+      overflow: hidden;
+      padding: 1.3rem;
+      border: 2px solid transparent;
+      animation: fadeUp 480ms both;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .exercise-card:focus-within { box-shadow: 0 12px 34px rgba(79, 110, 247, 0.14); }
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-corrected { border-color: var(--amber); }
+    .exercise-card.is-shaking { animation: shake 340ms ease; }
+
+    .card-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+
+    .exercise-index {
+      margin: 0;
+      font-size: 0.83rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .attempt-dots { display: flex; gap: 0.42rem; }
+
+    .attempt-dot {
+      width: 11px;
+      height: 11px;
+      border: 2px solid #c7d0e3;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .attempt-dot.is-error { border-color: var(--error); background: var(--error); }
+    .attempt-dot.is-success { border-color: var(--success); background: var(--success); transform: scale(1.2); }
+    .attempt-dot.is-hidden { display: none; }
+
+    .task-question { margin: 0 0 0.9rem; font-weight: 700; line-height: 1.5; }
+
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; margin-top: 1.1rem; flex-wrap: wrap; }
+    .feedback-slot { min-height: 1.5rem; flex: 1; }
+    .feedback { display: none; margin: 0; font-size: 0.9rem; font-weight: 650; }
+    .feedback.is-visible { display: block; }
+
+    .select-symbol-message { color: var(--muted); }
+    .wrong-message { color: var(--error); }
+    .success-message { color: var(--success); }
+    .test-recorded-message { color: var(--indigo-dark); }
+
+    .validate-button {
+      flex: none;
+      min-height: 42px;
+      padding: 0.65rem 1rem;
+      border: 0;
+      border-radius: 11px;
+      background: var(--indigo);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .validate-button:disabled { cursor: default; opacity: 0.5; }
+
+    .clear-button {
+      flex: none;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.86rem;
+      min-height: 42px;
+    }
+    .clear-button:disabled { cursor: default; opacity: 0.5; }
+
+    .correction {
+      display: none;
+      margin-top: 0.9rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      background: #fff7e7;
+      color: #8a5200;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .correction.is-visible { display: block; }
+    .correction-value { display: block; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 0.15rem; }
+
+    .completion-message, .test-results-panel {
+      display: none;
+      margin-top: 1.2rem;
+      padding: 1.1rem 1.2rem;
+      border-radius: 15px;
+      text-align: center;
+      background: #f0fdf4;
+      color: #15803d;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(34, 197, 94, 0.12);
+      animation: pop 400ms ease;
+    }
+
+    .test-results-panel { background: white; color: var(--ink); }
+    .completion-message.is-visible, .test-results-panel.is-visible { display: block; }
+
+    .test-result-value { margin: 0.35rem 0 0; font-size: 1.35rem; font-weight: 800; color: var(--indigo); }
+
+    .end-actions { display: none; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 1rem; }
+    .end-actions.is-visible { display: grid; }
+    .review-button.is-hidden { display: none; }
+
+    /* Tâches libres */
+    .task-card { padding: 1.3rem; margin-bottom: 1rem; animation: fadeUp 480ms both; }
+
+    .choice-grid { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0.2rem 0 0.2rem; }
+
+    .choice-chip {
+      min-width: 46px;
+      min-height: 44px;
+      padding: 0.5rem 0.85rem;
+      border: 1px solid #d4dcf3;
+      border-radius: 999px;
+      background: white;
+      color: #34405a;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      transition: transform 150ms ease, color 150ms ease, background 150ms ease, border-color 150ms ease;
+    }
+
+    .choice-chip:hover:not(:disabled) { color: var(--indigo); transform: translateY(-1px); }
+
+    .choice-chip.is-selected {
+      border-color: var(--indigo);
+      background: var(--indigo);
+      color: white;
+      box-shadow: 0 5px 13px rgba(79, 110, 247, 0.25);
+    }
+
+    .choice-chip.result-correct { border-color: var(--success); background: var(--success); color: white; }
+    .choice-chip.result-wrong { border-color: var(--error); background: var(--error); color: white; }
+
+    .choice-chip:disabled { cursor: default; opacity: 0.85; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 0.9rem; margin: 0.2rem 0 1rem; font-size: 0.82rem; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .legend .dot-selected { background: var(--indigo); }
+    .legend .dot-correct { background: var(--success); }
+    .legend .dot-wrong { background: var(--error); }
+
+    .fill-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-top: 0.4rem; }
+
+    .fill-input {
+      width: 8rem;
+      min-height: 44px;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 11px;
+      font-weight: 700;
+      font-family: "Courier New", monospace;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .fill-input.is-correct { border-color: var(--success); background: #f0fdf4; }
+    .fill-input.is-wrong { border-color: var(--error); background: #fef2f2; }
+
+    /* Classement : séquence construite par l'élève */
+    .sequence-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.9rem 0;
+      padding: 0.8rem 0.9rem;
+      border-radius: 12px;
+      background: #f8faff;
+      border: 1px dashed #c7d0e3;
+      min-height: 3.2rem;
+    }
+
+    .sequence-item {
+      font-family: "Courier New", monospace;
+      font-weight: 800;
+      font-size: 1.02rem;
+      background: white;
+      border: 1px solid #d4dcf3;
+      border-radius: 8px;
+      padding: 0.32rem 0.62rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sequence-symbol { font-weight: 800; color: var(--indigo); font-size: 1.1rem; }
+    .sequence-placeholder { color: var(--muted); font-size: 0.86rem; }
+
+    /* Droite graduée */
+    .number-line-wrap { position: relative; padding: 1.7rem 0.3rem 0.3rem; }
+
+    .number-line-track {
+      position: absolute;
+      left: 0.3rem;
+      right: 0.3rem;
+      top: 2.05rem;
+      height: 2px;
+      background: #c7d0e3;
+    }
+
+    .number-line-ticks {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.45rem;
+      z-index: 1;
+    }
+
+    .tick-chip {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid #c7d0e3;
+      background: white;
+      color: #34405a;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 0.84rem;
+      cursor: pointer;
+      transition: transform 150ms ease, color 150ms ease, background 150ms ease, border-color 150ms ease;
+    }
+
+    .tick-chip:hover:not(:disabled) { border-color: var(--indigo); color: var(--indigo); transform: translateY(-2px); }
+    .tick-chip.is-selected { border-color: var(--indigo); background: var(--indigo); color: white; }
+    .tick-chip.result-correct { border-color: var(--success); background: var(--success); color: white; }
+    .tick-chip.result-wrong { border-color: var(--error); background: var(--error); color: white; }
+    .tick-chip:disabled { cursor: default; opacity: 0.85; }
+
+    /* Encadrement : tableau d'association */
+    .match-table { display: grid; gap: 0.75rem; margin-top: 0.6rem; }
+
+    .match-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .match-label { color: #34405a; }
+    .match-select { width: auto; min-width: 120px; }
+    select.is-correct { border-color: var(--success) !important; background: #f0fdf4; }
+    select.is-wrong { border-color: var(--error) !important; background: #fef2f2; }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-3px); }
+    }
+    @keyframes pop { 0% { transform: scale(0.94); } 65% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+    @media (max-width: 620px) {
+      .app-shell {
+        background:
+          radial-gradient(circle at 12% 3%, rgba(79, 110, 247, 0.16), transparent 18rem),
+          linear-gradient(180deg, var(--slate) 0 24rem, var(--paper) 24rem 100%);
+      }
+      .hero { padding-top: 2.35rem; }
+      .settings-panel, .score-panel { grid-template-columns: 1fr; }
+      .exercise-card, .task-card { padding: 1.05rem; }
+      .card-actions { align-items: stretch; flex-direction: column; }
+      .validate-button, .clear-button { width: 100%; }
+      .end-actions { grid-template-columns: 1fr; }
+      .tick-chip { width: 38px; height: 38px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="main-width">
+        <div class="hero-copy">
+          <h1 class="display-font hero-title">Classer et encadrer des nombres entiers</h1>
+          <p class="hero-subtitle">Entraîne-toi à ranger des nombres entiers dans l'ordre, puis à les encadrer entre deux valeurs.</p>
+          <button id="new-exercises-button" class="new-button" type="button">Nouveaux exercices</button>
+        </div>
+      </div>
+    </header>
+    <main class="main-width content">
+
+      <section class="rule-panel" aria-labelledby="rule-title-classer">
+        <h2 id="rule-title-classer" class="display-font rule-title">Rappel — Classer, ordonner</h2>
+        <p class="rule-intro">CLASSER des nombres, c'est les ranger dans un ordre précis.</p>
+        <ul class="rule-list">
+          <li>Classer des nombres dans l'ordre <strong>CROISSANT</strong>, c'est les ranger du plus petit au plus grand. <span class="rule-example">−9 &lt; −3 &lt; 0 &lt; 7</span></li>
+          <li>Classer des nombres dans l'ordre <strong>DÉCROISSANT</strong>, c'est les ranger du plus grand au plus petit. <span class="rule-example">12 &gt; 4 &gt; −2 &gt; −15</span></li>
+        </ul>
+      </section>
+
+      <section class="settings-panel" aria-labelledby="settings-title">
+        <h2 id="settings-title" class="sr-only">Paramètres de l'exercice</h2>
+        <div class="field-group">
+          <label class="field-label" for="mode-select">Mode</label>
+          <select id="mode-select" class="select-control">
+            <option value="training">Entraînement (avec correction)</option>
+            <option value="test">Test (sans correction)</option>
+          </select>
+          <p class="field-help">En entraînement, tu as 3 essais et la correction s'affiche en cas d'erreur. En test, une seule tentative est enregistrée.</p>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="level-select">Niveau</label>
+          <select id="level-select" class="select-control">
+            <option value="all">Tous les niveaux</option>
+            <option value="1">Niveau 1 — Grands nombres naturels</option>
+            <option value="2">Niveau 2 — Nombres relatifs simples</option>
+            <option value="3">Niveau 3 — Nombres négatifs</option>
+          </select>
+          <p class="field-help">Choisis un niveau pour cibler une difficulté précise, ou garde « Tous les niveaux » pour un mélange.</p>
+        </div>
+      </section>
+
+      <section class="score-panel" aria-labelledby="score-caption">
+        <div class="score-values" aria-live="polite">
+          <div class="score-line"><strong id="immediate-score">0 / 8</strong> <span>réussites du premier coup</span></div>
+          <div class="score-line"><strong id="resolved-score">0 / 8</strong> <span>exercices résolus</span></div>
+        </div>
+        <div>
+          <p id="score-caption" class="score-label">Progression</p>
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression des exercices résolus" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <p class="score-helper">La barre se remplit au fur et à mesure que tu résous les exercices.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="classer-section-title">
+        <div class="section-heading">
+          <h2 id="classer-section-title" class="display-font section-title">1 · Classe les nombres</h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <p class="section-intro">Clique sur les nombres, dans le bon ordre, pour construire le classement demandé. Utilise « Effacer » pour recommencer avant de valider.</p>
+        <div id="classer-list" class="exercise-list"></div>
+        <p id="completion-message" class="completion-message" role="status">Bravo, tu as terminé la série !</p>
+        <section id="test-results-panel" class="test-results-panel" aria-labelledby="test-results-title">
+          <h2 id="test-results-title" class="display-font">Résultat du test</h2>
+          <p id="test-result-value" class="test-result-value" aria-live="polite"></p>
+        </section>
+        <div id="end-actions" class="end-actions">
+          <button id="review-errors-button" class="secondary-button review-button" type="button">Revoir les exercices manqués</button>
+          <button id="restart-button" class="secondary-button" type="button">Recommencer une série</button>
+        </div>
+      </section>
+
+      <section class="rule-panel" aria-labelledby="rule-title-encadrer">
+        <h2 id="rule-title-encadrer" class="display-font rule-title">Rappel — Encadrer</h2>
+        <p class="rule-intro">ENCADRER un nombre, c'est trouver deux valeurs entre lesquelles ce nombre se situe.</p>
+        <p class="rule-intro">25 se situe entre 24 et 26 : on écrit <span class="rule-example">24 &lt; 25 &lt; 26</span>, c'est un encadrement de 25. On lit : « 25 est plus grand que 24 et plus petit que 26 ».</p>
+        <p class="rule-intro">−15 se situe entre −16 et −14 : on écrit <span class="rule-example">−16 &lt; −15 &lt; −14</span>, c'est un encadrement de −15.</p>
+      </section>
+
+      <section aria-labelledby="line-section-title">
+        <div class="section-heading">
+          <h2 id="line-section-title" class="display-font section-title">2 · Encadre sur la droite graduée</h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <p class="section-intro">Clique sur tous les points de la droite qui correspondent à la consigne, puis vérifie ta réponse.</p>
+        <div id="numberline-tasks"></div>
+      </section>
+
+      <section aria-labelledby="match-section-title">
+        <div class="section-heading">
+          <h2 id="match-section-title" class="display-font section-title">3 · Replace chaque nombre dans son encadrement</h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <p class="section-intro">Pour chaque encadrement, choisis dans la liste déroulante le nombre qui convient.</p>
+        <div id="match-tasks"></div>
+      </section>
+
+      <section aria-labelledby="bounds-section-title">
+        <div class="section-heading">
+          <h2 id="bounds-section-title" class="display-font section-title">4 · Complète l'encadrement</h2>
+          <div class="section-line" aria-hidden="true"></div>
+        </div>
+        <p class="section-intro">Écris un nombre entier qui complète l'encadrement (il y a souvent plusieurs bonnes réponses possibles).</p>
+        <div id="bounds-tasks"></div>
+      </section>
+
+    </main>
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script>
+    /* ========================= OUTILS COMMUNS ========================= */
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function range(start, end) {
+      const out = [];
+      for (let value = start; value <= end; value += 1) out.push(value);
+      return out;
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let index = copy.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [copy[index], copy[randomIndex]] = [copy[randomIndex], copy[index]];
+      }
+      return copy;
+    }
+
+    function formatNumber(value) {
+      return value < 0 ? `−${Math.abs(value)}` : `${value}`;
+    }
+
+    function buildCandidates(correctArr, extras, max) {
+      const pool = new Set(correctArr);
+      shuffle(extras).forEach((value) => {
+        if (pool.size < max) pool.add(value);
+      });
+      return shuffle([...pool]);
+    }
+
+    function arraysEqual(a, b) {
+      return a.length === b.length && a.every((v, i) => v === b[i]);
+    }
+
+    const liveRegion = document.getElementById("live-region");
+    function announce(message) {
+      liveRegion.textContent = "";
+      window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+    }
+
+    /* ========================= 1. CLASSER LES NOMBRES ========================= */
+    const classerBank = [
+      // Niveau 1 — grands nombres naturels
+      { numbers: [4124569, 3485632, 3962365, 998632], level: 1 },
+      { numbers: [4563012, 4745962, 4125801, 4200874], level: 1 },
+      { numbers: [1250632, 1252048, 1249875, 1251900], level: 1 },
+      { numbers: [598120, 601234, 599999, 600450], level: 1 },
+      { numbers: [8234561, 8234516, 8234599, 8234498], level: 1 },
+      { numbers: [72500, 72499, 72501, 72398], level: 1 },
+      { numbers: [3000000, 2999999, 3000010, 2998888], level: 1 },
+      { numbers: [451236, 451263, 451226, 451299], level: 1 },
+      { numbers: [9876543, 9865432, 9876321, 9865321], level: 1 },
+      { numbers: [125000, 124999, 125100, 124899], level: 1 },
+      { numbers: [67200, 67020, 67002, 67210], level: 1 },
+      { numbers: [1005600, 1006500, 1000560, 1005060], level: 1 },
+
+      // Niveau 2 — nombres relatifs simples (signes mélangés)
+      { numbers: [14, 125, -12, -17, 17], level: 2 },
+      { numbers: [125, 271, -325, -12, 4, -327, -125], level: 2 },
+      { numbers: [-2, 4, -3, 6, -5, 0], level: 2 },
+      { numbers: [8, -8, 15, -15, 0, -1], level: 2 },
+      { numbers: [-20, 20, -19, 19, 0], level: 2 },
+      { numbers: [33, -33, -34, 34, 0, -1], level: 2 },
+      { numbers: [-45, 12, -12, 45, -1, 1], level: 2 },
+      { numbers: [7, -7, -70, 70, 0], level: 2 },
+      { numbers: [-100, 100, -99, 99, 0, 1], level: 2 },
+      { numbers: [56, -56, -57, 57, -1], level: 2 },
+
+      // Niveau 3 — nombres négatifs
+      { numbers: [-12, -17, -4, -25, -1], level: 3 },
+      { numbers: [-125, -132, -119, -140, -101], level: 3 },
+      { numbers: [-8, -18, -9, -90, -80], level: 3 },
+      { numbers: [-45, -40, -30, -33, -50], level: 3 },
+      { numbers: [-2, -9, -14, -11, -21], level: 3 },
+      { numbers: [-101, -110, -109, -100], level: 3 }
+    ];
+
+    const session = {
+      exercises: [],
+      immediateCount: 0,
+      resolvedCount: 0,
+      correctTotal: 0,
+      activeCard: null,
+      mode: "training",
+      reviewSource: []
+    };
+
+    const classerList = document.getElementById("classer-list");
+    const immediateScore = document.getElementById("immediate-score");
+    const resolvedScore = document.getElementById("resolved-score");
+    const progressTrack = document.getElementById("progress-track");
+    const progressFill = document.getElementById("progress-fill");
+    const completionMessage = document.getElementById("completion-message");
+    const testResultsPanel = document.getElementById("test-results-panel");
+    const testResultValue = document.getElementById("test-result-value");
+    const endActions = document.getElementById("end-actions");
+    const reviewButton = document.getElementById("review-errors-button");
+    const modeSelect = document.getElementById("mode-select");
+    const levelSelect = document.getElementById("level-select");
+
+    function buildBalancedDirections(count) {
+      const half = Math.floor(count / 2);
+      const directions = [
+        ...Array(half).fill("croissant"),
+        ...Array(count - half).fill("décroissant")
+      ];
+      return shuffle(directions);
+    }
+
+    function toSessionOrderExercise(source, index, forcedDirection) {
+      const direction = forcedDirection || (Math.random() < 0.5 ? "croissant" : "décroissant");
+      const correctSequence = [...source.numbers].sort((a, b) => a - b);
+      if (direction === "décroissant") correctSequence.reverse();
+      return {
+        id: `order-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 7)}`,
+        numbers: source.numbers,
+        level: source.level,
+        direction,
+        correctSequence,
+        chosen: [],
+        attempts: 0,
+        resolved: false,
+        correct: false,
+        immediate: false
+      };
+    }
+
+    function selectRandomOrderExercises(count, level) {
+      const pool = level === "all" ? classerBank : classerBank.filter((entry) => entry.level === Number(level));
+      const picks = shuffle(pool).slice(0, count);
+      const directions = buildBalancedDirections(picks.length);
+      return picks.map((source, index) => toSessionOrderExercise(source, index, directions[index]));
+    }
+
+    function setFeedbackText(card, text, cls) {
+      const feedback = card._feedback;
+      feedback.textContent = text;
+      feedback.className = `feedback is-visible ${cls}`;
+    }
+
+    function clearFeedback(card) {
+      const feedback = card._feedback;
+      feedback.textContent = "";
+      feedback.className = "feedback";
+    }
+
+    function updateOrderScore() {
+      const total = session.exercises.length || 8;
+      immediateScore.textContent = `${session.immediateCount} / ${total}`;
+      resolvedScore.textContent = `${session.resolvedCount} / ${total}`;
+
+      const percentage = total ? (session.resolvedCount / total) * 100 : 0;
+      progressFill.style.width = `${percentage}%`;
+      progressTrack.setAttribute("aria-valuemax", String(total));
+      progressTrack.setAttribute("aria-valuenow", String(session.resolvedCount));
+
+      const complete = session.resolvedCount === total;
+      completionMessage.classList.toggle("is-visible", complete);
+      endActions.classList.toggle("is-visible", complete);
+
+      if (!complete) {
+        testResultsPanel.classList.remove("is-visible");
+        return;
+      }
+
+      session.reviewSource = session.exercises.filter((exercise) => !exercise.immediate);
+      reviewButton.classList.toggle("is-hidden", session.reviewSource.length === 0);
+
+      if (session.mode === "test") {
+        testResultValue.textContent = `${session.correctTotal} / ${total}`;
+        testResultsPanel.classList.add("is-visible");
+      } else {
+        testResultsPanel.classList.remove("is-visible");
+      }
+    }
+
+    function renderSequence(card, exercise) {
+      const row = card._sequenceRow;
+      row.replaceChildren();
+      if (exercise.chosen.length === 0) {
+        const placeholder = document.createElement("span");
+        placeholder.className = "sequence-placeholder";
+        placeholder.textContent = "Clique sur les nombres ci-dessus pour construire le classement…";
+        row.appendChild(placeholder);
+        return;
+      }
+      exercise.chosen.forEach((value, i) => {
+        if (i > 0) {
+          const symbol = document.createElement("span");
+          symbol.className = "sequence-symbol";
+          symbol.textContent = exercise.direction === "croissant" ? "<" : ">";
+          row.appendChild(symbol);
+        }
+        const item = document.createElement("span");
+        item.className = "sequence-item";
+        item.textContent = formatNumber(value);
+        row.appendChild(item);
+      });
+    }
+
+    function handleChipClick(card, exercise, chip, value) {
+      if (exercise.resolved || chip.disabled) return;
+      exercise.chosen.push(value);
+      chip.disabled = true;
+      chip.classList.add("is-selected");
+      clearFeedback(card);
+      renderSequence(card, exercise);
+    }
+
+    function resetSelection(card, exercise) {
+      if (exercise.resolved) return;
+      exercise.chosen = [];
+      card._chips.forEach((chip) => {
+        chip.disabled = false;
+        chip.classList.remove("is-selected");
+      });
+      renderSequence(card, exercise);
+      clearFeedback(card);
+    }
+
+    function disableOrderCard(card) {
+      card._chips.forEach((chip) => { chip.disabled = true; });
+      card._clearBtn.disabled = true;
+      card._validateBtn.disabled = true;
+    }
+
+    function showOrderCorrection(card, exercise) {
+      const correction = card.querySelector(".correction");
+      correction.querySelector(".correction-value").textContent =
+        exercise.correctSequence.map(formatNumber).join(exercise.direction === "croissant" ? " < " : " > ");
+      correction.classList.add("is-visible");
+    }
+
+    function resolveOrderTraining(card, exercise, wasCorrect) {
+      exercise.resolved = true;
+      exercise.correct = wasCorrect;
+      exercise.immediate = wasCorrect && exercise.attempts === 1;
+      session.resolvedCount += 1;
+
+      if (exercise.immediate) session.immediateCount += 1;
+      if (wasCorrect) session.correctTotal += 1;
+
+      disableOrderCard(card);
+
+      if (wasCorrect) {
+        card.classList.add("is-correct");
+        setFeedbackText(card, "Bravo, l'ordre est correct !", "success-message");
+        announce("Bonne réponse.");
+      } else {
+        card.classList.add("is-corrected");
+        clearFeedback(card);
+        showOrderCorrection(card, exercise);
+        announce("La correction est affichée.");
+      }
+      updateOrderScore();
+    }
+
+    function resolveOrderTest(card, exercise) {
+      exercise.resolved = true;
+      exercise.correct = arraysEqual(exercise.chosen, exercise.correctSequence);
+      exercise.immediate = exercise.correct;
+      session.resolvedCount += 1;
+
+      if (exercise.correct) {
+        session.immediateCount += 1;
+        session.correctTotal += 1;
+      }
+
+      disableOrderCard(card);
+      setFeedbackText(card, "Réponse enregistrée.", "test-recorded-message");
+      announce("Réponse enregistrée.");
+      updateOrderScore();
+    }
+
+    function validateOrderExercise(card, exercise) {
+      if (exercise.resolved) return;
+      session.activeCard = card;
+
+      if (exercise.chosen.length < exercise.numbers.length) {
+        setFeedbackText(card, "Clique sur tous les nombres avant de valider.", "select-symbol-message");
+        announce("Il manque des nombres dans le classement.");
+        return;
+      }
+
+      exercise.attempts += 1;
+      const currentDot = card._dots[exercise.attempts - 1];
+      const isCorrect = arraysEqual(exercise.chosen, exercise.correctSequence);
+
+      if (session.mode === "test") {
+        if (currentDot) currentDot.classList.add(isCorrect ? "is-success" : "is-error");
+        resolveOrderTest(card, exercise);
+        return;
+      }
+
+      if (isCorrect) {
+        if (currentDot) currentDot.classList.add("is-success");
+        resolveOrderTraining(card, exercise, true);
+        return;
+      }
+
+      if (currentDot) currentDot.classList.add("is-error");
+      card.classList.remove("is-shaking");
+      void card.offsetWidth;
+      card.classList.add("is-shaking");
+
+      if (exercise.attempts >= 3) {
+        resolveOrderTraining(card, exercise, false);
+      } else {
+        const remaining = 3 - exercise.attempts;
+        setFeedbackText(card, `Ce n'est pas le bon ordre. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`, "wrong-message");
+        announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+        exercise.chosen = [];
+        card._chips.forEach((chip) => {
+          chip.disabled = false;
+          chip.classList.remove("is-selected");
+        });
+        renderSequence(card, exercise);
+      }
+    }
+
+    function createOrderCard(exercise, index) {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+      card.dataset.exerciseId = exercise.id;
+      card.style.animationDelay = `${index * 55}ms`;
+
+      const top = document.createElement("div");
+      top.className = "card-top";
+
+      const meta = document.createElement("div");
+      const idxP = document.createElement("p");
+      idxP.className = "exercise-index";
+      idxP.textContent = `Exercice ${index + 1}`;
+      meta.appendChild(idxP);
+      top.appendChild(meta);
+
+      const dotsWrap = document.createElement("div");
+      dotsWrap.className = "attempt-dots";
+      dotsWrap.setAttribute("aria-label", "Essais disponibles");
+      const dots = [];
+      for (let i = 0; i < 3; i += 1) {
+        const dot = document.createElement("span");
+        dot.className = "attempt-dot";
+        dot.setAttribute("aria-hidden", "true");
+        if (session.mode === "test" && i > 0) dot.classList.add("is-hidden");
+        dotsWrap.appendChild(dot);
+        dots.push(dot);
+      }
+      top.appendChild(dotsWrap);
+      card.appendChild(top);
+
+      const instruction = document.createElement("p");
+      instruction.className = "task-question";
+      instruction.textContent = `Classe les nombres suivants dans l'ordre ${exercise.direction}.`;
+      card.appendChild(instruction);
+
+      const chipRow = document.createElement("div");
+      chipRow.className = "choice-grid";
+      card.appendChild(chipRow);
+
+      const chips = [];
+      shuffle(exercise.numbers).forEach((value) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "choice-chip";
+        chip.dataset.value = String(value);
+        chip.textContent = formatNumber(value);
+        chip.addEventListener("click", () => handleChipClick(card, exercise, chip, value));
+        chips.push(chip);
+        chipRow.appendChild(chip);
+      });
+
+      const sequenceRow = document.createElement("div");
+      sequenceRow.className = "sequence-row";
+      card.appendChild(sequenceRow);
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+
+      const feedbackSlot = document.createElement("div");
+      feedbackSlot.className = "feedback-slot";
+      feedbackSlot.setAttribute("aria-live", "polite");
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedbackSlot.appendChild(feedback);
+      actions.appendChild(feedbackSlot);
+
+      const clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.className = "secondary-button clear-button";
+      clearBtn.textContent = "Effacer";
+      clearBtn.addEventListener("click", () => resetSelection(card, exercise));
+      actions.appendChild(clearBtn);
+
+      const validate = document.createElement("button");
+      validate.className = "validate-button";
+      validate.type = "button";
+      validate.textContent = "Valider";
+      validate.addEventListener("click", () => validateOrderExercise(card, exercise));
+      actions.appendChild(validate);
+
+      card.appendChild(actions);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<span>Correction :</span> <span class="correction-value"></span>`;
+      card.appendChild(correction);
+
+      card._chips = chips;
+      card._dots = dots;
+      card._feedback = feedback;
+      card._sequenceRow = sequenceRow;
+      card._clearBtn = clearBtn;
+      card._validateBtn = validate;
+
+      card.addEventListener("focusin", () => { session.activeCard = card; });
+
+      renderSequence(card, exercise);
+
+      return card;
+    }
+
+    function renderOrderExercises(exercises) {
+      session.exercises = exercises;
+      session.immediateCount = 0;
+      session.resolvedCount = 0;
+      session.correctTotal = 0;
+      session.activeCard = null;
+
+      classerList.replaceChildren();
+      const fragment = document.createDocumentFragment();
+      session.exercises.forEach((exercise, index) => fragment.appendChild(createOrderCard(exercise, index)));
+      classerList.appendChild(fragment);
+
+      completionMessage.classList.remove("is-visible");
+      testResultsPanel.classList.remove("is-visible");
+      endActions.classList.remove("is-visible");
+      updateOrderScore();
+    }
+
+    function regenerateOrderExercises() {
+      session.mode = modeSelect.value;
+      const exercises = selectRandomOrderExercises(8, levelSelect.value);
+      renderOrderExercises(exercises);
+    }
+
+    function reviewOrderErrors() {
+      if (!session.reviewSource.length) return;
+      session.mode = "training";
+      modeSelect.value = "training";
+      const sources = shuffle(session.reviewSource);
+      const directions = buildBalancedDirections(sources.length);
+      const reviewExercises = sources.map((exercise, index) =>
+        toSessionOrderExercise({ numbers: exercise.numbers, level: exercise.level }, index, directions[index])
+      );
+      renderOrderExercises(reviewExercises);
+      announce("La série de révision des erreurs est prête.");
+    }
+
+    function getExerciseForCard(card) {
+      return session.exercises.find((exercise) => exercise.id === card.dataset.exerciseId);
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" || event.repeat) return;
+      if (event.target.matches("button, select, input")) return;
+
+      let card = event.target.closest ? event.target.closest(".exercise-card") : null;
+      if (!card || getExerciseForCard(card)?.resolved) {
+        card = session.activeCard && !getExerciseForCard(session.activeCard)?.resolved
+          ? session.activeCard
+          : [...classerList.querySelectorAll(".exercise-card")].find((candidate) => {
+              const exercise = getExerciseForCard(candidate);
+              return exercise && !exercise.resolved;
+            });
+      }
+      if (!card) return;
+      event.preventDefault();
+      const exercise = getExerciseForCard(card);
+      if (exercise) validateOrderExercise(card, exercise);
+    });
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      regenerateOrderExercises();
+      announce("Une nouvelle série a commencé.");
+    });
+
+    reviewButton.addEventListener("click", reviewOrderErrors);
+
+    modeSelect.addEventListener("change", () => {
+      regenerateOrderExercises();
+      announce("Le mode a été modifié et une nouvelle série a commencé.");
+    });
+
+    levelSelect.addEventListener("change", () => {
+      regenerateOrderExercises();
+      announce("Le niveau a été modifié et une nouvelle série a commencé.");
+    });
+
+    /* ========================= 2. ENCADRER SUR LA DROITE GRADUÉE ========================= */
+    const numberLineGenerators = [
+      () => {
+        const a = randInt(-6, -1);
+        const b = a + randInt(4, 8);
+        const correct = range(a + 1, b - 1);
+        return { question: `Quels sont les nombres entiers supérieurs à ${formatNumber(a)} mais plus petits que ${formatNumber(b)} ?`, lo: a - 1, hi: b + 1, correct };
+      },
+      () => {
+        const a = randInt(-3, 3);
+        const b = a + randInt(4, 7);
+        const correct = range(a + 1, b - 1);
+        return { question: `Quels sont les nombres entiers strictement compris entre ${formatNumber(a)} et ${formatNumber(b)} ?`, lo: a - 1, hi: b + 1, correct };
+      },
+      () => {
+        const a = randInt(-11, -6);
+        const b = a + randInt(3, 6);
+        const correct = range(a + 1, b - 1);
+        return { question: `Quels sont les nombres entiers négatifs supérieurs à ${formatNumber(a)} et inférieurs à ${formatNumber(b)} ?`, lo: a - 1, hi: b + 1, correct };
+      },
+      () => {
+        const a = randInt(0, 3);
+        const b = a + randInt(4, 7);
+        const correct = range(a + 1, b - 1);
+        return { question: `Quels sont les nombres entiers positifs supérieurs à ${formatNumber(a)} et inférieurs à ${formatNumber(b)} ?`, lo: a - 1, hi: b + 1, correct };
+      }
+    ];
+
+    function pickNumberLineTasks(count) {
+      return shuffle(numberLineGenerators).slice(0, count).map((generator) => generator());
+    }
+
+    function buildNumberLineTask(task) {
+      const card = document.createElement("article");
+      card.className = "task-card";
+
+      const question = document.createElement("p");
+      question.className = "task-question";
+      question.textContent = task.question;
+      card.appendChild(question);
+
+      const wrap = document.createElement("div");
+      wrap.className = "number-line-wrap";
+      const track = document.createElement("div");
+      track.className = "number-line-track";
+      wrap.appendChild(track);
+      const ticks = document.createElement("div");
+      ticks.className = "number-line-ticks";
+      wrap.appendChild(ticks);
+      card.appendChild(wrap);
+
+      const selected = new Set();
+      const chips = [];
+      range(task.lo, task.hi).forEach((value) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "tick-chip";
+        chip.dataset.value = String(value);
+        chip.textContent = formatNumber(value);
+        chip.addEventListener("click", () => {
+          if (chip.disabled) return;
+          chip.classList.remove("result-correct", "result-wrong");
+          if (selected.has(value)) {
+            selected.delete(value);
+            chip.classList.remove("is-selected");
+          } else {
+            selected.add(value);
+            chip.classList.add("is-selected");
+          }
+        });
+        chips.push(chip);
+        ticks.appendChild(chip);
+      });
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedbackSlot = document.createElement("div");
+      feedbackSlot.className = "feedback-slot";
+      feedbackSlot.setAttribute("aria-live", "polite");
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedbackSlot.appendChild(feedback);
+      actions.appendChild(feedbackSlot);
+      const validate = document.createElement("button");
+      validate.className = "validate-button";
+      validate.type = "button";
+      validate.textContent = "Vérifier";
+      actions.appendChild(validate);
+      card.appendChild(actions);
+
+      let attempts = 0;
+      validate.addEventListener("click", () => {
+        attempts += 1;
+        const correctSet = new Set(task.correct);
+        let allGood = true;
+
+        chips.forEach((chip) => {
+          const value = Number(chip.dataset.value);
+          const shouldBeSelected = correctSet.has(value);
+          const isSelected = selected.has(value);
+          chip.classList.remove("result-correct", "result-wrong");
+
+          if (isSelected && shouldBeSelected) {
+            chip.classList.add("result-correct");
+          } else if (isSelected && !shouldBeSelected) {
+            chip.classList.add("result-wrong");
+            allGood = false;
+          } else if (!isSelected && shouldBeSelected) {
+            allGood = false;
+          }
+        });
+
+        feedback.className = "feedback is-visible";
+        if (allGood) {
+          feedback.classList.add("success-message");
+          feedback.textContent = "Bravo, tous les points sont bien placés !";
+          chips.forEach((chip) => { chip.disabled = true; });
+          validate.disabled = true;
+        } else if (attempts >= 3) {
+          feedback.classList.add("wrong-message");
+          feedback.textContent = `Les bons nombres étaient : ${task.correct.map(formatNumber).join(", ")}.`;
+          chips.forEach((chip) => { chip.disabled = true; });
+          validate.disabled = true;
+        } else {
+          feedback.classList.add("wrong-message");
+          const remaining = 3 - attempts;
+          feedback.textContent = `Ce n'est pas encore correct. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+        }
+      });
+
+      return card;
+    }
+
+    const numberLineContainer = document.getElementById("numberline-tasks");
+    function renderNumberLineTasks() {
+      numberLineContainer.replaceChildren();
+      pickNumberLineTasks(2).forEach((task) => numberLineContainer.appendChild(buildNumberLineTask(task)));
+    }
+
+    /* ========================= 3. REPLACE DANS SON ENCADREMENT ========================= */
+    function generateMatchSeries() {
+      const stepOptions = [10, 100, 1000];
+      const rowCount = randInt(4, 6);
+      const usedBases = new Set();
+      const rows = [];
+
+      // On garantit au moins la moitié des lignes en nombres négatifs,
+      // pour bien pratiquer l'encadrement des nombres relatifs.
+      const negativeCount = Math.max(2, Math.ceil(rowCount / 2));
+      const signPattern = shuffle([
+        ...Array(negativeCount).fill(-1),
+        ...Array(Math.max(0, rowCount - negativeCount)).fill(1)
+      ]);
+
+      for (let i = 0; i < rowCount; i += 1) {
+        const step = stepOptions[randInt(0, 2)];
+        const sign = signPattern[i] ?? (Math.random() < 0.5 ? -1 : 1);
+        let base;
+        let tries = 0;
+        do {
+          const magnitude = step === 1000 ? randInt(1, 9) : step === 100 ? randInt(10, 98) : randInt(100, 998);
+          base = sign * magnitude * step;
+          tries += 1;
+        } while (usedBases.has(base) && tries < 20);
+        usedBases.add(base);
+
+        // L'encadrement se lit toujours du plus petit au plus grand :
+        // ex. -680 < ... < -670 (et non -670 < ... < -680).
+        const lo = base;
+        const hi = base + step;
+        const correctValue = lo + randInt(1, step - 1);
+        rows.push({ lo, hi, correctValue });
+      }
+
+      const numbers = shuffle(rows.map((row) => row.correctValue));
+      return { rows, numbers };
+    }
+
+    function pickMatchTasks(count) {
+      const tasks = [];
+      for (let i = 0; i < count; i += 1) tasks.push(generateMatchSeries());
+      return tasks;
+    }
+
+    function buildMatchTask(task, taskIndex) {
+      const card = document.createElement("article");
+      card.className = "task-card";
+
+      const question = document.createElement("p");
+      question.className = "task-question";
+      question.textContent = `Série ${taskIndex + 1} — Replace chacun de ces nombres dans son encadrement : ${task.numbers.map(formatNumber).join(" ; ")}`;
+      card.appendChild(question);
+
+      const table = document.createElement("div");
+      table.className = "match-table";
+
+      const selects = [];
+      task.rows.forEach((row) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "match-row";
+
+        const startLabel = document.createElement("span");
+        startLabel.className = "match-label";
+        startLabel.textContent = `${formatNumber(row.lo)} < `;
+
+        const select = document.createElement("select");
+        select.className = "select-control match-select";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "?";
+        select.appendChild(placeholder);
+        task.numbers.forEach((value) => {
+          const option = document.createElement("option");
+          option.value = String(value);
+          option.textContent = formatNumber(value);
+          select.appendChild(option);
+        });
+
+        const endLabel = document.createElement("span");
+        endLabel.className = "match-label";
+        endLabel.textContent = ` < ${formatNumber(row.hi)}`;
+
+        rowEl.appendChild(startLabel);
+        rowEl.appendChild(select);
+        rowEl.appendChild(endLabel);
+        table.appendChild(rowEl);
+        selects.push({ select, row });
+      });
+      card.appendChild(table);
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      const feedbackSlot = document.createElement("div");
+      feedbackSlot.className = "feedback-slot";
+      feedbackSlot.setAttribute("aria-live", "polite");
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedbackSlot.appendChild(feedback);
+      actions.appendChild(feedbackSlot);
+      const validate = document.createElement("button");
+      validate.className = "validate-button";
+      validate.type = "button";
+      validate.textContent = "Vérifier";
+      actions.appendChild(validate);
+      card.appendChild(actions);
+
+      let attempts = 0;
+      validate.addEventListener("click", () => {
+        attempts += 1;
+        let allGood = true;
+
+        selects.forEach(({ select, row }) => {
+          select.classList.remove("is-correct", "is-wrong");
+          const value = Number(select.value);
+          if (select.value !== "" && value === row.correctValue) {
+            select.classList.add("is-correct");
+          } else {
+            select.classList.add("is-wrong");
+            allGood = false;
+          }
+        });
+
+        feedback.className = "feedback is-visible";
+        if (allGood) {
+          feedback.classList.add("success-message");
+          feedback.textContent = "Bravo, tous les nombres sont bien placés !";
+          selects.forEach(({ select }) => { select.disabled = true; });
+          validate.disabled = true;
+        } else if (attempts >= 3) {
+          feedback.classList.add("wrong-message");
+          feedback.textContent = "Voici les bonnes réponses.";
+          selects.forEach(({ select, row }) => {
+            select.value = String(row.correctValue);
+            select.classList.remove("is-wrong");
+            select.classList.add("is-correct");
+            select.disabled = true;
+          });
+          validate.disabled = true;
+        } else {
+          feedback.classList.add("wrong-message");
+          const remaining = 3 - attempts;
+          feedback.textContent = `Certaines réponses sont incorrectes. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+        }
+      });
+
+      return card;
+    }
+
+    const matchContainer = document.getElementById("match-tasks");
+    function renderMatchTasks() {
+      matchContainer.replaceChildren();
+      pickMatchTasks(2).forEach((task, index) => matchContainer.appendChild(buildMatchTask(task, index)));
+    }
+
+    /* ========================= 4. COMPLÈTE L'ENCADREMENT ========================= */
+    // Contrairement à l'exercice 2 (repérer TOUS les nombres sur une droite graduée),
+    // ici l'élève doit lui-même ÉCRIRE un nombre entier valide : c'est une tâche
+    // de production libre, avec plusieurs bonnes réponses possibles.
+    const boundsGenerators = [
+      () => {
+        const a = randInt(-6, 4);
+        const b = a + randInt(3, 7);
+        return { a, b };
+      },
+      () => {
+        const a = randInt(-9, -3);
+        const b = a + randInt(3, 7);
+        return { a, b };
+      },
+      () => {
+        const a = randInt(0, 6);
+        const b = a + randInt(3, 8);
+        return { a, b };
+      },
+      () => {
+        const a = randInt(-8, -2);
+        const b = a + randInt(2, 5);
+        return { a, b };
+      }
+    ];
+
+    function pickBoundsTasks(count) {
+      const tasks = [];
+      for (let i = 0; i < count; i += 1) {
+        const { a, b } = shuffle(boundsGenerators)[i % boundsGenerators.length]();
+        const possibleCount = Math.max(0, b - a - 1);
+        tasks.push({
+          question: `${formatNumber(a)} < ... < ${formatNumber(b)}`,
+          a,
+          b,
+          possibleCount
+        });
+      }
+      return tasks;
+    }
+
+    function buildBoundsTask(task) {
+      const card = document.createElement("article");
+      card.className = "task-card";
+
+      const question = document.createElement("p");
+      question.className = "task-question";
+      question.textContent = `${task.question} — Écris un nombre entier qui complète cet encadrement.`;
+      card.appendChild(question);
+
+      const row = document.createElement("div");
+      row.className = "fill-row";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.inputMode = "numeric";
+      input.className = "fill-input";
+      input.setAttribute("aria-label", task.question);
+      row.appendChild(input);
+
+      const validate = document.createElement("button");
+      validate.className = "validate-button";
+      validate.type = "button";
+      validate.textContent = "Valider";
+      row.appendChild(validate);
+
+      const feedback = document.createElement("p");
+      feedback.className = "feedback is-visible";
+      feedback.style.width = "100%";
+      feedback.style.marginTop = "0.6rem";
+
+      card.appendChild(row);
+      card.appendChild(feedback);
+
+      let attempts = 0;
+      validate.addEventListener("click", () => {
+        const raw = input.value.trim().replace(/\s+/g, "").replace("−", "-");
+        const parsed = Number.parseInt(raw, 10);
+
+        if (raw === "" || Number.isNaN(parsed)) {
+          feedback.className = "feedback is-visible select-symbol-message";
+          feedback.textContent = "Écris un nombre entier (par exemple -3 ou 4).";
+          return;
+        }
+
+        attempts += 1;
+        input.classList.remove("is-correct", "is-wrong");
+        const isValid = parsed > task.a && parsed < task.b;
+
+        if (isValid) {
+          input.classList.add("is-correct");
+          feedback.className = "feedback is-visible success-message";
+          feedback.textContent = task.possibleCount > 1
+            ? `Bonne réponse ! Il y avait ${task.possibleCount} nombres possibles.`
+            : "Bonne réponse !";
+          input.disabled = true;
+          validate.disabled = true;
+          return;
+        }
+
+        input.classList.add("is-wrong");
+        if (attempts >= 3) {
+          feedback.className = "feedback is-visible wrong-message";
+          feedback.textContent = task.possibleCount > 0
+            ? `Il fallait un nombre entier strictement compris entre ${formatNumber(task.a)} et ${formatNumber(task.b)} (par exemple ${formatNumber(task.a + 1)}).`
+            : `Aucun nombre entier ne convient ici.`;
+          input.disabled = true;
+          validate.disabled = true;
+        } else {
+          feedback.className = "feedback is-visible wrong-message";
+          feedback.textContent = `Ce n'est pas ça. Il reste ${3 - attempts} essai${3 - attempts > 1 ? "s" : ""}.`;
+        }
+      });
+
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          validate.click();
+        }
+      });
+
+      return card;
+    }
+
+    const boundsContainer = document.getElementById("bounds-tasks");
+    function renderBoundsTasks() {
+      boundsContainer.replaceChildren();
+      pickBoundsTasks(3).forEach((task) => boundsContainer.appendChild(buildBoundsTask(task)));
+    }
+
+    /* ========================= INITIALISATION ========================= */
+    document.getElementById("new-exercises-button").addEventListener("click", () => {
+      regenerateOrderExercises();
+      renderNumberLineTasks();
+      renderMatchTasks();
+      renderBoundsTasks();
+      announce("De nouveaux exercices ont été générés.");
+    });
+
+    regenerateOrderExercises();
+    renderNumberLineTasks();
+    renderMatchTasks();
+    renderBoundsTasks();
+  </script>
+</body>
+</html>

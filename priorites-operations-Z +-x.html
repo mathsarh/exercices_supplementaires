@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Priorités des opérations</title>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #16a34a;
+      --success-soft: #ecfdf3;
+      --error: #dc2626;
+      --error-soft: #fff5f5;
+      --line: #dbe3f4;
+      --correction: #fff7e7;
+      --correction-line: #e3a227;
+      --card-radius: 17px;
+      --control-radius: 9px;
+      --score-size: 68px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+    }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.4);
+      outline-offset: 3px;
+    }
+    .app-shell {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.16), transparent 25rem),
+        linear-gradient(180deg, var(--slate) 0 17rem, var(--paper) 17rem 100%);
+    }
+    .main-width { width: min(100% - 2rem, 900px); margin-inline: auto; }
+    .hero { padding: 2.7rem 0 2.2rem; color: white; }
+    .hero-title { margin: 0; letter-spacing: -0.03em; font-weight: 800; font-size: clamp(1.8rem, 4.4vw, 2.5rem); }
+    .hero-subtitle { max-width: 46rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+    .content { padding-bottom: 4rem; }
+
+    .rule-panel {
+      margin-top: -0.6rem;
+      padding: 1.35rem 1.4rem;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+    }
+    .rule-heading { margin: 0 0 0.75rem; font-size: 1.1rem; font-weight: 800; }
+    .rule-list { margin: 0; padding-left: 1.3rem; line-height: 1.65; }
+    .rule-list li::marker { color: var(--indigo); font-weight: 800; }
+    .rule-note { margin: 0.7rem 0 0; color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+
+    .score-panel {
+      display: grid;
+      grid-template-columns: minmax(200px, auto) 1fr;
+      align-items: center;
+      gap: 1.3rem;
+      margin-top: 1.2rem;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 12px 32px rgba(30, 42, 58, 0.09);
+    }
+    .score-values { display: flex; align-items: center; gap: 1rem; }
+    .score-line { color: var(--muted); font-size: 0.88rem; white-space: nowrap; }
+    .score-line strong { display: block; color: var(--indigo); font-size: 1.5rem; font-weight: 800; }
+    .score-percent {
+      display: grid; place-items: center;
+      width: var(--score-size); height: var(--score-size);
+      flex: none;
+      border: 5px solid #dfe5ff;
+      border-radius: 50%;
+      color: var(--indigo-dark);
+      background: #f8f9ff;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+    }
+    .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+    .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+    .score-detail { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.9rem; }
+
+    .section-block { margin-top: 2.4rem; }
+    .section-heading { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .section-number {
+      display: grid; place-items: center;
+      width: 2.15rem; height: 2.15rem; flex: none;
+      border-radius: 10px;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+    }
+    .section-title { margin: 0; font-size: 1.2rem; font-weight: 800; }
+    .section-instructions { margin: 0 0 1.1rem 3.15rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+    .exercise-list { display: grid; gap: 1.15rem; }
+    @media (min-width: 760px) { .exercise-list.two-col { grid-template-columns: repeat(2, 1fr); } }
+
+    .exercise-card {
+      padding: 1.3rem 1.35rem;
+      border: 2px solid transparent;
+      border-radius: var(--card-radius);
+      background: white;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      transition: border-color 180ms ease;
+    }
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-incorrect { border-color: var(--correction-line); }
+    .exercise-card.is-shaking { animation: shake 300ms ease; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+    }
+
+    .item-label { margin: 0 0 0.5rem; color: var(--muted); font-weight: 700; }
+    .expression {
+      margin: 0 0 0.95rem;
+      padding: 0.75rem 0.95rem;
+      overflow-x: auto;
+      border-radius: 10px;
+      background: #f4f6fd;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 1.02rem;
+    }
+
+    .symbol-toolbar { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0 0 0.95rem; }
+    .symbol-button {
+      min-width: 2.5rem;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #eef1fc;
+      color: var(--indigo-dark);
+      font-family: "Courier New", monospace;
+      font-weight: 800;
+      font-size: 1.05rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .symbol-button:hover { background: #e0e5fb; }
+    .symbol-button:active { background: #d3d9f7; }
+
+    .steps-panel { display: grid; gap: 0.7rem; }
+    .step-row { display: grid; grid-template-columns: 1.7rem 1fr; align-items: start; gap: 0.6rem; }
+    .step-number {
+      display: grid; place-items: center;
+      width: 1.65rem; height: 1.65rem;
+      margin-top: 0.15rem;
+      border-radius: 50%;
+      color: var(--indigo-dark);
+      background: #e7ebff;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+    .answer-group { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .step-equals { flex: none; font-size: 1.15rem; font-weight: 800; }
+    .line-input {
+      min-height: 42px;
+      width: min(100%, 340px);
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #ccd6ee;
+      border-radius: var(--control-radius);
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .line-input:disabled { background: #f4f6fd; opacity: 0.86; }
+    .step-status {
+      display: none; flex: none;
+      width: 1.55rem; height: 1.55rem;
+      align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+    .step-row.is-step-error .line-input { border-color: var(--error); background: var(--error-soft); }
+    .step-row.is-step-correct .line-input { border-color: var(--success); background: var(--success-soft); }
+    .step-row.is-step-revealed .line-input { border-color: var(--correction-line); background: var(--correction); }
+    .step-row.is-step-error .step-status { display: flex; color: var(--error); background: var(--error-soft); }
+    .step-row.is-step-correct .step-status { display: flex; color: var(--success); background: var(--success-soft); }
+    .step-row.is-step-revealed .step-status { display: flex; color: var(--correction-line); background: var(--correction); }
+    .step-hint { grid-column: 2; display: none; margin: -0.1rem 0 0; font-size: 0.85rem; line-height: 1.4; }
+    .step-row.is-step-error .step-hint { display: block; color: var(--error); }
+    .step-row.is-step-revealed .step-hint { display: block; color: var(--correction-line); }
+
+    .add-step-button {
+      justify-self: start;
+      margin-top: 0.15rem;
+      padding: 0.35rem 0.65rem;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--indigo-dark);
+      font-size: 0.82rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .add-step-button:hover { background: #eef1fc; }
+    .add-step-button[hidden] { display: none; }
+    .step-row.is-free-step .step-number { background: #fff4d9; color: #8a5a00; }
+
+    .card-status { margin: 0.9rem 0 0; font-size: 0.9rem; font-weight: 650; min-height: 1.2em; }
+    .card-status.correct { color: var(--success); }
+    .card-status.incorrect { color: var(--correction-line); }
+
+    .correction {
+      display: none;
+      margin-top: 0.85rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      border-left: 4px solid var(--correction-line);
+      background: var(--correction);
+      color: #7a4900;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .correction.is-visible { display: block; }
+    .correction strong { display: block; margin-bottom: 0.25rem; }
+    .correction-lines { font-family: "Courier New", monospace; font-weight: 700; }
+
+    .footer-actions { margin-top: 2.6rem; text-align: center; }
+    .restart-button {
+      min-height: 46px;
+      padding: 0.75rem 1.3rem;
+      border: 0;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    @media (max-width: 680px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .score-values { justify-content: space-between; }
+      .section-instructions { margin-left: 0; }
+      .line-input { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="main-width">
+        <h1 class="hero-title">Priorités des opérations dans ℤ</h1>
+        <p class="hero-subtitle">Parenthèses, crochets, multiplications, additions et soustractions : calcule chaque expression étape par étape en respectant l'ordre des opérations.</p>
+        <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;background:#4f6ef7;color:white;border:0;">Nouveaux exercices</button>
+      </div>
+    </header>
+    <main class="main-width content">
+      <section class="rule-panel" aria-labelledby="rule-title">
+        <h2 id="rule-title" class="rule-heading">Rappel</h2>
+        <p style="margin:0 0 0.6rem;">Dans une suite d'opérations, il faut effectuer dans l'ordre :</p>
+        <ol class="rule-list">
+          <li>les opérations entre parenthèses, puis entre crochets,</li>
+          <li>les multiplications,</li>
+          <li>les additions et les soustractions, dans l'ordre où elles se présentent.</li>
+        </ol>
+        <p class="rule-note">À l'intérieur des parenthèses (ou des crochets), on respecte le même ordre indiqué ci-dessus.</p>
+      </section>
+
+      <section class="score-panel" aria-labelledby="progress-label">
+        <div class="score-values" aria-live="polite">
+          <div class="score-line"><strong id="score-value">0 / 10</strong>exercices terminés</div>
+          <div id="score-percent" class="score-percent" aria-label="Score : 0 pour cent">0 %</div>
+        </div>
+        <div>
+          <p id="progress-label" class="score-label">Progression</p>
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <p id="score-detail" class="score-detail">0 exercice terminé · 0 réussi</p>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">9</span>
+          <h2 class="section-title">Calcule en respectant les priorités des opérations</h2>
+        </div>
+        <p class="section-instructions">Complète chaque ligne du calcul, étape par étape. Une nouvelle ligne se débloque dès que la précédente est correcte. Tu as 3 essais par ligne avant que la solution ne s'affiche. Utilise le point "." pour noter une multiplication.</p>
+        <div id="section1-list" class="exercise-list two-col"></div>
+      </section>
+
+      <div class="footer-actions">
+        <button id="restart-button" class="restart-button" type="button">Générer d'autres exercices</button>
+      </div>
+    </main>
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const MAX_ATTEMPTS = 3;
+    const EPSILON = 1e-9;
+
+    const state = { total: 0, completed: 0, correct: 0 };
+    const liveRegion = document.getElementById("live-region");
+    const scoreValue = document.getElementById("score-value");
+    const scorePercent = document.getElementById("score-percent");
+    const scoreDetail = document.getElementById("score-detail");
+    const progressTrack = document.getElementById("progress-track");
+    const progressFill = document.getElementById("progress-fill");
+
+    function announce(message) {
+      liveRegion.textContent = "";
+      window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+    }
+
+    function updateScore() {
+      scoreValue.textContent = `${state.completed} / ${state.total}`;
+      const pct = state.total ? Math.round((state.correct / state.total) * 100) : 0;
+      scorePercent.textContent = `${pct} %`;
+      scorePercent.setAttribute("aria-label", `Score : ${pct} pour cent`);
+      progressFill.style.width = `${state.total ? (state.completed / state.total) * 100 : 0}%`;
+      progressTrack.setAttribute("aria-valuemax", String(state.total));
+      progressTrack.setAttribute("aria-valuenow", String(state.completed));
+      scoreDetail.textContent = `${state.completed} exercice${state.completed > 1 ? "s" : ""} terminé${state.completed > 1 ? "s" : ""} · ${state.correct} réussi${state.correct > 1 ? "s" : ""}`;
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function letterLabel(index) {
+      return `${String.fromCharCode(97 + index)})`;
+    }
+
+    // ---------- Évaluateur restreint à + , - , . (multiplication), ( ) , [ ] ----------
+    // Domaine Z : pas de nombres décimaux, donc le point "." ne peut jamais faire
+    // partie d'un nombre : il représente toujours une multiplication.
+    function normalizeExpression(raw) {
+      return String(raw)
+        .trim()
+        .replace(/[\u2212\u2013\u2014\u00d7\u00b7]/g, (m) => (m === "\u00d7" || m === "\u00b7" ? "." : "-")) // × et · typographiques -> ".", tirets typographiques -> "-"
+        .replace(/\[/g, "(")
+        .replace(/\]/g, ")")
+        .replace(/\s+/g, "");
+    }
+
+    function safeEvaluate(raw) {
+      const expr = normalizeExpression(raw);
+      if (!expr || !/^[0-9+\-.()]+$/.test(expr)) throw new Error("Expression non reconnue");
+
+      let pos = 0;
+      function peek() { return expr[pos]; }
+      function parsePrimary() {
+        if (peek() === "+") { pos += 1; return parsePrimary(); }
+        if (peek() === "-") { pos += 1; return -parsePrimary(); }
+        if (peek() === "(") {
+          pos += 1;
+          const value = parseSum();
+          if (peek() !== ")") throw new Error("Parenthèse manquante");
+          pos += 1;
+          return value;
+        }
+        const start = pos;
+        while (pos < expr.length && /[0-9]/.test(expr[pos])) pos += 1;
+        if (start === pos) throw new Error("Nombre attendu");
+        return Number(expr.slice(start, pos));
+      }
+      function parseProduct() {
+        let value = parsePrimary();
+        while (peek() === ".") {
+          pos += 1;
+          const right = parsePrimary();
+          value *= right;
+        }
+        return value;
+      }
+      function parseSum() {
+        let value = parseProduct();
+        while (peek() === "+" || peek() === "-") {
+          const op = expr[pos];
+          pos += 1;
+          const right = parseProduct();
+          value = op === "+" ? value + right : value - right;
+        }
+        return value;
+      }
+      const result = parseSum();
+      if (pos !== expr.length || !Number.isFinite(result)) throw new Error("Expression incomplète");
+      return result;
+    }
+
+    function isBareNumber(raw) {
+      const expr = normalizeExpression(raw);
+      return /^-?[0-9]+$/.test(expr);
+    }
+
+    function nearlyEqual(a, b) {
+      return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < EPSILON;
+    }
+
+    // Compte les opérateurs binaires (+, - ou .) d'une expression normalisée :
+    // un signe n'est "binaire" (une vraie opération à effectuer) que s'il est
+    // précédé d'un chiffre ou d'une parenthèse fermante ; sinon c'est le signe
+    // d'un nombre (unaire). Le point "." est toujours binaire. Sert à mesurer
+    // combien d'opérations il reste à faire, pour empêcher de sauter plusieurs
+    // étapes d'un coup même quand la VALEUR obtenue est déjà juste.
+    function countBinaryOps(raw) {
+      const expr = normalizeExpression(raw);
+      let count = 0;
+      for (let i = 1; i < expr.length; i += 1) {
+        const c = expr[i];
+        if ((c === "+" || c === "-" || c === ".") && /[0-9)]/.test(expr[i - 1])) count += 1;
+      }
+      return count;
+    }
+
+    // Indique s'il reste au moins une addition ou une soustraction binaire à
+    // effectuer dans le texte (le point "." n'est pas concerné). Sert à
+    // repérer les portions de calcul qui ne sont plus qu'un produit de
+    // plusieurs facteurs : une fois qu'il ne reste que des multiplications
+    // (associatives et commutatives), les regrouper en une seule ligne ne
+    // fait sauter aucune étape de priorité, contrairement à mélanger une
+    // multiplication et une addition/soustraction.
+    function hasBinaryAddSub(raw) {
+      const expr = normalizeExpression(raw);
+      for (let i = 1; i < expr.length; i += 1) {
+        const c = expr[i];
+        if ((c === "+" || c === "-") && /[0-9)]/.test(expr[i - 1])) return true;
+      }
+      return false;
+    }
+
+    // Compte les groupes de parenthèses/crochets encore présents dans une
+    // expression normalisée. Sert à repérer une simplification de signes
+    // successifs (ex. "+ (-9)" devient "-9") : ce type d'étape ne change pas
+    // le nombre d'opérations restantes (countBinaryOps), mais fait bien
+    // disparaître une paire de parenthèses — c'est ce qui permet de la
+    // distinguer d'une simple recopie de la ligne précédente.
+    function countParenGroups(raw) {
+      const matches = normalizeExpression(raw).match(/\(/g);
+      return matches ? matches.length : 0;
+    }
+
+    // Fusionne les doubles signes d'une expression : "+ (-9)" devient "- 9",
+    // "- (-9)" devient "+ 9", etc. Ne touche qu'aux parenthèses qui contiennent
+    // un simple nombre signé (pas une sous-expression avec une opération à
+    // effectuer), pour ne fusionner que des signes déjà "prêts".
+    function mergeSigns(text) {
+      return text.replace(/([+-])\s*\(([+-])(\d+(?:[.,]\d+)?)\)/g, (match, outer, inner, num) => {
+        const combined = outer === inner ? "+" : "-";
+        return ` ${combined} ${num}`;
+      });
+    }
+
+    // Reprend la liste des étapes d'un modèle et insère, chaque fois que
+    // nécessaire, une étape intermédiaire de pure fusion de signes entre deux
+    // étapes existantes — sauf si cette étape fusionnée correspond déjà à
+    // l'étape suivante (pas de doublon).
+    function expandSignSteps(steps) {
+      const expanded = [steps[0]];
+      for (let i = 1; i < steps.length; i += 1) {
+        const previous = expanded[expanded.length - 1];
+        const merged = mergeSigns(previous);
+        // Comparaison sur la forme normalisée (espaces ignorés) : la fusion
+        // de signes peut introduire un espace superflu (ex. double espace),
+        // ce qui créerait sinon une étape "dupliquée" en apparence différente
+        // de l'étape déjà écrite manuellement dans le modèle.
+        const mergedNorm = normalizeExpression(merged);
+        const sameAsPrevious = mergedNorm === normalizeExpression(previous);
+        const sameAsNext = mergedNorm === normalizeExpression(steps[i]);
+        const alreadyPresent = expanded.some((s) => normalizeExpression(s) === mergedNorm);
+        if (!sameAsPrevious && !sameAsNext && !alreadyPresent) {
+          expanded.push(merged);
+        }
+        expanded.push(steps[i]);
+      }
+      return expanded;
+    }
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Formate un terme qui suit un opérateur ("+", "-" ou ".") : un nombre
+    // négatif est entre parenthèses pour éviter une écriture ambiguë du type
+    // "+ -6" ou "3 . -6".
+    function neg(n) {
+      return n < 0 ? `(${n})` : `${n}`;
+    }
+
+    // Fusionne directement "prefixText <op> value" en une écriture déjà
+    // simplifiée (ex. mergedOp("84", "-", -120) -> "84 + 120"), sans jamais
+    // passer par une forme intermédiaire du type "84 - (-120)". Cette forme
+    // intermédiaire a le même nombre d'opérations que sa version fusionnée
+    // (fusionner un double signe ne change pas le nombre d'opérations), ce
+    // qui la rend indiscernable d'un raccourci pour la vérification par
+    // comptage d'opérations : mieux vaut donc ne jamais la générer comme
+    // étape à part entière.
+    function mergedOp(prefixText, op, value) {
+      if (op === "+") {
+        return value < 0 ? `${prefixText} - ${-value}` : `${prefixText} + ${value}`;
+      }
+      return value < 0 ? `${prefixText} + ${-value}` : `${prefixText} - ${value}`;
+    }
+
+    // ---------- Pool de modèles d'exercices (nombres aléatoires à chaque génération) ----------
+    const TEMPLATES = [
+      // p . (q) + r
+      () => {
+        const p = randInt(2, 12), q = -randInt(2, 12), r = randInt(2, 20);
+        const val = p * q;
+        return { expr: `${p} . (${q}) + ${r}`, steps: [`${p} . (${q}) + ${r}`, `${val} + ${r}`, `${val + r}`] };
+      },
+      // p . q - r . (-s)
+      () => {
+        const p = randInt(2, 12), q = randInt(2, 12), r = randInt(2, 12), s = randInt(2, 12);
+        const val1 = p * q, val2 = r * (-s);
+        return {
+          expr: `${p} . ${q} - ${r} . (${-s})`,
+          steps: [`${p} . ${q} - ${r} . (${-s})`, mergedOp(`${val1}`, "-", val2), `${val1 - val2}`]
+        };
+      },
+      // p . a - (b + c)
+      () => {
+        const p = randInt(2, 10), a = randInt(2, 10), b = randInt(5, 30), c = randInt(2, 20);
+        const valMult = p * a, valParen = b + c;
+        return {
+          expr: `${p} . ${a} - (${b} + ${c})`,
+          steps: [`${p} . ${a} - (${b} + ${c})`, `${valMult} - ${valParen}`, `${valMult - valParen}`]
+        };
+      },
+      // p - q . (r - s)
+      () => {
+        const p = randInt(5, 30), q = randInt(2, 10), r = randInt(2, 15), s = randInt(2, 15);
+        const inner = r - s, val = q * inner;
+        return {
+          expr: `${p} - ${q} . (${r} - ${s})`,
+          steps: [`${p} - ${q} . (${r} - ${s})`, `${p} - ${q} . (${inner})`, mergedOp(`${p}`, "-", val), `${p - val}`]
+        };
+      },
+      // [p - (-q)] . r - s
+      () => {
+        const p = randInt(-25, -2), q = randInt(2, 20), r = randInt(2, 10), s = randInt(2, 20);
+        const bracketVal = p - (-q);
+        const val = bracketVal * r;
+        return {
+          expr: `[${p} - (${-q})] . ${r} - ${s}`,
+          steps: [
+            `[${p} - (${-q})] . ${r} - ${s}`,
+            `[${p} + ${q}] . ${r} - ${s}`,
+            `${bracketVal} . ${r} - ${s}`,
+            `${val} - ${s}`,
+            `${val - s}`
+          ]
+        };
+      },
+      // (a + b . c - d) . (e + f)
+      () => {
+        const a = randInt(1, 10), b = randInt(2, 9), c = randInt(2, 9), d = randInt(1, 15), e = randInt(1, 10), f = randInt(1, 10);
+        const mVal = b * c, parenVal1 = a + mVal - d, parenVal2 = e + f;
+        return {
+          expr: `(${a} + ${b} . ${c} - ${d}) . (${e} + ${f})`,
+          steps: [
+            `(${a} + ${b} . ${c} - ${d}) . (${e} + ${f})`,
+            `(${a} + ${mVal} - ${d}) . ${parenVal2}`,
+            `${parenVal1} . ${parenVal2}`,
+            `${parenVal1 * parenVal2}`
+          ]
+        };
+      },
+      // p . (q - r) - (s - t) . u
+      () => {
+        const p = randInt(2, 12), q = randInt(5, 25), r = randInt(2, 20), s = randInt(5, 25), t = randInt(2, 20), u = randInt(2, 10);
+        const inner1 = q - r, inner2 = s - t, val1 = p * inner1, val2 = inner2 * u;
+        return {
+          expr: `${p} . (${q} - ${r}) - (${s} - ${t}) . ${u}`,
+          steps: [
+            `${p} . (${q} - ${r}) - (${s} - ${t}) . ${u}`,
+            `${p} . ${inner1} - ${inner2} . ${u}`,
+            mergedOp(`${val1}`, "-", val2),
+            `${val1 - val2}`
+          ]
+        };
+      },
+      // -(a - b) . (-c) . (d - e)
+      () => {
+        const a = randInt(5, 20), b = randInt(2, 19), c = randInt(2, 10), d = randInt(2, 15), e = randInt(2, 14);
+        const val1 = a - b, f1 = -val1, f2 = -c, val3 = d - e;
+        return {
+          expr: `-(${a} - ${b}) . (${f2}) . (${d} - ${e})`,
+          steps: [
+            `-(${a} - ${b}) . (${f2}) . (${d} - ${e})`,
+            `${f1} . ${neg(f2)} . ${neg(val3)}`,
+            `${f1 * f2} . ${neg(val3)}`,
+            `${f1 * f2 * val3}`
+          ]
+        };
+      },
+      // p - [(a . b - c) + d]
+      () => {
+        const p = randInt(30, 90), a = randInt(2, 15), b = randInt(2, 15), c = randInt(2, 40), d = randInt(2, 30);
+        const innerMul = a * b, innerParen = innerMul - c, bracketVal = innerParen + d;
+        return {
+          expr: `${p} - [(${a} . ${b} - ${c}) + ${d}]`,
+          steps: [
+            `${p} - [(${a} . ${b} - ${c}) + ${d}]`,
+            `${p} - [${innerParen} + ${d}]`,
+            `${p} - [${bracketVal}]`,
+            `${p - bracketVal}`
+          ]
+        };
+      },
+      // p - [q - (a - b) . (-c)]
+      () => {
+        const p = -randInt(50, 150), q = randInt(20, 100), a = randInt(5, 20), b = randInt(2, 19), c = randInt(2, 10);
+        const inner = a - b, val = inner * (-c), bracketVal = q - val;
+        return {
+          expr: `${p} - [${q} - (${a} - ${b}) . (${-c})]`,
+          steps: [
+            `${p} - [${q} - (${a} - ${b}) . (${-c})]`,
+            `${p} - [${q} - ${inner} . (${-c})]`,
+            `${p} - [${mergedOp(`${q}`, "-", val)}]`,
+            `${p} - [${bracketVal}]`,
+            `${p - bracketVal}`
+          ]
+        };
+      },
+      // p . (-q) - r
+      () => {
+        const p = randInt(2, 15), q = randInt(2, 20), r = randInt(2, 25);
+        const val = p * (-q);
+        return {
+          expr: `${p} . (${-q}) - ${r}`,
+          steps: [`${p} . (${-q}) - ${r}`, `${val} - ${r}`, `${val - r}`]
+        };
+      },
+      // -p + q . (r - s)
+      () => {
+        const p = randInt(2, 20), q = randInt(2, 10), r = randInt(2, 20), s = randInt(2, 19);
+        const inner = r - s, val = q * inner;
+        return {
+          expr: `-${p} + ${q} . (${r} - ${s})`,
+          steps: [`-${p} + ${q} . (${r} - ${s})`, `-${p} + ${q} . (${inner})`, mergedOp(`-${p}`, "+", val), `${-p + val}`]
+        };
+      }
+    ];
+
+    const GENERIC_HINTS = [
+      "Vérifie que tu as bien effectué l'opération prioritaire (parenthèse, crochet ou multiplication) avant le reste.",
+      "Recalcule une seule opération à la fois à partir de la ligne précédente."
+    ];
+
+    function buildCard(item, index) {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+
+      const label = document.createElement("p");
+      label.className = "item-label";
+      label.textContent = letterLabel(index);
+      card.appendChild(label);
+
+      const exprEl = document.createElement("p");
+      exprEl.className = "expression";
+      exprEl.textContent = item.expr;
+      card.appendChild(exprEl);
+
+      let focusedInput = null;
+
+      const toolbar = document.createElement("div");
+      toolbar.className = "symbol-toolbar";
+      toolbar.setAttribute("role", "group");
+      toolbar.setAttribute("aria-label", `Insérer un symbole dans la réponse de ${item.expr}`);
+      ["(", ")", "[", "]", "."].forEach((symbol) => {
+        const symbolButton = document.createElement("button");
+        symbolButton.type = "button";
+        symbolButton.className = "symbol-button";
+        symbolButton.textContent = symbol;
+        symbolButton.setAttribute("aria-label", symbol === "." ? "Insérer le symbole de multiplication" : `Insérer ${symbol}`);
+        symbolButton.addEventListener("pointerdown", (event) => event.preventDefault());
+        symbolButton.addEventListener("mousedown", (event) => event.preventDefault());
+        symbolButton.addEventListener("click", () => {
+          const target = getTargetInput();
+          if (target) insertSymbol(target, symbol);
+        });
+        toolbar.appendChild(symbolButton);
+      });
+      card.appendChild(toolbar);
+
+      function getTargetInput() {
+        if (focusedInput && !focusedInput.disabled) return focusedInput;
+        const next = rows.find((entry) => !entry.input.disabled);
+        return next ? next.input : null;
+      }
+
+      function insertSymbol(input, symbol) {
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? input.value.length;
+        input.value = input.value.slice(0, start) + symbol + input.value.slice(end);
+        input.focus();
+        const cursor = start + symbol.length;
+        input.setSelectionRange(cursor, cursor);
+      }
+
+      const panel = document.createElement("div");
+      panel.className = "steps-panel";
+      card.appendChild(panel);
+
+      const status = document.createElement("p");
+      status.className = "card-status";
+      card.appendChild(status);
+
+      const correction = document.createElement("div");
+      correction.className = "correction";
+      correction.innerHTML = `<strong>Correction :</strong><div class="correction-lines">${item.steps.map((s) => `= ${s}`).slice(1).join("<br>")}</div>`;
+      card.appendChild(correction);
+
+      const targetTexts = item.steps.slice(1);
+      const targetValues = targetTexts.map((t) => safeEvaluate(t));
+      const targetOpCounts = targetTexts.map((t) => countBinaryOps(t));
+      const rows = [];
+      let cardHadReveal = false;
+
+      // Construit la structure DOM commune à une ligne (numérotée ou "+"),
+      // utilisée aussi bien pour les lignes du modèle que pour une ligne
+      // ajoutée librement par l'élève.
+      function buildRowElements(labelText, ariaLabel) {
+        const row = document.createElement("div");
+        row.className = "step-row";
+
+        const number = document.createElement("span");
+        number.className = "step-number";
+        number.textContent = labelText;
+        number.setAttribute("aria-hidden", "true");
+
+        const group = document.createElement("div");
+        group.className = "answer-group";
+
+        const equals = document.createElement("span");
+        equals.className = "step-equals";
+        equals.textContent = "=";
+        equals.setAttribute("aria-hidden", "true");
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "line-input";
+        input.setAttribute("aria-label", ariaLabel);
+        input.autocomplete = "off";
+        input.disabled = true;
+        input.addEventListener("focus", () => { focusedInput = input; });
+
+        const statusIcon = document.createElement("span");
+        statusIcon.className = "step-status";
+
+        const hint = document.createElement("p");
+        hint.className = "step-hint";
+
+        group.append(equals, input, statusIcon);
+        row.append(number, group, hint);
+        return { row, input, statusIcon, hint };
+      }
+
+      targetTexts.forEach((text, canonicalIndex) => {
+        const elements = buildRowElements(String(canonicalIndex + 1), `Étape ${canonicalIndex + 1} du calcul de ${item.expr}`);
+        panel.appendChild(elements.row);
+        const entry = { ...elements, attempts: 0, state: "pending", canonicalIndex };
+        rows.push(entry);
+        elements.input.addEventListener("blur", () => validateRow(entry));
+        elements.input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") { event.preventDefault(); elements.input.blur(); }
+        });
+      });
+      rows[0].input.disabled = false;
+
+      const addStepButton = document.createElement("button");
+      addStepButton.type = "button";
+      addStepButton.className = "add-step-button";
+      addStepButton.textContent = "+ Ajouter une ligne de calcul";
+      addStepButton.setAttribute("aria-label", `Ajouter une ligne de calcul supplémentaire pour ${item.expr}`);
+      addStepButton.addEventListener("click", () => {
+        const activeEntry = rows.find((r) => r.state === "pending" && !r.input.disabled);
+        if (!activeEntry) return;
+        insertFreeRow(activeEntry);
+      });
+      panel.appendChild(addStepButton);
+
+      function insertFreeRow(beforeEntry) {
+        const elements = buildRowElements("+", `Étape supplémentaire du calcul de ${item.expr}`);
+        panel.insertBefore(elements.row, beforeEntry.row);
+        elements.row.classList.add("is-free-step");
+        const freeEntry = { ...elements, attempts: 0, state: "pending", canonicalIndex: null };
+        const beforeArrayIndex = rows.indexOf(beforeEntry);
+        rows.splice(beforeArrayIndex, 0, freeEntry);
+
+        beforeEntry.input.disabled = true;
+        elements.input.disabled = false;
+        window.setTimeout(() => elements.input.focus({ preventScroll: true }), 50);
+
+        elements.input.addEventListener("blur", () => validateFreeRow(freeEntry));
+        elements.input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") { event.preventDefault(); elements.input.blur(); }
+        });
+      }
+
+      function unlockNext(entry) {
+        const idx = rows.indexOf(entry);
+        const next = rows[idx + 1];
+        if (next) {
+          next.input.disabled = false;
+          window.setTimeout(() => next.input.focus({ preventScroll: true }), 200);
+        } else {
+          addStepButton.hidden = true;
+          finishCard();
+        }
+      }
+
+      // Validation permissive pour une ligne ajoutée librement par l'élève :
+      // elle doit simplement conserver la même valeur que la ligne
+      // précédente (peu importe la forme exacte), pour lui permettre de
+      // détailler un calcul en plusieurs lignes plutôt qu'une seule.
+      function validateFreeRow(entry) {
+        if (entry.state !== "pending") return;
+        if (!entry.input.value.trim()) return;
+
+        const idx = rows.indexOf(entry);
+        const previousEntry = idx > 0 ? rows[idx - 1] : null;
+        let previousValue;
+        try {
+          previousValue = previousEntry ? safeEvaluate(previousEntry.input.value) : safeEvaluate(item.expr);
+        } catch (err) {
+          previousValue = NaN;
+        }
+
+        let studentValue;
+        try {
+          studentValue = safeEvaluate(entry.input.value);
+        } catch (err) {
+          studentValue = NaN;
+        }
+
+        entry.attempts += 1;
+        const valueCorrect = nearlyEqual(studentValue, previousValue);
+
+        if (valueCorrect) {
+          entry.state = "correct";
+          entry.row.classList.add("is-step-correct");
+          entry.statusIcon.textContent = "✓";
+          entry.hint.textContent = "";
+          entry.input.disabled = true;
+          unlockNext(entry);
+          return;
+        }
+
+        entry.row.classList.remove("is-step-error");
+        void entry.row.offsetWidth;
+        entry.row.classList.add("is-step-error");
+        entry.statusIcon.textContent = "✗";
+
+        if (entry.attempts >= MAX_ATTEMPTS) {
+          cardHadReveal = true;
+          entry.state = "revealed";
+          entry.row.classList.remove("is-step-error");
+          entry.row.classList.add("is-step-revealed");
+          entry.statusIcon.textContent = "!";
+          entry.input.value = Number.isFinite(previousValue) ? String(previousValue) : entry.input.value;
+          entry.input.disabled = true;
+          entry.hint.textContent = "Cette ligne supplémentaire est laissée de côté ; continue avec la suite du calcul.";
+          unlockNext(entry);
+          return;
+        }
+
+        entry.hint.textContent = !Number.isFinite(studentValue)
+          ? "Ton expression n'est pas reconnue : vérifie qu'elle est bien écrite."
+          : "Cette ligne doit avoir la même valeur que la ligne précédente : vérifie ton calcul.";
+        announce(entry.hint.textContent);
+      }
+
+      function finishCard() {
+        if (cardHadReveal) {
+          card.classList.add("is-incorrect");
+          status.className = "card-status incorrect";
+          status.textContent = "Certaines étapes ont été révélées. Regarde la correction complète ci-dessous.";
+          correction.classList.add("is-visible");
+          announce(status.textContent);
+        } else {
+          state.correct += 1;
+          card.classList.add("is-correct");
+          status.className = "card-status correct";
+          status.textContent = "Bravo, tout le calcul est correct !";
+          announce(`Exercice ${index + 1} réussi.`);
+        }
+        state.completed += 1;
+        updateScore();
+      }
+
+      function revealRow(entry, stepIndex) {
+        cardHadReveal = true;
+        entry.state = "revealed";
+        entry.input.value = targetTexts[stepIndex];
+        entry.input.disabled = true;
+        entry.row.classList.remove("is-step-error");
+        entry.row.classList.add("is-step-revealed");
+        entry.statusIcon.textContent = "!";
+        entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} révélée`);
+        entry.hint.textContent = "Solution révélée pour débloquer la suite.";
+        announce(`Étape ${stepIndex + 1} révélée : ${targetTexts[stepIndex]}.`);
+        unlockNext(entry);
+      }
+
+      function validateRow(entry) {
+        const stepIndex = entry.canonicalIndex;
+        if (entry.state !== "pending") return;
+        if (!entry.input.value.trim()) return;
+
+        let studentValue;
+        try {
+          studentValue = safeEvaluate(entry.input.value);
+        } catch (err) {
+          studentValue = NaN;
+        }
+
+        const isLast = stepIndex === targetTexts.length - 1;
+        const isReduced = !isLast || isBareNumber(entry.input.value);
+        const studentOpCount = Number.isFinite(studentValue) ? countBinaryOps(entry.input.value) : NaN;
+        const valueCorrect = nearlyEqual(studentValue, targetValues[stepIndex]);
+        // La valeur seule ne suffit pas : une fois tous les signes distribués,
+        // n'importe quel regroupement restant de la même somme donne déjà la
+        // bonne valeur. On exige donc aussi que le nombre d'opérations encore
+        // écrites corresponde exactement à cette étape, pour empêcher de
+        // sauter directement au résultat final.
+        const opsMatchTarget = studentOpCount === targetOpCounts[stepIndex];
+        // Certaines étapes sont de pures simplifications de signes successifs
+        // (ex. "+ (-9)" devient "-9") : le nombre d'opérations à effectuer ne
+        // change pas par rapport à la ligne précédente, seule l'écriture se
+        // simplifie. Dans ce cas précis, on exige en plus que le nombre de
+        // parenthèses/crochets diminue réellement, pour ne pas accepter une
+        // simple recopie de la ligne précédente comme si c'était un progrès.
+        const previousText = stepIndex === 0 ? item.expr : targetTexts[stepIndex - 1];
+        const isSignSimplificationStep = targetOpCounts[stepIndex] === countBinaryOps(previousText);
+        // Dès qu'il ne reste plus que des multiplications à effectuer (plus
+        // aucune addition/soustraction dans ce qui reste à calculer), on
+        // n'impose plus de faire une seule multiplication à la fois : les
+        // regrouper, voire aller directement au résultat final, ne fait
+        // sauter aucune priorité (toutes les opérations restantes sont du
+        // même type), donc on l'accepte.
+        const pureProductRemaining = !hasBinaryAddSub(previousText);
+        let paceCorrect = opsMatchTarget;
+        if (pureProductRemaining) {
+          paceCorrect = true;
+        } else if (isSignSimplificationStep) {
+          const previousParenCount = countParenGroups(previousText);
+          const studentParenCount = countParenGroups(entry.input.value);
+          paceCorrect = opsMatchTarget && studentParenCount < previousParenCount;
+        }
+
+        entry.attempts += 1;
+
+        if (valueCorrect && isReduced && paceCorrect) {
+          entry.state = "correct";
+          entry.row.classList.remove("is-step-error");
+          entry.row.classList.add("is-step-correct");
+          entry.statusIcon.textContent = "✓";
+          entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} correcte`);
+          entry.hint.textContent = "";
+          entry.input.disabled = true;
+          unlockNext(entry);
+          return;
+        }
+
+        // Un élève peut légitimement regrouper plusieurs étapes du modèle en
+        // une seule ligne (ex. résoudre une parenthèse ET la multiplication
+        // qui suit en même temps). Si sa valeur est juste et que le nombre
+        // d'opérations qu'il lui reste à faire correspond exactement à celui
+        // d'une étape PLUS LOIN dans le modèle, on considère qu'il a aussi
+        // résolu toutes les étapes intermédiaires : on les remplit
+        // automatiquement (avec leur propre forme canonique) plutôt que de
+        // le bloquer sur une étape qu'il a déjà dépassée.
+        if (valueCorrect && isReduced && !paceCorrect && studentOpCount < targetOpCounts[stepIndex]) {
+          const matchIndex = targetOpCounts.findIndex((oc, idx) => idx > stepIndex && oc === studentOpCount);
+          if (matchIndex !== -1) {
+            entry.state = "correct";
+            entry.row.classList.remove("is-step-error");
+            entry.row.classList.add("is-step-correct");
+            entry.statusIcon.textContent = "✓";
+            entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} correcte`);
+            entry.hint.textContent = "";
+            entry.input.disabled = true;
+
+            let lastEntry = entry;
+            for (let idx = stepIndex + 1; idx <= matchIndex; idx += 1) {
+              const skippedEntry = rows.find((r) => r.canonicalIndex === idx);
+              if (!skippedEntry) continue;
+              skippedEntry.state = "correct";
+              skippedEntry.input.value = targetTexts[idx];
+              skippedEntry.input.disabled = true;
+              skippedEntry.row.classList.remove("is-step-error");
+              skippedEntry.row.classList.add("is-step-correct");
+              skippedEntry.statusIcon.textContent = "✓";
+              skippedEntry.statusIcon.setAttribute("aria-label", `Étape ${idx + 1} obtenue directement`);
+              skippedEntry.hint.textContent = "";
+              lastEntry = skippedEntry;
+            }
+            unlockNext(lastEntry);
+            return;
+          }
+        }
+
+        entry.row.classList.remove("is-step-error");
+        void entry.row.offsetWidth;
+        entry.row.classList.add("is-step-error");
+        entry.statusIcon.textContent = "✗";
+        entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} à revoir`);
+
+        if (entry.attempts >= MAX_ATTEMPTS) {
+          revealRow(entry, stepIndex);
+          return;
+        }
+
+        // On distingue d'abord les erreurs de VALEUR (résultat numérique faux)
+        // des erreurs de FORME (bon résultat mais écriture ou rythme incorrects),
+        // pour ne jamais afficher un conseil sur les priorités d'opérations
+        // quand le problème est en réalité une erreur de calcul ou de signe.
+        if (!Number.isFinite(studentValue)) {
+          entry.hint.textContent = "Ton expression n'est pas reconnue : vérifie qu'elle est bien écrite (parenthèses bien fermées, pas de symbole en trop...).";
+        } else if (!valueCorrect) {
+          if (nearlyEqual(Math.abs(studentValue), Math.abs(targetValues[stepIndex]))) {
+            entry.hint.textContent = "Tu n'es pas loin : ta réponse a la même distance à zéro que le résultat attendu, vérifie le signe.";
+          } else {
+            entry.hint.textContent = "Ce résultat n'est pas correct. Reprends le calcul à partir de la ligne précédente.";
+          }
+        } else if (!isReduced) {
+          entry.hint.textContent = "Ta valeur est juste, mais cette dernière ligne doit contenir uniquement le résultat final (un seul nombre).";
+        } else if (isSignSimplificationStep && !paceCorrect) {
+          entry.hint.textContent = "Simplifie d'abord les signes successifs (par exemple \"+ (-9)\" devient \"- 9\") avant de calculer.";
+        } else if (paceCorrect === false && studentOpCount < targetOpCounts[stepIndex]) {
+          entry.hint.textContent = "Ta valeur finale est correcte, mais tu es allé trop vite : n'effectue qu'une seule opération prioritaire à la fois sur cette ligne (parenthèse, crochet ou multiplication).";
+        } else {
+          entry.hint.textContent = GENERIC_HINTS[Math.min(entry.attempts - 1, GENERIC_HINTS.length - 1)];
+        }
+        announce(entry.hint.textContent);
+      }
+
+      return card;
+    }
+
+    const EXERCISE_COUNT = 10;
+
+    function buildAll() {
+      const container = document.getElementById("section1-list");
+      container.replaceChildren();
+
+      const chosenTemplates = shuffle(TEMPLATES).slice(0, Math.min(EXERCISE_COUNT, TEMPLATES.length));
+      while (chosenTemplates.length < EXERCISE_COUNT) {
+        chosenTemplates.push(TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)]);
+      }
+      const items = chosenTemplates.map((template) => {
+        const item = template();
+        item.steps = expandSignSteps(item.steps);
+        return item;
+      });
+
+      state.total = items.length;
+      state.completed = 0;
+      state.correct = 0;
+      updateScore();
+
+      items.forEach((item, index) => {
+        container.appendChild(buildCard(item, index));
+      });
+    }
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.getElementById("new-exercises-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+    });
+
+    buildAll();
+  </script>
+</body>
+</html>
