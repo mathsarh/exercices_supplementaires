@@ -353,24 +353,6 @@
     font-size:0.9rem;
     max-width:500px;
   }
-  #zone-nom-eleve{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-    padding-bottom:10px;
-    border-bottom:1px solid var(--gris-clair);
-  }
-  #zone-nom-eleve label{
-    font-size:0.78rem;
-    color: var(--gris);
-  }
-  #zone-nom-eleve input{
-    padding:7px 9px;
-    border:1px solid var(--gris-clair);
-    border-radius:6px;
-    font-size:0.9rem;
-    font-family:inherit;
-  }
   #statut-envoi{
     font-size:0.78rem;
     color: var(--gris);
@@ -512,11 +494,6 @@
 <div id="conteneur">
 
   <div id="colonne-gauche">
-
-    <div id="zone-nom-eleve">
-      <label for="input-nom-eleve">Ton prénom (pour l'envoi des résultats) :</label>
-      <input type="text" id="input-nom-eleve" placeholder="ex : Camille">
-    </div>
 
     <div id="indicateur-exercice"></div>
 
@@ -1229,18 +1206,25 @@
   let journalEtapes = [];
   const inputNomEleveEl = document.getElementById("input-nom-eleve");
   const statutEnvoiEl = document.getElementById("statut-envoi");
-  // On mémorise le prénom d'une visite à l'autre (fichier ouvert en local,
-  // pas de souci de confidentialité serveur : ça reste sur l'appareil).
-  try{
-    const nomSauvegarde = window.localStorage ? localStorage.getItem("reperage-entiers-nom") : null;
-    if(nomSauvegarde) inputNomEleveEl.value = nomSauvegarde;
-  }catch(e){ /* localStorage indisponible (mode privé, etc.) : tant pis */ }
-  inputNomEleveEl.addEventListener("input", function(){
-    try{ if(window.localStorage) localStorage.setItem("reperage-entiers-nom", inputNomEleveEl.value); }catch(e){}
-  });
+  // Champ prénom retiré de la page pour l'instant (pas encore prêt pour la
+  // récolte des résultats) : inputNomEleveEl vaut donc null. Le code
+  // ci-dessous reste protégé pour ce cas et retombe simplement sur
+  // "Anonyme" lors de l'envoi, sans rien casser si le champ est réintroduit
+  // plus tard.
+  if(inputNomEleveEl){
+    // On mémorise le prénom d'une visite à l'autre (fichier ouvert en local,
+    // pas de souci de confidentialité serveur : ça reste sur l'appareil).
+    try{
+      const nomSauvegarde = window.localStorage ? localStorage.getItem("reperage-entiers-nom") : null;
+      if(nomSauvegarde) inputNomEleveEl.value = nomSauvegarde;
+    }catch(e){ /* localStorage indisponible (mode privé, etc.) : tant pis */ }
+    inputNomEleveEl.addEventListener("input", function(){
+      try{ if(window.localStorage) localStorage.setItem("reperage-entiers-nom", inputNomEleveEl.value); }catch(e){}
+    });
+  }
 
   function envoyerResultatExercice(){
-    const nom = (inputNomEleveEl.value || "").trim() || "Anonyme";
+    const nom = (inputNomEleveEl ? (inputNomEleveEl.value || "") : "").trim() || "Anonyme";
     const nbReussies = journalEtapes.filter(function(e){ return e.reussi; }).length;
     const score = nbReussies + "/" + journalEtapes.length;
     const detail = journalEtapes.map(function(e){
