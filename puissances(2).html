@@ -158,6 +158,14 @@
     letter-spacing: 0.02em;
   }
 
+  sup {
+    font-size: 0.62em;
+    line-height: 0;
+    position: relative;
+    top: -0.7em;
+    margin-left: 0.05em;
+  }
+
   .power-answer-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.55rem; margin-bottom: 0.9rem; font-family: "Courier New", monospace; font-weight: 700; }
   .power-answer-row .dot-sep { align-self: center; color: var(--muted); font-size: 1.1rem; }
   .power-notation { display: inline-flex; align-items: flex-start; }
@@ -298,16 +306,16 @@
     <section class="example-panel">
       <p class="example-title">Rappel : vocabulaire et cas particuliers</p>
       <div class="vocab-grid">
-        <div><span class="term">Une puissance</span> d'un nombre est un produit de facteurs tous égaux à ce nombre. Dans 6⁵ : <span class="term">6</span> est la base (le facteur que l'on répète), <span class="term">5</span> est l'exposant (il indique le nombre de facteurs du produit).</div>
+        <div><span class="term">Une puissance</span> d'un nombre est un produit de facteurs tous égaux à ce nombre. Dans 6<sup>5</sup> : <span class="term">6</span> est la base (le facteur que l'on répète), <span class="term">5</span> est l'exposant (il indique le nombre de facteurs du produit).</div>
       </div>
       <div class="reading-row">
-        <div class="reading-chip"><strong>5⁴</strong>se lit « 5 exposant 4 », « 5 à la puissance 4 » ou « la 4ᵉ puissance de 5 ».</div>
-        <div class="reading-chip"><strong>6²</strong>se lit aussi « 6 au carré » ou « le carré de 6 ».</div>
-        <div class="reading-chip"><strong>7³</strong>se lit aussi « 7 au cube » ou « le cube de 7 ».</div>
+        <div class="reading-chip"><strong>5<sup>4</sup></strong>se lit « 5 exposant 4 », « 5 à la puissance 4 » ou « la 4ᵉ puissance de 5 ».</div>
+        <div class="reading-chip"><strong>6<sup>2</sup></strong>se lit aussi « 6 au carré » ou « le carré de 6 ».</div>
+        <div class="reading-chip"><strong>7<sup>3</sup></strong>se lit aussi « 7 au cube » ou « le cube de 7 ».</div>
       </div>
       <div class="rule-box">
         <strong>Exposant 0 et exposant 1</strong>
-        Un nombre naturel élevé à la puissance 1 est égal à ce nombre : a¹ = a. Un nombre naturel non nul élevé à la puissance 0 est égal à 1 : a⁰ = 1.
+        Un nombre naturel élevé à la puissance 1 est égal à ce nombre : a<sup>1</sup> = a. Un nombre naturel non nul élevé à la puissance 0 est égal à 1 : a<sup>0</sup> = 1.
       </div>
       <div class="rule-box">
         <strong>Puissances de 0 et de 1</strong>
@@ -392,9 +400,8 @@
   function randChoice(arr) { return arr[randInt(0, arr.length - 1)]; }
   function letterLabel(index) { return `${String.fromCharCode(97 + index)})`; }
 
-  const SUP_DIGITS = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
-  function toSuperscript(n) { return String(n).split("").map((d) => SUP_DIGITS[d] || d).join(""); }
-  function formatPower(base, exponent) { return `${base}${toSuperscript(exponent)}`; }
+  function formatPower(base, exponent) { return `${base}<sup>${exponent}</sup>`; }
+  function formatPowerText(base, exponent) { return `${base} exposant ${exponent}`; }
   function formatNumber(n) { return n.toLocaleString("fr-BE").replace(/\u00a0/g, " "); }
 
   // Calcule base^exponent par multiplications successives (nombres entiers uniquement,
@@ -817,7 +824,7 @@
 
     const raw = document.createElement("p");
     raw.className = "raw-number";
-    raw.textContent = `${formatPower(item.base, item.exponent)} =`;
+    raw.innerHTML = `${formatPower(item.base, item.exponent)} =`;
     card.appendChild(raw);
 
     const row = document.createElement("div");
@@ -826,7 +833,7 @@
     input.type = "text";
     input.inputMode = "numeric";
     input.className = "numeric-input";
-    input.setAttribute("aria-label", `${formatPower(item.base, item.exponent)}, résultat`);
+    input.setAttribute("aria-label", `${formatPowerText(item.base, item.exponent)}, résultat`);
     row.appendChild(input);
     card.appendChild(row);
 
@@ -878,7 +885,7 @@
 
     const raw = document.createElement("p");
     raw.className = "raw-number";
-    raw.textContent = `${formatPower(item.base, item.exponent)} =`;
+    raw.innerHTML = `${formatPower(item.base, item.exponent)} =`;
     card.appendChild(raw);
 
     const row = document.createElement("div");
@@ -887,7 +894,7 @@
     input.type = "text";
     input.inputMode = "numeric";
     input.className = "numeric-input";
-    input.setAttribute("aria-label", `${formatPower(item.base, item.exponent)}, résultat`);
+    input.setAttribute("aria-label", `${formatPowerText(item.base, item.exponent)}, résultat`);
     row.appendChild(input);
     card.appendChild(row);
 
