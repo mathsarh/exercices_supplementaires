@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Programme de construction — Géométrie Plane</title>
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+<style>
+  :root{
+    --bleu-fonce: #1d3557;
+    --bleu: #457b9d;
+    --fond: #f1f4f8;
+    --vert: #2a9d5c;
+    --vert-fond: #e6f6ec;
+    --rouge: #d64545;
+    --rouge-fond: #fbe9e9;
+    --gris-clair: #e2e6ec;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; height:100%; font-family: sans-serif; background: var(--fond); }
+
+  #bandeau{ height:64px; background: var(--bleu-fonce); color:#fff; display:flex; align-items:center; justify-content:space-between; padding: 0 24px; }
+  #conteneur-principal{ height: calc(100vh - 64px); display:flex; }
+  .panneau-consigne{ width:400px; background:#fff; padding:24px; display:flex; flex-direction:column; gap:16px; border-right:1px solid var(--gris-clair); }
+  .etapes-box{ background: #f8fafc; border: 1px solid var(--gris-clair); border-radius: 8px; padding: 14px; }
+  .btn-action{ width:100%; padding:12px; background: var(--bleu-fonce); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+  .btn-action:hover{ background: var(--bleu); }
+  .zone-retour-msg{ padding:12px; border-radius:8px; margin-top:10px; display:none; }
+  .zone-retour-msg ul{ margin:8px 0 0; padding-left:20px; }
+  .zone-retour-msg li{ margin-bottom:4px; }
+  .succes{ background: var(--vert-fond); color: var(--vert); border:1px solid #b7e3c6; display:block !important;}
+  .erreur{ background: var(--rouge-fond); color: var(--rouge); border:1px solid #f0bcbc; display:block !important;}
+  .panneau-ggb{ flex:1; background:#fff; }
+</style>
+</head>
+<body>
+
+<div id="bandeau">
+  <div>Programme de construction</div>
+  <button onclick="chargerNouvelExercice()">🔄 Nouvel exercice</button>
+</div>
+
+<div id="conteneur-principal">
+  <div class="panneau-consigne">
+    <h3 id="titre-ex"></h3>
+    <div class="etapes-box"><ol id="liste-etapes"></ol></div>
+    <button class="btn-action" onclick="verifierConstruction()">Vérifier ma construction</button>
+    <div id="msg-retour" class="zone-retour-msg"></div>
+  </div>
+  <div class="panneau-ggb" id="ggb-container"></div>
+</div>
+
+<script>
+let applet;
+let exerciceCourant = null;
+
+/* ---------- Lecture de la définition d'un objet GeoGebra ---------- */
+function definitionOf(api, name) {
+  return (api.getCommandString(name, false) || "") + " " + (api.getDefinitionString(name) || "");
+}
+function refersTo(def, token) {
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp("\\b" + escaped + "\\b").test(def);
+}
+/* GeoGebra renvoie "circle" (et non "conic") pour un cercle tracé avec l'outil Cercle */
+function typeMatches(actual, expected) {
+  if (expected === "conic") return actual === "circle" || actual === "conic";
+  return actual === expected;
+}
+function libelleType(t) {
+  switch (t) {
+    case "point": return "un point";
+    case "line": return "une droite";
+    case "segment": return "un segment";
+    case "ray": return "une demi-droite";
+    case "conic": return "un cercle";
+    default: return "un objet";
+  }
+}
+
+/* ---------- Vérification détaillée d'une étape de construction ----------
+   step = { name: "d" | null, objType: "point"|"line"|"segment"|"ray"|"conic",
+            refs: ["A","B",...], label: "texte pour le feedback" }
+   - Si name est fourni : l'objet DOIT exister sous ce nom exact, avoir le bon type,
+     et sa définition doit référencer tous les éléments de refs.
+   - Si name est null : on cherche un objet de ce type (n'importe quel nom) dont la
+     définition référence tous les éléments de refs (utile pour les segments qui
+     ne sont pas nommés explicitement dans les consignes).
+   Retourne { ok: true } ou { ok: false, message: "..." } ciblant l'erreur précise.
+------------------------------------------------------------------------- */
+function evaluateStep(api, step) {
+  if (step.name) {
+    if (!api.exists(step.name)) {
+      return { ok: false, message: `Il manque ${step.label} (nom attendu : "${step.name}").` };
+    }
+    if (!typeMatches(api.getObjectType(step.name), step.objType)) {
+      return { ok: false, message: `"${step.name}" existe, mais n'est pas ${libelleType(step.objType)} comme attendu pour ${step.label}.` };
+    }
+    const def = definitionOf(api, step.name);
+    if (!step.refs.every(r => refersTo(def, r))) {
+      return { ok: false, message: `"${step.name}" existe, mais ne semble pas correctement construit(e) : vérifie ${step.label}.` };
+    }
+    return { ok: true };
+  } else {
+    const names = api.getAllObjectNames().filter(n => typeMatches(api.getObjectType(n), step.objType));
+    const found = names.some(n => step.refs.every(r => refersTo(definitionOf(api, n), r)));
+    if (!found) {
+      return { ok: false, message: `Il manque ${step.label}.` };
+    }
+    return { ok: true };
+  }
+}
+
+/* ---------- Pool de programmes de construction (sans angles ni bissectrices) ---------- */
+const exercicesPool = [
+  { titre: "Parallèles et segment sécant",
+    etapes: ["Place deux points C et D.","Trace la droite d passant par C et D.",
+      "Place un point A tel que A n'est pas sur d.","Place un point B tel que B n'est pas sur d.",
+      "Trace la droite e parallèle à d passant par A.","Trace la droite f parallèle à d passant par B.",
+      "Trace le segment [AB]."],
+    steps: [
+      {name:"C",objType:"point",refs:[],label:"le point C"},
+      {name:"D",objType:"point",refs:[],label:"le point D"},
+      {name:"d",objType:"line",refs:["C","D"],label:"la droite d passant par C et D"},
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:"e",objType:"line",refs:["d","A"],label:"la droite e parallèle à d, passant par A"},
+      {name:"f",objType:"line",refs:["d","B"],label:"la droite f parallèle à d, passant par B"},
+      {name:null,objType:"segment",refs:["A","B"],label:"le segment [AB]"}
+    ]},
+  { titre: "Perpendiculaire depuis un point extérieur",
+    etapes: ["Place deux points A et B.","Trace la droite d passant par A et B.",
+      "Place un point C qui n'est pas sur d.","Trace la droite p perpendiculaire à d passant par C.",
+      "Place le point H, intersection de d et p.","Trace le segment [CH]."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:"d",objType:"line",refs:["A","B"],label:"la droite d passant par A et B"},
+      {name:"C",objType:"point",refs:[],label:"le point C (qui n'est pas sur d)"},
+      {name:"p",objType:"line",refs:["d","C"],label:"la droite p perpendiculaire à d, passant par C"},
+      {name:"H",objType:"point",refs:["d","p"],label:"le point H, intersection de d et p"},
+      {name:null,objType:"segment",refs:["C","H"],label:"le segment [CH]"}
+    ]},
+  { titre: "Cercle de centre O",
+    etapes: ["Place un point O.","Place un point A.","Trace le cercle c de centre O passant par A.",
+      "Place un point B sur le cercle c.","Trace le segment [OB]."],
+    steps: [
+      {name:"O",objType:"point",refs:[],label:"le point O"},
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"c",objType:"conic",refs:["O","A"],label:"le cercle c de centre O passant par A"},
+      {name:"B",objType:"point",refs:[],label:"le point B (sur le cercle c)"},
+      {name:null,objType:"segment",refs:["O","B"],label:"le segment [OB]"}
+    ]},
+  { titre: "Milieu d'un segment et médiane",
+    etapes: ["Place trois points A, B et C.","Trace le triangle ABC (segments [AB], [BC] et [AC]).",
+      "Place le milieu M du segment [BC].","Trace la médiane [AM]."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:"C",objType:"point",refs:[],label:"le point C"},
+      {name:null,objType:"segment",refs:["A","B"],label:"le segment [AB]"},
+      {name:null,objType:"segment",refs:["B","C"],label:"le segment [BC]"},
+      {name:null,objType:"segment",refs:["A","C"],label:"le segment [AC]"},
+      {name:"M",objType:"point",refs:["B","C"],label:"le milieu M du segment [BC]"},
+      {name:null,objType:"segment",refs:["A","M"],label:"la médiane [AM]"}
+    ]},
+  { titre: "Parallélogramme (deux paires de parallèles)",
+    etapes: ["Place trois points A, B et C non alignés.","Trace la droite d passant par A et B.",
+      "Trace la droite e passant par B et C.","Trace la droite f parallèle à d passant par C.",
+      "Trace la droite g parallèle à e passant par A.","Place le point D, intersection de f et g."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:"C",objType:"point",refs:[],label:"le point C"},
+      {name:"d",objType:"line",refs:["A","B"],label:"la droite d passant par A et B"},
+      {name:"e",objType:"line",refs:["B","C"],label:"la droite e passant par B et C"},
+      {name:"f",objType:"line",refs:["d","C"],label:"la droite f parallèle à d, passant par C"},
+      {name:"g",objType:"line",refs:["e","A"],label:"la droite g parallèle à e, passant par A"},
+      {name:"D",objType:"point",refs:["f","g"],label:"le point D, intersection de f et g"}
+    ]},
+  { titre: "Deux perpendiculaires à une même droite",
+    etapes: ["Place deux points A et B.","Trace la droite d passant par A et B.",
+      "Trace la droite p perpendiculaire à d passant par A.","Trace la droite q perpendiculaire à d passant par B.",
+      "Place un point C sur p et un point D sur q.","Trace le segment [CD]."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:"d",objType:"line",refs:["A","B"],label:"la droite d passant par A et B"},
+      {name:"p",objType:"line",refs:["d","A"],label:"la droite p perpendiculaire à d, passant par A"},
+      {name:"q",objType:"line",refs:["d","B"],label:"la droite q perpendiculaire à d, passant par B"},
+      {name:"C",objType:"point",refs:[],label:"le point C (sur p)"},
+      {name:"D",objType:"point",refs:[],label:"le point D (sur q)"},
+      {name:null,objType:"segment",refs:["C","D"],label:"le segment [CD]"}
+    ]},
+  { titre: "Parallèle et sécante",
+    etapes: ["Place deux points A et B.","Trace la droite d passant par A et B.",
+      "Place un point C qui n'est pas sur d.","Trace la droite e parallèle à d passant par C.",
+      "Place un point D distinct de C.","Trace la droite s passant par D et A.",
+      "Place le point d'intersection I entre e et s."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:"d",objType:"line",refs:["A","B"],label:"la droite d passant par A et B"},
+      {name:"C",objType:"point",refs:[],label:"le point C (qui n'est pas sur d)"},
+      {name:"e",objType:"line",refs:["d","C"],label:"la droite e parallèle à d, passant par C"},
+      {name:"D",objType:"point",refs:[],label:"le point D (distinct de C)"},
+      {name:"s",objType:"line",refs:["D","A"],label:"la droite s passant par D et A"},
+      {name:"I",objType:"point",refs:["e","s"],label:"le point I, intersection de e et s"}
+    ]},
+  { titre: "Triangle isocèle via un cercle",
+    etapes: ["Place deux points A et B.","Trace le segment [AB].",
+      "Trace le cercle c de centre A passant par B.","Place un point C sur le cercle c.",
+      "Trace le triangle ABC (segments [AB], [BC] et [AC])."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:null,objType:"segment",refs:["A","B"],label:"le segment [AB]"},
+      {name:"c",objType:"conic",refs:["A","B"],label:"le cercle c de centre A passant par B"},
+      {name:"C",objType:"point",refs:[],label:"le point C (sur le cercle c)"},
+      {name:null,objType:"segment",refs:["B","C"],label:"le segment [BC]"},
+      {name:null,objType:"segment",refs:["A","C"],label:"le segment [AC]"}
+    ]},
+  { titre: "Milieux et médianes",
+    etapes: ["Place trois points A, B et C.","Trace le triangle ABC.",
+      "Place le milieu M du segment [BC].","Place le milieu N du segment [AC].",
+      "Trace les médianes [AM] et [BN]."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:"C",objType:"point",refs:[],label:"le point C"},
+      {name:null,objType:"segment",refs:["A","B"],label:"le segment [AB]"},
+      {name:null,objType:"segment",refs:["B","C"],label:"le segment [BC]"},
+      {name:null,objType:"segment",refs:["A","C"],label:"le segment [AC]"},
+      {name:"M",objType:"point",refs:["B","C"],label:"le milieu M du segment [BC]"},
+      {name:"N",objType:"point",refs:["A","C"],label:"le milieu N du segment [AC]"},
+      {name:null,objType:"segment",refs:["A","M"],label:"la médiane [AM]"},
+      {name:null,objType:"segment",refs:["B","N"],label:"la médiane [BN]"}
+    ]},
+  { titre: "Deux cercles sécants",
+    etapes: ["Place deux points A et B.","Trace le segment [AB].",
+      "Trace le cercle c1 de centre A passant par B.","Trace le cercle c2 de centre B passant par A.",
+      "Place un point d'intersection C entre c1 et c2.","Trace le triangle ABC."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:null,objType:"segment",refs:["A","B"],label:"le segment [AB]"},
+      {name:"c1",objType:"conic",refs:["A","B"],label:"le cercle c1 de centre A passant par B"},
+      {name:"c2",objType:"conic",refs:["B","A"],label:"le cercle c2 de centre B passant par A"},
+      {name:"C",objType:"point",refs:["c1","c2"],label:"le point C, intersection de c1 et c2"},
+      {name:null,objType:"segment",refs:["B","C"],label:"le segment [BC]"},
+      {name:null,objType:"segment",refs:["A","C"],label:"le segment [AC]"}
+    ]},
+  { titre: "Hauteur d'un triangle",
+    etapes: ["Place trois points A, B et C.","Trace la droite d passant par B et C.",
+      "Trace les segments [AB] et [AC].","Trace la hauteur h issue de A, perpendiculaire à d.",
+      "Place le pied H, intersection de h et d."],
+    steps: [
+      {name:"A",objType:"point",refs:[],label:"le point A"},
+      {name:"B",objType:"point",refs:[],label:"le point B"},
+      {name:"C",objType:"point",refs:[],label:"le point C"},
+      {name:"d",objType:"line",refs:["B","C"],label:"la droite d passant par B et C"},
+      {name:null,objType:"segment",refs:["A","B"],label:"le segment [AB]"},
+      {name:null,objType:"segment",refs:["A","C"],label:"le segment [AC]"},
+      {name:"h",objType:"line",refs:["d","A"],label:"la hauteur h issue de A, perpendiculaire à d"},
+      {name:"H",objType:"point",refs:["h","d"],label:"le pied H, intersection de h et d"}
+    ]}
+];
+
+function verifierExercice(api, ex) {
+  const erreurs = [];
+  ex.steps.forEach(step => {
+    const res = evaluateStep(api, step);
+    if (!res.ok) erreurs.push(res.message);
+  });
+  return erreurs;
+}
+
+/* ---------- Gestion de l'affichage et du tirage aléatoire ---------- */
+function pickExercice() {
+  let idx;
+  do { idx = Math.floor(Math.random() * exercicesPool.length); }
+  while (exercicesPool.length > 1 && exercicesPool[idx] === exerciceCourant);
+  exerciceCourant = exercicesPool[idx];
+  return exerciceCourant;
+}
+
+function afficherExercice(ex) {
+  document.getElementById("titre-ex").textContent = ex.titre;
+  document.getElementById("liste-etapes").innerHTML = ex.etapes.map(e => `<li>${e}</li>`).join("");
+}
+
+function verifierConstruction() {
+  if (!applet || !exerciceCourant) return;
+  const erreurs = verifierExercice(applet, exerciceCourant);
+  const msg = document.getElementById("msg-retour");
+  msg.className = "zone-retour-msg " + (erreurs.length === 0 ? "succes" : "erreur");
+  if (erreurs.length === 0) {
+    msg.textContent = "Bravo ! Ta construction respecte le programme demandé.";
+  } else {
+    msg.innerHTML = "Ce n'est pas encore correct. Voici ce qu'il faut revoir :<ul>"
+      + erreurs.map(e => `<li>${e}</li>`).join("")
+      + "</ul>";
+  }
+}
+
+function chargerNouvelExercice() {
+  if (!applet) return;
+  applet.newConstruction();
+  applet.setAxesVisible(false, false);
+  applet.setGridVisible(false);
+  applet.setCoordSystem(-6, 6, -4, 4);
+  document.getElementById("msg-retour").style.display = "none";
+  afficherExercice(pickExercice());
+}
+
+function initGGB() {
+  new GGBApplet({
+    appName: "classic",
+    perspective: "G",
+    width: document.getElementById("ggb-container").clientWidth,
+    height: document.getElementById("ggb-container").clientHeight,
+    showToolBar: true,
+    showAlgebraInput: false,
+    algebraOpen: false,
+    showMenuBar: false,
+    language: "fr",
+    appletOnLoad: (api) => {
+      applet = api;
+      applet.setAxesVisible(false, false);
+      applet.setGridVisible(false);
+      applet.setCoordSystem(-6, 6, -4, 4);
+      applet.setErrorDialogsActive(false);
+      applet.registerAddListener(name => {
+        // Pas d'étiquette (minuscule) pour les droites, segments et demi-droites
+        const t = applet.getObjectType(name);
+        applet.setLabelVisible(name, !["line", "segment", "ray"].includes(t));
+      });
+      afficherExercice(pickExercice());
+    }
+  }, true).inject("ggb-container");
+}
+
+window.onload = initGGB;
+</script>
+</body>
+</html>
