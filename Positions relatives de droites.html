@@ -204,7 +204,7 @@ window.onObjectAdded = function(objName) {
   if (a.getObjectType(objName) === "line") a.setLabelVisible(objName, true);
 };
 
-const questionsEx1 = [ { d1: "a", d2: "b" }, { d1: "a", d2: "c" }, { d1: "a", d2: "e" }, { d1: "c", d2: "d" }, { d1: "b", d2: "c" }, { d1: "d", d2: "f" } ];
+const questionsEx1 = [ { d1: "a", d2: "b", rep: "∥" }, { d1: "a", d2: "c", rep: "⊥" }, { d1: "a", d2: "e", rep: "=" }, { d1: "c", d2: "d", rep: "∦" }, { d1: "b", d2: "c", rep: "⊥" }, { d1: "d", d2: "f", rep: "∦" } ];
 const subConfigsEx2 = [
   { titre: "Exercice 2 — Parallèles", consigne: "Trace la droite b parallèle à la droite a passant par le point P.", droites: { a: "Line((-4,0), (4,2))" }, points: { P: [-1, 3] }, vue: [-6, 6, -4, 5] },
   { titre: "Exercice 2 — Parallèles", consigne: "Trace la droite b parallèle à la droite a passant par le point Q.", droites: { a: "Line((-2,-3), (1,3))" }, points: { Q: [3, 0] }, vue: [-5, 5, -5, 5] },
@@ -254,16 +254,42 @@ function chargerFigureEx1(){
   appletEx1.evalCommand("f = Line((-3,-4), (1,4))");
   appletEx1.setLabelVisible("a", false); appletEx1.setLabelVisible("e", false);
   appletEx1.evalCommand('lblA = Text("a", (-5.3, -0.8))'); appletEx1.evalCommand('lblE = Text("e", (2.2, 1.7))');
-  ["a","b","c","d","e","f"].forEach(d => appletEx1.setLabelVisible(d, true));
+  ["b","c","d","f"].forEach(d => appletEx1.setLabelVisible(d, true));
+  // a et e sont confondues : leurs noms sont affichés par les textes lblA et lblE, étiquettes natives masquées
+  appletEx1.setLabelVisible("a", false); appletEx1.setLabelVisible("e", false);
 }
 
 function verifierExercice1(){
-  let toutCorrect = true;
+  const msg = document.getElementById("msg-retour-ex1");
+  let nbCorrect = 0, nbVide = 0;
   questionsEx1.forEach((q, idx) => {
     const sel = document.getElementById(`select-ex1-${idx}`);
     const stat = document.getElementById(`statut-ex1-${idx}`);
     const repUser = sel.value;
+    if (repUser === "") {
+      nbVide++;
+      stat.textContent = "";
+      stat.className = "statut-reponse";
+    } else if (repUser === q.rep) {
+      nbCorrect++;
+      stat.textContent = "✓";
+      stat.className = "statut-reponse correct";
+    } else {
+      stat.textContent = "✗";
+      stat.className = "statut-reponse incorrect";
+    }
   });
+  msg.style.display = "block";
+  if (nbCorrect === questionsEx1.length) {
+    msg.className = "zone-retour-msg succes";
+    msg.innerHTML = "<b>Bravo !</b> Toutes les relations sont correctes.";
+  } else {
+    msg.className = "zone-retour-msg erreur";
+    let texte = `${nbCorrect} réponse(s) correcte(s) sur ${questionsEx1.length}.`;
+    if (nbVide > 0) texte += ` Il reste ${nbVide} paire(s) sans réponse.`;
+    texte += " Corrige les paires marquées ✗ et vérifie à nouveau.";
+    msg.textContent = texte;
+  }
 }
 
 // --- VÉRIFICATION PARALLÈLES ET PERPENDICULAIRES (Avec Nommage) ---
