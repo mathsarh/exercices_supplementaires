@@ -818,6 +818,8 @@
       const coord = ex.points[nom];
       a.evalCommand(nom + "=(" + coord[0] + "," + coord[1] + ")");
       a.setColor(nom, 29, 53, 87);
+      a.setLabelStyle(nom, 0);
+      a.setLabelVisible(nom, true);
     });
   }
 
@@ -841,12 +843,30 @@
       showAlgebraInput: false,
       showMenuBar: false,
       showResetIcon: false,
+      perspective: "G",
+      enableLabelDrags: false,
       showGrid: false,
       showAxes: false,
       language: "fr",
       country: "FR",
       appletOnLoad: function(api){
         window.ggbApplet = api;
+        // Fenêtre Algèbre masquée : seule la zone graphique est affichée
+        try{ api.setPerspective("G"); }catch(e){}
+        // Pas d'étiquette (minuscule automatique) sur droites, demi-droites, segments
+        api.registerAddListener(function(nom){
+          try{
+            const type = api.getObjectType(nom);
+            if(type === "line" || type === "ray" || type === "segment"){
+              api.setLabelVisible(nom, false);
+            } else if(type === "point"){
+              // Sans fenêtre Algèbre, GeoGebra n'étiquette plus les points
+              // automatiquement : on force l'affichage du nom.
+              api.setLabelStyle(nom, 0);
+              api.setLabelVisible(nom, true);
+            }
+          }catch(e){}
+        });
         api.setAxesVisible(false, false);
         api.setGridVisible(false);
         demarrerExercice(0);
