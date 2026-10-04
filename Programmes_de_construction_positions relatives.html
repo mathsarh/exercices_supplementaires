@@ -330,9 +330,9 @@ function initGGB() {
       applet.setCoordSystem(-6, 6, -4, 4);
       applet.setErrorDialogsActive(false);
       applet.registerAddListener(name => {
-        // Pas d'étiquette (minuscule) pour les droites, segments et demi-droites
+        // Pas d'étiquette (minuscule) pour les segments et demi-droites (les droites gardent leur nom)
         const t = applet.getObjectType(name);
-        applet.setLabelVisible(name, !["line", "segment", "ray"].includes(t));
+        applet.setLabelVisible(name, !["segment", "ray"].includes(t));
       });
       afficherExercice(pickExercice());
     }

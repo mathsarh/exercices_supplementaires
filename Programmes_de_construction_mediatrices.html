@@ -561,7 +561,9 @@ function initGGB() {
       applet.evalCommand("SetAxesRatio(1,1)");
       applet.setErrorDialogsActive(false);
       applet.registerAddListener(name => {
-        applet.setLabelVisible(name, true);
+        // Pas d'étiquette (minuscule) pour les segments et demi-droites (les droites gardent leur nom)
+        const t = applet.getObjectType(name);
+        applet.setLabelVisible(name, !["segment", "ray"].includes(t));
         autoCodeIfMediatrice(applet, name);
         autoCodeIfPerpendiculaire(applet, name);
       });
