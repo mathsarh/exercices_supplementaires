@@ -61,6 +61,11 @@ function refersTo(def, token) {
   const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return new RegExp("\\b" + escaped + "\\b").test(def);
 }
+/* GeoGebra renvoie "circle" (et non "conic") pour un cercle tracé avec l'outil Cercle */
+function typeMatches(actual, expected) {
+  if (expected === "conic") return actual === "circle" || actual === "conic";
+  return actual === expected;
+}
 function libelleType(t) {
   switch (t) {
     case "point": return "un point";
@@ -87,7 +92,7 @@ function evaluateStep(api, step) {
     if (!api.exists(step.name)) {
       return { ok: false, message: `Il manque ${step.label} (nom attendu : "${step.name}").` };
     }
-    if (api.getObjectType(step.name) !== step.objType) {
+    if (!typeMatches(api.getObjectType(step.name), step.objType)) {
       return { ok: false, message: `"${step.name}" existe, mais n'est pas ${libelleType(step.objType)} comme attendu pour ${step.label}.` };
     }
     const def = definitionOf(api, step.name);
@@ -96,7 +101,7 @@ function evaluateStep(api, step) {
     }
     return { ok: true };
   } else {
-    const names = api.getAllObjectNames(step.objType);
+    const names = api.getAllObjectNames().filter(n => typeMatches(api.getObjectType(n), step.objType));
     const found = names.some(n => step.refs.every(r => refersTo(definitionOf(api, n), r)));
     if (!found) {
       return { ok: false, message: `Il manque ${step.label}.` };
@@ -324,7 +329,11 @@ function initGGB() {
       applet.setGridVisible(false);
       applet.setCoordSystem(-6, 6, -4, 4);
       applet.setErrorDialogsActive(false);
-      applet.registerAddListener(name => applet.setLabelVisible(name, true));
+      applet.registerAddListener(name => {
+        // Pas d'étiquette (minuscule) pour les droites, segments et demi-droites
+        const t = applet.getObjectType(name);
+        applet.setLabelVisible(name, !["line", "segment", "ray"].includes(t));
+      });
       afficherExercice(pickExercice());
     }
   }, true).inject("ggb-container");
