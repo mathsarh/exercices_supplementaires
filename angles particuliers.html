@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Les angles particuliers — Exercices supplémentaires</title>
+<style>
+:root{--bf:#1d3557;--b:#457b9d;--bc:#a8dadc;--fond:#f1f4f8;--pan:#fff;--tx:#1f2937;--v:#2a9d5c;--vf:#e6f6ec;--r:#d64545;--rf:#fbe9e9;--g:#6b7280;--gc:#e2e6ec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fond:#12161f;--pan:#1b2130;--tx:#e8ebf1;--gc:#2b3242;--vf:#16301f;--rf:#3a1c1c}}
+:root[data-theme="dark"]{--fond:#12161f;--pan:#1b2130;--tx:#e8ebf1;--gc:#2b3242;--vf:#16301f;--rf:#3a1c1c}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--fond);color:var(--tx);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--bf);color:#fff;padding:12px 20px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header h1{margin:0 0 8px;font-size:1.1rem}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600}
+nav button.on{background:var(--bc);color:var(--bf)}
+main{max-width:1000px;margin:0 auto;padding:18px}
+section{display:none}section.on{display:block}
+.card{background:var(--pan);border:1px solid var(--gc);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 6px;color:var(--b);font-size:1.15rem}
+p.c{margin:0 0 12px;font-size:.92rem;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.it{border:1px solid var(--gc);border-radius:8px;padding:8px 10px;background:var(--fond);margin-bottom:8px;line-height:1.7}
+.grid .it{text-align:center;margin:0}
+.it svg{width:100%;height:auto;max-width:300px;color:var(--tx);display:block;margin:0 auto}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.fg{flex:0 1 300px;width:100%;max-width:300px}
+.tx{flex:1;min-width:220px}
+.ok{border-color:var(--v)!important;background:var(--vf)!important}
+.err{border-color:var(--r)!important;background:var(--rf)!important}
+select,input[type=text]{padding:6px;border-radius:6px;border:1px solid var(--g);background:var(--pan);color:var(--tx);font-size:.9rem;max-width:100%}
+input[type=text]{width:70px}
+.btn{padding:9px 16px;background:var(--bf);color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer;margin-right:8px;margin-top:8px}
+.btn.s{background:transparent;color:var(--bf);border:1px solid var(--bf)}
+@media (prefers-color-scheme:dark){.btn.s{color:var(--bc);border-color:var(--bc)}}
+.nt{font-size:.82rem;color:var(--g);margin-top:4px;line-height:1.4;text-align:left}
+.msg{display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:.9rem;line-height:1.4}
+.msg.succes{display:block;background:var(--vf);color:var(--v);border:1px solid var(--v)}
+.msg.erreur{display:block;background:var(--rf);color:var(--r);border:1px solid var(--r)}
+.ex{display:none;font-size:.82rem;color:var(--g);margin-top:3px}
+.show .ex{display:block}
+.mem{background:var(--fond);border-left:4px solid var(--b);padding:8px 12px;font-size:.88rem;margin-bottom:12px;border-radius:4px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+<h1>📐 Les angles particuliers — exercices supplémentaires (S1)</h1>
+<nav id="nav"></nav>
+</header>
+<main>
+<div class="mem"><b>À retenir :</b> <b>adjacents</b> = même sommet, un côté commun, de part et d'autre de ce côté · <b>opposés par le sommet</b> = même sommet, côtés dans le prolongement l'un de l'autre → même amplitude · <b>complémentaires</b> : somme = 90° · <b>supplémentaires</b> : somme = 180° · adjacents complémentaires → angle droit · adjacents supplémentaires → angle plat (points alignés).</div>
+
+<section id="s0" class="on card">
+<h2>Exercice 1 — Adjacents ou opposés par le sommet ?</h2>
+<p class="c">Les amplitudes des deux angles colorés (orange et vert) sont indiquées. Choisis la réponse la plus précise : adjacents (et, si c'est le cas, complémentaires ou supplémentaires), opposés par le sommet, complémentaires ou supplémentaires sans être adjacents, ou aucune de ces réponses.</p>
+<div class="grid" id="g1"></div>
+<button class="btn" onclick="chk1()">Vérifier</button><button class="btn s" onclick="init1()">🔄 Nouvelles questions</button>
+<div class="msg" id="m1"></div>
+</section>
+
+<section id="s1" class="card">
+<h2>Exercice 2 — Calcule l'amplitude</h2>
+<p class="c">Donne l'amplitude demandée, en degrés. Lis bien chaque énoncé !</p>
+<div id="l2"></div>
+<button class="btn" onclick="chk2()">Vérifier</button><button class="btn s" onclick="init2()">🔄 Nouvelles questions</button>
+<div class="msg" id="m2"></div>
+</section>
+
+<section id="s2" class="card">
+<h2>Exercice 3 — Petits problèmes</h2>
+<p class="c">Calcule sans mesurer, à l'aide de la figure. (Les nombres changent à chaque nouvelle série.)</p>
+<div id="l3"></div>
+<button class="btn" onclick="chk3()">Vérifier</button><button class="btn s" onclick="init3()">🔄 Nouvelles questions</button>
+<div class="msg" id="m3"></div>
+</section>
+
+<section id="s3" class="card">
+<h2>Exercice 4 — Complète les définitions</h2>
+<p class="c">Choisis le bon mot ou la bonne valeur dans chaque liste.</p>
+<div id="l4"></div>
+<button class="btn" onclick="chk4()">Vérifier</button><button class="btn s" onclick="init4()">🔄 Nouvelles questions</button>
+<div class="msg" id="m4"></div>
+</section>
+
+<section id="s4" class="card">
+<h2>Exercice 5 — Vrai ou faux ?</h2>
+<p class="c">Choisis la bonne réponse. Les explications apparaissent quand tout est juste, ou après 3 vérifications ratées.</p>
+<div id="l6"></div>
+<button class="btn" onclick="chk6()">Vérifier</button><button class="btn s" onclick="init6()">🔄 Nouvelles questions</button>
+<div class="msg" id="m6"></div>
+</section>
+
+<section id="s5" class="card">
+<h2>Exercice 6 — Quelle propriété justifie le résultat ?</h2>
+<p class="c">Pour chaque résultat, choisis la propriété du cours qui permet de le justifier.</p>
+<div id="l7"></div>
+<button class="btn" onclick="chk7()">Vérifier</button><button class="btn s" onclick="init7()">🔄 Nouvelles questions</button>
+<div class="msg" id="m7"></div>
+</section>
+
+<section id="s6" class="card">
+<h2>Exercice 7 — Lire une figure</h2>
+<p class="c">Les trois droites se coupent en O. Pour chaque consigne, choisis un angle qui convient (il peut y avoir plusieurs réponses possibles).</p>
+<div class="it" id="f8" style="max-width:340px;margin:0 auto 12px"></div>
+<div id="l8"></div>
+<button class="btn" onclick="chk8()">Vérifier</button><button class="btn s" onclick="init8()">🔄 Nouvelles questions</button>
+<div class="msg" id="m8"></div>
+</section>
+
+<section id="s7" class="card">
+<h2>Exercice 8 — Problèmes à plusieurs étapes</h2>
+<p class="c">Calcule les amplitudes demandées, dans l'ordre : chaque résultat peut servir pour le suivant.</p>
+<div id="l9"></div>
+<button class="btn" onclick="chk9()">Vérifier</button><button class="btn s" onclick="init9()">🔄 Nouvelles questions</button>
+<div class="msg" id="m9"></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const num=id=>{const v=$(id).value.trim().replace(',','.');return v===''?NaN:parseFloat(v)};
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const mark=(el,ok)=>{el.classList.remove('ok','err');el.classList.add(ok?'ok':'err')};
+const ang=(a,b,c)=>a+b+'\u0302'+c;
+const inp=id=>`<input type="text" id="${id}">`;
+const att={};
+function msg(id,ok,tot,txt,corr){const e=$(id);e.className='msg '+(ok===tot?'succes':'erreur');e.textContent=ok===tot?`Bravo ! Tout est juste (${ok}/${tot}).`:`${ok}/${tot} correct. ${txt||''}`;
+ att[id]=ok===tot?0:(att[id]||0)+1;
+ if(corr&&att[id]>=3){e.appendChild(document.createElement('br'));const b=document.createElement('button');b.className='btn s';b.textContent='💡 Voir la correction';b.onclick=corr;e.appendChild(b)}}
+['Ex. 1 · Adjacents / opposés','Ex. 2 · Calculs','Ex. 3 · Problèmes','Ex. 4 · Définitions','Ex. 5 · Vrai/Faux','Ex. 6 · Propriétés','Ex. 7 · Lire une figure','Ex. 8 · Problèmes'].forEach((t,i)=>{
+ const b=document.createElement('button');b.textContent=t;if(!i)b.className='on';
+ b.onclick=()=>{document.querySelectorAll('nav button').forEach((x,j)=>x.classList.toggle('on',j===i));document.querySelectorAll('section').forEach((s,j)=>s.classList.toggle('on',j===i))};
+ $('nav').appendChild(b)});
+
+/* Dessin d'angles : rayons [angle,'étiquette'], secteurs [a,b,couleur,rayon], texte [x,y,txt] */
+const P=(c,g,l)=>[(c[0]+l*Math.cos(g*Math.PI/180)).toFixed(1),(c[1]-l*Math.sin(g*Math.PI/180)).toFixed(1)];
+const TX=(x,y,t,sz=11)=>`<text x="${x}" y="${y}" font-size="${sz}" font-weight="700" text-anchor="middle" dominant-baseline="middle" fill="currentColor" style="stroke:var(--pan);stroke-width:3px;paint-order:stroke;stroke-linejoin:round">${t}</text>`;
+const T=(c,g,l,t)=>{const p=P(c,g,l);return TX(p[0],p[1],t)};
+function pic(pieces){let s='<svg viewBox="0 0 160 130">';
+ pieces.forEach(p=>{const L=p.L||62,al=p.r.map(h=>Array.isArray(h)?h[0]:h),sr=al.map(x=>((x%360)+360)%360).sort((x,y)=>x-y);
+  (p.s||[]).forEach(([a,b,col,r=26])=>{const x=P(p.c,a,r),y=P(p.c,b,r);s+=`<path d="M${p.c[0]} ${p.c[1]} L${x[0]} ${x[1]} A${r} ${r} 0 ${b-a>180?1:0} 0 ${y[0]} ${y[1]}Z" fill="${col}" opacity=".75"/>`});
+  p.r.forEach(g=>{const a=Array.isArray(g)?g[0]:g,e=P(p.c,a,L);s+=`<line x1="${p.c[0]}" y1="${p.c[1]}" x2="${e[0]}" y2="${e[1]}" stroke="currentColor" stroke-width="2"/>`;if(Array.isArray(g)&&g[1]){let md=999,sg=1;al.forEach(b=>{const d=((b-a+540)%360)-180;if(b!==a&&Math.abs(d)<md){md=Math.abs(d);sg=d>0?-1:1}});const rk=sr.indexOf(((a%360)+360)%360),q=P(p.c,a,(p.dr||30)+(rk%2)*(p.st||14)),o=P([0,0],a+sg*90,10);s+=`<circle cx="${q[0]}" cy="${q[1]}" r="2.6" fill="currentColor"/>`+TX((+q[0]+ +o[0]).toFixed(1),(+q[1]+ +o[1]).toFixed(1),g[1])}});
+  if(p.sq){const a=P(p.c,0,12),b=P(p.c,90,12);s+=`<path d="M${a} L${+a[0]+ +b[0]-p.c[0]},${+a[1]+ +b[1]-p.c[1]} L${b}" fill="none" stroke="currentColor"/>`}
+  s+=`<circle cx="${p.c[0]}" cy="${p.c[1]}" r="3" fill="currentColor"/>`;
+  if(p.n)s+=TX(p.c[0]-2,p.c[1]+14,p.n);
+  (p.t||[]).forEach(q=>s+=q)});
+ return s+'</svg>'}
+const O='#e07a1f',V='#2a9d5c',C=[80,68];
+
+/* Ex 1 : banque de figures avec amplitudes, tirées au hasard et tournées */
+const mk=(rays,secs)=>d=>[{c:C,r:rays.map(g=>g+d),s:secs.map(([x,y],k)=>[x+d,y+d,k?V:O]),t:secs.map(([x,y])=>T(C,(x+y)/2+d,42,(y-x)+'°'))}];
+const R6=[0,60,120,180,240,300];
+const TP=[
+ ['adjacents',d=>{const x=rnd(20,60);let y=rnd(20,60);if(x+y===90)y+=7;return mk([0,x,x+y],[[0,x],[x,x+y]])(d)}],
+ ['adjacents',mk(R6,[[60,120],[120,180]])],
+ ['adj-comp',d=>{const x=rnd(20,70);return mk([0,x,90],[[0,x],[x,90]])(d)}],
+ ['adj-comp',d=>{const x=rnd(20,70);return mk([0,x,90,215],[[0,x],[x,90]])(d)}],
+ ['adj-supp',d=>{const x=rnd(30,150);return mk([0,x,180],[[0,x],[x,180]])(d)}],
+ ['adj-supp',d=>{const a=rnd(25,80),k=rnd(0,60);return mk([k,k+a,k+180,k+180+a],[[k,k+a],[k+a,k+180]])(d)}],
+ ['opposés',d=>{const a=rnd(25,80),k=rnd(0,60);return mk([k,k+a,k+180,k+180+a],[[k,k+a],[k+180,k+180+a]])(d)}],
+ ['opposés',mk(R6,[[0,60],[180,240]])],
+ ['opposés',mk(R6,[[60,120],[240,300]])],
+ ['comp',mk([0,40,100,150],[[0,40],[100,150]])],
+ ['supp',mk(R6,[[0,60],[120,240]])],
+ ['supp',d=>{const x=rnd(30,60);return mk([0,x,70,250-x],[[0,x],[70,250-x]])(d)}],
+ ['ni',mk([0,40,60,100],[[0,40],[60,100]])],
+ ['ni',mk(R6,[[0,60],[240,300]])],
+ ['ni',mk(R6,[[0,60],[120,180]])],
+ ['comp',d=>{const x=rnd(20,60);return mk([0,x,70,160-x],[[0,x],[70,160-x]])(d)}],
+ ['ni',d=>[{c:C,r:[0,45,100].map(x=>x+d),s:[[d,100+d,O,40],[d,45+d,V,22]],t:[T(C,22+d,30,'45°'),T(C,75+d,50,'100°')]}]],
+ ['ni',d=>[{c:[45,68],L:40,r:[d,d+70],s:[[d,70+d,O]],t:[T([45,68],35+d,40,'70°')]},{c:[115,68],L:40,r:[d,d+70],s:[[d,70+d,V]],t:[T([115,68],35+d,40,'70°')]}]]];
+let A1=[];
+const S1='<select id="s1-%"><option value="">—</option><option value="adjacents">adjacents</option><option value="adj-supp">adjacents supplémentaires</option><option value="adj-comp">adjacents complémentaires</option><option value="opposés">opposés par le sommet</option><option value="comp">complémentaires (non adjacents)</option><option value="supp">supplémentaires (non adjacents)</option><option value="ni">aucune de ces réponses</option></select>';
+function init1(){const kinds=['adjacents','adj-supp','adj-comp','opposés','comp','supp','ni'];
+ let pick=kinds.map(k=>mix(TP.filter(t=>t[0]===k))[0]);
+ pick=pick.concat(mix(TP.filter(t=>!pick.includes(t))).slice(0,1));
+ A1=mix(pick).map(t=>[t[1](rnd(0,359)),t[0]]);
+ $('g1').innerHTML=A1.map((f,i)=>`<div class="it" id="i1-${i}">${pic(f[0])}<div>${S1.replace('%',i)}</div></div>`).join('');$('m1').className='msg';att.m1=0}
+function chk1(){let ok=0;A1.forEach((f,i)=>{const g=$('s1-'+i).value===f[1];if(g)ok++;mark($('i1-'+i),g)});
+ msg('m1',ok,A1.length,'Si les angles sont adjacents, additionne leurs amplitudes : 90° → adjacents complémentaires ; 180° → adjacents supplémentaires ; sinon simplement adjacents. Attention aux angles qui se chevauchent, qui n\'ont pas de côté commun ou pas le même sommet : sans côté commun ils ne sont pas adjacents, mais ils peuvent quand même être complémentaires ou supplémentaires !',corr1)}
+
+/* Ex 2 : types mélangés */
+let A2=[];
+const R2={
+ comp:[()=>rnd(5,85),v=>90-v,v=>`Le complémentaire d'un angle de <b>${v}°</b> mesure`],
+ supp:[()=>rnd(20,170),v=>180-v,v=>`Le supplémentaire d'un angle de <b>${v}°</b> mesure`],
+ plat:[()=>rnd(20,170),v=>180-v,v=>`Deux angles adjacents forment un angle plat. L'un mesure <b>${v}°</b>, l'autre mesure`],
+ droit:[()=>rnd(5,85),v=>90-v,v=>`Deux angles adjacents forment un angle droit. L'un mesure <b>${v}°</b>, l'autre mesure`],
+ opp:[()=>rnd(10,170),v=>v,v=>`L'angle opposé par le sommet d'un angle de <b>${v}°</b> mesure`],
+ tri:[()=>rnd(10,80),v=>90-v,v=>`Dans un triangle rectangle, un des angles aigus mesure <b>${v}°</b>. L'autre mesure`],
+ adj:[()=>{const v=rnd(20,160);return v===90?70:v},v=>180-v,v=>`Deux droites sécantes forment un angle de <b>${v}°</b>. Chacun des angles adjacents à celui-ci mesure`]};
+function init2(){const ks=Object.keys(R2);const ty=mix([...ks,ks[rnd(0,ks.length-1)]]);
+ A2=ty.map(t=>{const v=R2[t][0]();return [t,v,R2[t][1](v)]});
+ $('l2').innerHTML=A2.map((q,i)=>`<div class="it" id="q2-${i}">${i+1}. ${R2[q[0]][2](q[1])} ${inp('a2-'+i)} °</div>`).join('');$('m2').className='msg';att.m2=0}
+function chk2(){let ok=0;A2.forEach((q,i)=>{const g=num('a2-'+i)===q[2];if(g)ok++;mark($('q2-'+i),g)});
+ msg('m2',ok,A2.length,'Complémentaires (ou adjacents formant un angle droit, ou angles aigus d\'un triangle rectangle) : somme 90°. Supplémentaires (ou adjacents formant un angle plat) : somme 180°. Opposés par le sommet : même amplitude.',corr2)}
+
+/* Ex 3 : problèmes avec figures (6 tirés parmi 8) */
+let A3=[];
+const T3=[
+ i=>{const a=rnd(25,80);return {f:pic([{c:C,r:[[20,'A'],[20+a,'B'],[200,'C'],[200+a,'D']],s:[[20,20+a,O,30]],n:'O',t:[T(C,20+a/2,52,a+'°')]}]),
+  t:`Les droites AC et BD se coupent en O. |${ang('A','O','B')}| = ${a}°. Alors |${ang('C','O','D')}| = ${inp(`a3-${i}-0`)} °, |${ang('B','O','C')}| = ${inp(`a3-${i}-1`)} ° et |${ang('D','O','A')}| = ${inp(`a3-${i}-2`)} °.`,a:[a,180-a,180-a]}},
+ i=>{const b=rnd(25,65);return {f:`<svg viewBox="0 0 160 130"><path d="M35 105 L125 105 L35 35Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M35 93 L47 93 L47 105" fill="none" stroke="currentColor"/>${TX(22,115,'A')}${TX(135,108,'B')}${TX(25,28,'C')}${TX(100,98,b+'°')}</svg>`,
+  t:`ABC est un triangle rectangle en A et |${ang('A','B','C')}| = ${b}°. Alors |${ang('B','C','A')}| = ${inp(`a3-${i}-0`)} °.`,a:[90-b]}},
+ i=>{const y=rnd(100,150);return {f:pic([{c:C,r:[[180,'A'],[0,'B'],[180-y,'C']],s:[[180-y,180,O,30]],n:'O',t:[T(C,180-y/2,52,y+'°')]}]),
+  t:`A, O et B sont alignés. |${ang('A','O','C')}| = ${y}°. Alors |${ang('C','O','B')}| = ${inp(`a3-${i}-0`)} °.`,a:[180-y]}},
+ i=>{const z=rnd(15,75);return {f:pic([{c:[60,95],r:[[0,'A'],[z,'M'],[90,'B']],s:[[0,z,O,34]],sq:1,n:'O',t:[T([60,95],z/2,52,z+'°')]}]),
+  t:`L'angle ${ang('A','O','B')} est un angle droit et M est un point à l'intérieur de cet angle. |${ang('A','O','M')}| = ${z}°. Alors |${ang('M','O','B')}| = ${inp(`a3-${i}-0`)} °.`,a:[90-z]}},
+ i=>{const w=rnd(30,160);return {f:pic([{c:[40,95],L:36,r:[0,w],s:[[0,w,O,22]]},{c:[120,95],L:36,r:[0,180-w],s:[[0,180-w,V,22]]}]).replace('</svg>',TX(40,22,'angle 1 : '+w+'°')+TX(120,22,'angle 2 : ?')+'</svg>'),
+  t:`Les angles 1 et 2 sont supplémentaires (ils ne sont pas adjacents). Alors l'angle 2 mesure ${inp(`a3-${i}-0`)} °.`,a:[180-w]}},
+ i=>{const x=rnd(30,70),u=rnd(30,70);return {f:pic([{c:C,r:[[180,'A'],[0,'B'],[180-x,'C'],[180-x-u,'D']],s:[[180-x,180,O,30],[180-x-u,180-x,V,42]],n:'O',t:[T(C,180-x/2,50,x+'°'),T(C,180-x-u/2,58,u+'°')]}]),
+  t:`A, O et B sont alignés. |${ang('A','O','C')}| = ${x}° et |${ang('C','O','D')}| = ${u}°. Alors |${ang('D','O','B')}| = ${inp(`a3-${i}-0`)} °.`,a:[180-x-u]}},
+ i=>{const p=rnd(30,60),q=rnd(30,60);return {f:pic([{c:C,r:[[10,'A'],[10+p,'B'],[10+p+q,'C'],[190,'D'],[190+p,'E'],[190+p+q,'F']],s:[[10,10+p,O,30],[10+p,10+p+q,V,42]],n:'O',t:[T(C,10+p/2,50,p+'°'),T(C,10+p+q/2,58,q+'°')]}]),
+  t:`Les droites AD, BE et CF se coupent en O. |${ang('A','O','B')}| = ${p}° et |${ang('B','O','C')}| = ${q}°. Alors |${ang('D','O','E')}| = ${inp(`a3-${i}-0`)} °, |${ang('A','O','C')}| = ${inp(`a3-${i}-1`)} ° et |${ang('C','O','D')}| = ${inp(`a3-${i}-2`)} °.`,a:[p,p+q,180-p-q]}},
+ i=>{const y=rnd(100,150);return {f:pic([{c:C,r:[[180,'A'],[0,'B'],[90,'D'],[180-y,'C']],s:[[180-y,180,O,30]],sq:1,n:'O',t:[T(C,180-y/2,52,y+'°')]}]),
+  t:`A, O et B sont alignés et OD est perpendiculaire à AB. |${ang('A','O','C')}| = ${y}°. Alors |${ang('C','O','D')}| = ${inp(`a3-${i}-0`)} °.`,a:[y-90]}}];
+function init3(){A3=mix(T3.map((f,k)=>[f,k])).slice(0,6).map(([f,k],i)=>{const o=f(i);o.k=k;return o});
+ $('l3').innerHTML=A3.map((q,i)=>`<div class="it row" id="q3-${i}"><div class="fg">${q.f}</div><div class="tx">${i+1}. ${q.t}</div></div>`).join('');$('m3').className='msg';att.m3=0}
+function chk3(){let ok=0;A3.forEach((q,i)=>{const r=q.a.map((v,j)=>{const g=num(`a3-${i}-${j}`)===v;mark($(`a3-${i}-${j}`),g);return g});
+ const all=r.every(Boolean),el=$('q3-'+i);el.classList.remove('ok','err');if(all){ok++;el.classList.add('ok')}else if(!r.some(Boolean))el.classList.add('err')});
+ msg('m3',ok,A3.length,'Opposés par le sommet : même amplitude. Adjacents sur une droite (angle plat) : somme 180°. Angle droit : somme 90°. Triangle rectangle : les deux autres angles sont complémentaires.',corr3)}
+
+/* Ex 4 : définitions (4 tirées parmi 9) */
+const OPT=['90°','180°','360°','côté','droit','même amplitude','de part et d\'autre','du même côté','plat','prolongement','sommet'];
+const B4=[
+ ['Deux angles sont adjacents s\'ils ont le ','sommet',' commun, partagent un ','côté',' et sont situés ','de part et d\'autre',' de ce côté commun.'],
+ ['Deux angles sont opposés par le sommet s\'ils ont le ','sommet',' commun et si leurs côtés sont dans le ','prolongement',' l\'un de l\'autre. Ils ont alors la ','même amplitude','.'],
+ ['Deux angles complémentaires ont une somme de ','90°','. Deux angles supplémentaires ont une somme de ','180°','.'],
+ ['Deux angles adjacents complémentaires forment un angle ','droit','. Deux angles adjacents supplémentaires forment un angle ','plat','.'],
+ ['Pour être adjacents, deux angles doivent être situés ','de part et d\'autre',' de leur ','côté',' commun.'],
+ ['Dans un triangle rectangle, la somme des deux angles aigus vaut ','90°',' : ils sont complémentaires.'],
+ ['Deux angles adjacents supplémentaires forment un angle ','plat','. Leurs côtés non communs sont dans le ','prolongement',' l\'un de l\'autre.'],
+ ['La somme de deux angles supplémentaires vaut ','180°',', et la somme de deux angles complémentaires vaut ','90°','.'],
+ ['Deux angles opposés par le ','sommet',' sont toujours égaux : ils ont la ','même amplitude','.']];
+let D4=[];
+function init4(){D4=mix(B4).slice(0,4);const o='<option value="">—</option>'+OPT.map(x=>`<option>${x}</option>`).join('');
+ $('l4').innerHTML=D4.map((d,i)=>`<div class="it" id="q4-${i}">${d.map((x,j)=>j%2?`<select id="s4-${i}-${j}">${o}</select>`:x).join('')}</div>`).join('');$('m4').className='msg';att.m4=0}
+function chk4(){let ok=0;D4.forEach((d,i)=>{const r=[];d.forEach((x,j)=>{if(j%2){const g=$(`s4-${i}-${j}`).value===x;mark($(`s4-${i}-${j}`),g);r.push(g)}});
+ const all=r.every(Boolean),el=$('q4-'+i);el.classList.remove('ok','err');if(all){ok++;el.classList.add('ok')}else if(!r.some(Boolean))el.classList.add('err')});
+ msg('m4',ok,D4.length,'Relis l\'encadré du cours sur les angles adjacents, opposés par le sommet, complémentaires et supplémentaires.',corr4)}
+
+/* Ex 5 : banque de questions + générateurs */
+const B6=[
+ ['Deux angles opposés par le sommet ont la même amplitude.',1,'C\'est la propriété du cours.'],
+ ['Deux angles adjacents ont toujours la même amplitude.',0,'Adjacents ne veut pas dire égaux : 30° et 80° peuvent être adjacents.'],
+ ['Deux angles supplémentaires sont toujours adjacents.',0,'52° et 128° sont supplémentaires mais peuvent être placés loin l\'un de l\'autre.'],
+ ['Un angle de 120° possède un angle complémentaire.',0,'120° dépasse déjà 90° : aucune amplitude positive ne complète à 90°.'],
+ ['Le supplémentaire d\'un angle aigu est un angle obtus.',1,'180° − (moins de 90°) donne plus de 90° et moins de 180°.'],
+ ['Deux angles adjacents de 47° et 43° forment un angle droit.',1,'47° + 43° = 90° et ils sont adjacents : leurs côtés non communs sont perpendiculaires.'],
+ ['Deux angles adjacents de 110° et 80° forment un angle plat.',0,'110° + 80° = 190° ≠ 180° : ils ne forment pas un angle plat.'],
+ ['Deux angles de 70° et 110° sont supplémentaires. S\'ils ne sont pas adjacents, on ne peut pas dire que les points sont alignés.',1,'Pour conclure à un alignement, il faut aussi qu\'ils soient adjacents.'],
+ ['Quand deux droites se coupent, deux angles opposés par le sommet sont supplémentaires.',0,'Ils sont égaux. Ce sont les angles adjacents qui sont supplémentaires.'],
+ ['Si deux angles adjacents sont supplémentaires, leurs côtés non communs sont dans le prolongement l\'un de l\'autre.',1,'Ils forment un angle plat : les points sont alignés.'],
+ ['Deux angles qui ont le même sommet sont toujours adjacents.',0,'Il faut aussi un côté commun, et que les angles soient de part et d\'autre de ce côté.'],
+ ['Deux angles qui n\'ont pas le même sommet ne peuvent pas être adjacents.',1,'Le sommet commun est la première condition.'],
+ ['Si l\'un de deux angles est à l\'intérieur de l\'autre, ils ne sont pas adjacents même s\'ils partagent un côté.',1,'Ils doivent être de part et d\'autre du côté commun.'],
+ ['Deux angles opposés par le sommet peuvent être adjacents.',0,'Les côtés de l\'un prolongent ceux de l\'autre : ils n\'ont aucun côté commun.'],
+ ['Deux angles aigus peuvent être supplémentaires.',0,'Deux angles de moins de 90° ont une somme inférieure à 180°.'],
+ ['Deux angles obtus peuvent être supplémentaires.',0,'Deux angles de plus de 90° ont une somme supérieure à 180°.'],
+ ['Deux angles complémentaires peuvent ne pas être adjacents.',1,'Seule la somme (90°) compte pour être complémentaires.'],
+ ['Deux angles droits sont supplémentaires.',1,'90° + 90° = 180°.'],
+ ['Deux angles droits sont complémentaires.',0,'90° + 90° = 180° ≠ 90°.'],
+ ['Si deux angles sont supplémentaires à un même angle, ils ont la même amplitude.',1,'Chacun vaut 180° moins l\'amplitude de cet angle.'],
+ ['Dans un triangle rectangle, les deux angles qui ne sont pas droits sont complémentaires.',1,'La somme des angles d\'un triangle vaut 180° : il reste 90° pour les deux autres.'],
+ ['Le complémentaire d\'un angle aigu est un angle obtus.',0,'90° − (moins de 90°) donne un angle aigu.'],
+ ['Le supplémentaire d\'un angle droit est un angle droit.',1,'180° − 90° = 90°.'],
+ ['Quand deux droites se coupent, les quatre angles ont toujours la même amplitude.',0,'C\'est vrai seulement si les droites sont perpendiculaires.'],
+ ['Deux droites sécantes forment un angle de 40° : les quatre angles mesurent 40°, 140°, 40° et 140°.',1,'Opposés : égaux ; adjacents : 180° − 40° = 140°.'],
+ ['Deux angles adjacents complémentaires ont leurs côtés non communs perpendiculaires.',1,'Ils forment un angle droit.'],
+ ['Si deux angles adjacents ont une somme de 180°, ils forment un angle droit.',0,'180° correspond à un angle plat.'],
+ ['Deux angles opposés par le sommet sont toujours supplémentaires.',0,'Ils sont égaux : ils ne sont supplémentaires que s\'ils mesurent chacun 90°.'],
+ ['Deux angles adjacents de 90° et 90° forment un angle plein.',0,'90° + 90° = 180° : c\'est un angle plat.'],
+ ['Deux angles adjacents peuvent être à la fois complémentaires et supplémentaires.',0,'Leur somme ne peut pas valoir 90° et 180° en même temps.'],
+ ['Pour montrer que deux droites sont perpendiculaires, on peut montrer que deux angles adjacents sont complémentaires.',1,'Ils forment alors un angle droit.']];
+const gen6=[
+ ()=>{const x=rnd(10,80),ok=Math.random()<.5,y=ok?90-x:90-x+rnd(5,20);return [`Deux angles adjacents de ${x}° et ${y}° forment un angle droit.`,+ok,`${x}° + ${y}° = ${x+y}°${ok?' : angle droit.':', pas 90°.'}`]},
+ ()=>{const x=rnd(30,150),ok=Math.random()<.5,y=ok?180-x:180-x+rnd(5,20);return [`Deux angles adjacents de ${x}° et ${y}° forment un angle plat.`,+ok,`${x}° + ${y}° = ${x+y}°${ok?' : angle plat.':', pas 180°.'}`]},
+ ()=>{const x=rnd(10,80),ok=Math.random()<.5,y=ok?90-x:180-x;return [`Des angles de ${x}° et ${y}° sont complémentaires.`,+ok,`${x}° + ${y}° = ${x+y}°${ok?'.':' : c\'est la somme de deux angles supplémentaires, pas complémentaires.'}`]},
+ ()=>{const x=rnd(20,80),ok=Math.random()<.5,y=ok?180-x:90-x;return [`Le supplémentaire d'un angle de ${x}° mesure ${y}°.`,+ok,ok?`180° − ${x}° = ${y}°.`:`${y}° est le complémentaire. Le supplémentaire mesure 180° − ${x}° = ${180-x}°.`]},
+ ()=>{const x=rnd(20,80),ok=Math.random()<.5,y=ok?x:180-x;return [`Deux droites sécantes forment un angle de ${x}°. L'angle opposé par le sommet mesure ${y}°.`,+ok,ok?'Opposés par le sommet : même amplitude.':`L'angle opposé par le sommet mesure ${x}° ; ${y}° est celui de l'angle adjacent.`]}];
+let S6=[];
+const mix=a=>[...a].sort(()=>Math.random()-.5);
+function init6(){S6=mix([...mix(gen6).slice(0,3).map(f=>f()),...mix(B6).slice(0,7)]);
+ $('l6').innerHTML=S6.map((q,i)=>`<div class="it" id="q6-${i}">${i+1}. ${q[0]}<br><label><input type="radio" name="q${i}" value="1"> Vrai</label> &nbsp; <label><input type="radio" name="q${i}" value="0"> Faux</label><div class="ex">${q[2]}</div></div>`).join('');
+ $('l6').classList.remove('show');$('m6').className='msg';att.m6=0}
+function chk6(){let ok=0;S6.forEach((q,i)=>{const r=document.querySelector(`input[name=q${i}]:checked`);const g=r&&+r.value===q[1];if(g)ok++;mark($('q6-'+i),g)});
+ msg('m6',ok,S6.length,'Corrige tes erreurs et vérifie à nouveau : les explications apparaîtront après 3 vérifications ratées.',corr6);
+ if(ok===S6.length||att.m6>=3)$('l6').classList.add('show')}
+
+
+/* Corrections proposées après 3 essais ratés */
+function note(par,id,h){let e=$(id);if(!e){e=document.createElement('div');e.id=id;e.className='nt';$(par).appendChild(e)}e.innerHTML=h}
+const W1={adjacents:'Adjacents : même sommet, un côté commun, de part et d\'autre de ce côté. La somme des amplitudes ne vaut ni 90° ni 180°.',
+ 'adj-supp':'Adjacents (même sommet, côté commun, de part et d\'autre) et la somme des amplitudes vaut 180° : ils forment un angle plat.',
+ 'adj-comp':'Adjacents (même sommet, côté commun, de part et d\'autre) et la somme des amplitudes vaut 90° : ils forment un angle droit.',
+ 'opposés':'Même sommet et côtés dans le prolongement l\'un de l\'autre : opposés par le sommet, donc de même amplitude.',
+ comp:'Les angles ne sont pas adjacents (pas de côté commun, ou pas de part et d\'autre), mais la somme de leurs amplitudes vaut 90° : ils sont complémentaires.',
+ supp:'Les angles ne sont pas adjacents, mais la somme de leurs amplitudes vaut 180° : ils sont supplémentaires.',
+ 'ni':'Aucune relation du cours ne convient : les angles ne sont ni adjacents, ni opposés par le sommet, et la somme de leurs amplitudes ne vaut ni 90° ni 180°.'};
+function corr1(){A1.forEach((f,i)=>{$('s1-'+i).value=f[1];mark($('s1-'+i),true);mark($('i1-'+i),true);note('i1-'+i,'n1-'+i,W1[f[1]])});
+ $('m1').className='msg succes';$('m1').textContent='Correction affichée. Relis chaque explication, puis clique sur « Nouvelles questions » pour t\'entraîner de nouveau.'}
+function corr2(){A2.forEach((q,i)=>{$('a2-'+i).value=q[2];mark($('a2-'+i),true);mark($('q2-'+i),true);
+ const S={comp:90,droit:90,tri:90,supp:180,plat:180,adj:180}[q[0]];
+ note('q2-'+i,'n2-'+i,q[0]==='opp'?`Opposés par le sommet : même amplitude, donc ${q[2]}°.`:`${S}° − ${q[1]}° = ${q[2]}°`)});
+ $('m2').className='msg succes';$('m2').textContent='Correction affichée. Retiens : complémentaires = 90°, supplémentaires = 180°, opposés par le sommet = égaux.'}
+const am=(x,y,z)=>`|${ang(x,y,z)}|`;
+const J3=[
+ `Opposés par le sommet : même amplitude. Un angle adjacent à ${ang('A','O','B')} lui est supplémentaire : 180° − ${am('A','O','B')}.`,
+ `Dans un triangle rectangle, les deux angles aigus sont complémentaires : ${am('B','C','A')} = 90° − ${am('A','B','C')}.`,
+ `A, O, B alignés : ${ang('A','O','C')} et ${ang('C','O','B')} sont adjacents supplémentaires (angle plat), donc ${am('C','O','B')} = 180° − ${am('A','O','C')}.`,
+ `${ang('A','O','M')} et ${ang('M','O','B')} sont adjacents et forment un angle droit : ils sont complémentaires, donc ${am('M','O','B')} = 90° − ${am('A','O','M')}.`,
+ 'Deux angles supplémentaires ont des amplitudes dont la somme vaut 180° : |angle 2| = 180° − |angle 1|.',
+ `A, O, B alignés : ${am('A','O','C')} + ${am('C','O','D')} + ${am('D','O','B')} = 180°, donc ${am('D','O','B')} = 180° − ${am('A','O','C')} − ${am('C','O','D')}.`,
+ `${ang('A','O','B')} et ${ang('D','O','E')} sont opposés par le sommet : ${am('D','O','E')} = ${am('A','O','B')}. De plus ${am('A','O','C')} = ${am('A','O','B')} + ${am('B','O','C')}, et ${am('C','O','D')} = 180° − ${am('A','O','C')} (A, O, D alignés).`,
+ `Comme OD ⊥ AB, ${am('A','O','D')} = 90°. Donc ${am('C','O','D')} = ${am('A','O','C')} − 90°.`];
+function corr3(){A3.forEach((q,i)=>{q.a.forEach((v,j)=>{$(`a3-${i}-${j}`).value=v;mark($(`a3-${i}-${j}`),true)});mark($('q3-'+i),true);note('q3-'+i,'n3-'+i,'💡 '+J3[q.k])});
+ $('m3').className='msg succes';$('m3').textContent='Correction affichée avec la méthode sous chaque problème. Clique sur « Nouvelles questions » pour réessayer.'}
+function corr4(){D4.forEach((d,i)=>{d.forEach((x,j)=>{if(j%2){$(`s4-${i}-${j}`).value=x;mark($(`s4-${i}-${j}`),true)}});mark($('q4-'+i),true)});
+ $('m4').className='msg succes';$('m4').textContent='Correction affichée. Relis l\'encadré « À retenir » en haut de la page.'}
+function corr6(){S6.forEach((q,i)=>{const r=document.querySelector(`input[name=q${i}][value="${q[1]}"]`);if(r)r.checked=true;mark($('q6-'+i),true)});
+ $('l6').classList.add('show');$('m6').className='msg succes';$('m6').textContent='Correction affichée : lis l\'explication sous chaque affirmation.'}
+
+
+/* Ex 6 : propriété qui justifie */
+const P6=['Deux angles opposés par le sommet ont la même amplitude.',
+ 'Des angles adjacents qui forment un angle plat ont des amplitudes dont la somme vaut 180°.',
+ 'Des angles adjacents qui forment un angle droit ont des amplitudes dont la somme vaut 90°.',
+ 'Dans un triangle rectangle, les deux angles aigus sont complémentaires.',
+ 'Deux angles supplémentaires (même non adjacents) ont des amplitudes dont la somme vaut 180°.',
+ 'Deux angles adjacents supplémentaires forment un angle plat : les points sont alignés.',
+ 'Deux angles adjacents complémentaires forment un angle droit : les droites sont perpendiculaires.'];
+const G6=[
+ ()=>{const a=rnd(25,80);return [`Les droites AC et BD se coupent en O. ${am('A','O','B')} = ${a}°, donc ${am('C','O','D')} = ${a}°.`,0]},
+ ()=>{const y=rnd(100,150);return [`A, O et B sont alignés. ${am('A','O','C')} = ${y}°, donc ${am('C','O','B')} = ${180-y}°.`,1]},
+ ()=>{const z=rnd(15,75);return [`L'angle ${ang('A','O','B')} est droit et M est à l'intérieur de cet angle. ${am('A','O','M')} = ${z}°, donc ${am('M','O','B')} = ${90-z}°.`,2]},
+ ()=>{const b=rnd(25,65);return [`ABC est rectangle en A. ${am('A','B','C')} = ${b}°, donc ${am('B','C','A')} = ${90-b}°.`,3]},
+ ()=>{const w=rnd(30,160);return [`Les angles 1 et 2 sont supplémentaires, sans être adjacents. |angle 1| = ${w}°, donc |angle 2| = ${180-w}°.`,4]},
+ ()=>{const y=rnd(40,140);return [`${ang('A','O','C')} et ${ang('C','O','B')} sont adjacents, ${am('A','O','C')} = ${y}° et ${am('C','O','B')} = ${180-y}°, donc A, O et B sont alignés.`,5]},
+ ()=>{const x=rnd(15,75);return [`${ang('A','O','C')} et ${ang('C','O','B')} sont adjacents, ${am('A','O','C')} = ${x}° et ${am('C','O','B')} = ${90-x}°, donc OA ⊥ OB.`,6]}];
+let S7=[];
+function init7(){S7=mix(G6).slice(0,5).map(g=>g());
+ const o='<option value="">— choisis une propriété —</option>'+P6.map((p,i)=>`<option value="${i}">${p}</option>`).join('');
+ $('l7').innerHTML=S7.map((q,i)=>`<div class="it" id="q7-${i}">${i+1}. ${q[0]}<br>Justification : <select id="s7-${i}">${o}</select></div>`).join('');$('m7').className='msg';att.m7=0}
+function chk7(){let ok=0;S7.forEach((q,i)=>{const g=$('s7-'+i).value===String(q[1]);if(g)ok++;mark($('q7-'+i),g)});
+ msg('m7',ok,S7.length,'Regarde ce qu\'on cherche : une somme (90° ou 180°) ou une égalité ? Et quelle est la situation : angles opposés, adjacents, dans un triangle, ou une conclusion (alignés, perpendiculaires) ?',corr7)}
+function corr7(){S7.forEach((q,i)=>{$('s7-'+i).value=q[1];mark($('q7-'+i),true)});$('m7').className='msg succes';$('m7').textContent='Correction affichée. Relis l\'encadré « À retenir » en haut de la page.'}
+
+/* Ex 7 : lire une figure à lettres */
+const LT='ABCDEF';let ANG=[],GP=[],Q8=[];
+const sz=a=>{let t=0;for(let j=0;j<a.k;j++)t+=GP[(a.i+j)%6];return t};
+const nm=a=>ang(LT[a.i],'O',LT[(a.i+a.k)%6]);
+const PR8={opp:(x,y)=>y.i===(x.i+3)%6&&y.k===x.k,
+ adj:(x,y)=>(x.i+x.k)%6===y.i||(y.i+y.k)%6===x.i,
+ flat:(x,y)=>PR8.adj(x,y)&&Math.abs(sz(x)+sz(y)-180)<.5};
+const TX8={opp:x=>`Cite un angle opposé par le sommet à ${nm(x)}.`,adj:x=>`Cite un angle adjacent à ${nm(x)}.`,flat:x=>`Cite un angle qui forme avec ${nm(x)} un angle plat.`};
+function init8(){const l1=rnd(0,40),l2=l1+rnd(35,60),l3=l2+rnd(40,70),rt=rnd(0,359);
+ const th=[l1,l2,l3,l1+180,l2+180,l3+180].map(x=>x+rt);
+ GP=th.map((t,i)=>(((th[(i+1)%6]-t)%360)+360)%360);
+ ANG=[];for(let i=0;i<6;i++)for(let k=1;k<=2;k++)ANG.push({i,k});
+ $('f8').innerHTML=pic([{c:C,n:'O',r:th.map((t,i)=>[t,LT[i]])}]);
+ Q8=mix(['opp','opp','adj','adj','flat','flat']).map(t=>({t,x:ANG[rnd(0,ANG.length-1)]}));
+ const o='<option value="">—</option>'+ANG.map((a,j)=>`<option value="${j}">${nm(a)}</option>`).join('');
+ $('l8').innerHTML=Q8.map((q,i)=>`<div class="it" id="q8-${i}">${i+1}. ${TX8[q.t](q.x)} <select id="s8-${i}">${o}</select></div>`).join('');$('m8').className='msg';att.m8=0}
+function chk8(){let ok=0;Q8.forEach((q,i)=>{const v=$('s8-'+i).value;const g=v!==''&&PR8[q.t](q.x,ANG[+v]);if(g)ok++;mark($('q8-'+i),g)});
+ msg('m8',ok,Q8.length,'Adjacents : même sommet, un côté commun, de part et d\'autre. Opposés : les côtés sont dans le prolongement. Angle plat : adjacents et 180° au total (compare avec le trait droit de la figure).',corr8)}
+function corr8(){Q8.forEach((q,i)=>{const v=ANG.map((a,j)=>j).filter(j=>PR8[q.t](q.x,ANG[j]));$('s8-'+i).value=v[0];mark($('q8-'+i),true);
+ note('q8-'+i,'n8-'+i,'Réponses possibles : '+v.map(j=>nm(ANG[j])).join(', '))});
+ $('m8').className='msg succes';$('m8').textContent='Correction affichée avec toutes les réponses possibles.'}
+
+/* Ex 8 : problèmes à plusieurs étapes */
+const T8=[
+ i=>{const y=2*rnd(50,75),m=(180-y)/2;return {f:pic([{c:C,r:[[180,'A'],[0,'B'],[180-y,'C'],[m,'M']],s:[[180-y,180,O,30]],n:'O',t:[T(C,180-y*.25,52,y+'°')]}]),
+  t:`A, O et B sont alignés et [OM est la bissectrice de ${ang('C','O','B')}. ${am('A','O','C')} = ${y}°. Calcule ${am('C','O','B')} = ${inp(`a9-${i}-0`)} °, ${am('M','O','B')} = ${inp(`a9-${i}-1`)} ° et ${am('A','O','M')} = ${inp(`a9-${i}-2`)} °.`,a:[180-y,m,180-m]}},
+ i=>{const u=rnd(20,40);return {f:pic([{c:C,r:[[180,'A'],[0,'C'],[180-u,'D'],[180-2*u,'F'],[90-u,'E']],s:[[180-u,180,O,30]],n:'B',t:[T(C,180-u*.5,56,u+'°')]}]),
+  t:`A, B et C sont alignés. ${am('A','B','D')} = ${u}°, [BD est la bissectrice de ${ang('A','B','F')} et BD ⊥ BE. Calcule ${am('A','B','F')} = ${inp(`a9-${i}-0`)} °, ${am('C','B','F')} = ${inp(`a9-${i}-1`)} °, ${am('C','B','E')} = ${inp(`a9-${i}-2`)} ° et ${am('E','B','F')} = ${inp(`a9-${i}-3`)} °. Que peux-tu dire de [BE pour l'angle ${ang('C','B','F')} ?`,a:[2*u,180-2*u,90-u,90-u]}},
+ i=>{const c=2*rnd(25,35),a=rnd(24,34),B=[40,108];return {f:pic([{c:B,L:100,dr:50,st:22,r:[[0,'E'],[c/2,'D'],[c,'C'],[c+a,'A']],s:[[0,c,O,42],[c,c+a,V,84]],n:'B',t:[T(B,c*.28,30,c+'°'),T(B,c+a/2,68,a+'°')]}]),
+  t:`[BD est la bissectrice de ${ang('C','B','E')}. ${am('C','B','E')} = ${c}° et ${am('A','B','C')} = ${a}°. Calcule ${am('E','B','D')} = ${inp(`a9-${i}-0`)} ° et ${am('A','B','D')} = ${inp(`a9-${i}-1`)} °.`,a:[c/2,c/2+a]}},
+ i=>{const x=2*rnd(20,50);return {f:pic([{c:C,r:[[180,'A'],[0,'B'],[180-x,'C'],[360-x,'D'],[180-x/2,'E']],s:[[180-x,180,O,30]],n:'O',t:[T(C,180-x*.2,54,x+'°')]}]),
+  t:`Les droites AB et CD se coupent en O et [OE est la bissectrice de ${ang('A','O','C')}. ${am('A','O','C')} = ${x}°. Calcule ${am('A','O','E')} = ${inp(`a9-${i}-0`)} °, ${am('E','O','B')} = ${inp(`a9-${i}-1`)} ° et ${am('D','O','B')} = ${inp(`a9-${i}-2`)} °.`,a:[x/2,180-x/2,x]}}];
+const J9=[
+ `A, O, B alignés : ${am('C','O','B')} = 180° − ${am('A','O','C')}. Bissectrice : ${am('M','O','B')} = ${am('C','O','B')} : 2. Angle plat : ${am('A','O','M')} = 180° − ${am('M','O','B')}.`,
+ `Bissectrice de ${ang('A','B','F')} : ${am('A','B','F')} = 2 × ${am('A','B','D')}. Angle plat : ${am('C','B','F')} = 180° − ${am('A','B','F')}. Comme BD ⊥ BE : ${am('C','B','E')} = 180° − ${am('A','B','D')} − 90°. Puis ${am('E','B','F')} = ${am('C','B','F')} − ${am('C','B','E')}. Les deux angles ${ang('C','B','E')} et ${ang('E','B','F')} sont égaux : [BE est la bissectrice de ${ang('C','B','F')}.`,
+ `Bissectrice de ${ang('C','B','E')} : ${am('E','B','D')} = ${am('C','B','E')} : 2. Puis ${am('A','B','D')} = ${am('A','B','C')} + ${am('C','B','D')}, avec ${am('C','B','D')} = ${am('E','B','D')}.`,
+ `Bissectrice : ${am('A','O','E')} = ${am('A','O','C')} : 2. A, O, B alignés : ${am('E','O','B')} = 180° − ${am('A','O','E')}. ${ang('D','O','B')} et ${ang('A','O','C')} sont opposés par le sommet : même amplitude.`];
+let A9=[];
+function init9(){A9=mix(T8.map((f,k)=>[f,k])).slice(0,3).map(([f,k],i)=>{const o=f(i);o.k=k;return o});
+ $('l9').innerHTML=A9.map((q,i)=>`<div class="it row" id="q9-${i}"><div class="fg">${q.f}</div><div class="tx">${i+1}. ${q.t}</div></div>`).join('');$('m9').className='msg';att.m9=0}
+function chk9(){let ok=0;A9.forEach((q,i)=>{const r=q.a.map((v,j)=>{const g=num(`a9-${i}-${j}`)===v;mark($(`a9-${i}-${j}`),g);return g});
+ const all=r.every(Boolean),el=$('q9-'+i);el.classList.remove('ok','err');if(all){ok++;el.classList.add('ok')}else if(!r.some(Boolean))el.classList.add('err')});
+ msg('m9',ok,A9.length,'Avance étape par étape : bissectrice = moitié de l\'angle ; points alignés = 180° ; angle droit = 90° ; opposés par le sommet = égaux.',corr9)}
+function corr9(){A9.forEach((q,i)=>{q.a.forEach((v,j)=>{$(`a9-${i}-${j}`).value=v;mark($(`a9-${i}-${j}`),true)});mark($('q9-'+i),true);note('q9-'+i,'n9-'+i,'💡 '+J9[q.k])});
+ $('m9').className='msg succes';$('m9').textContent='Correction affichée avec la méthode sous chaque problème.'}
+
+init1();init2();init3();init4();init6();init7();init8();init9();
+</script>
+</body>
+</html>
