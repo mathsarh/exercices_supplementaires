@@ -130,6 +130,7 @@
       margin: 0 0 0.95rem;
       padding: 0.75rem 0.95rem;
       overflow-x: auto;
+      white-space: nowrap;
       border-radius: 10px;
       background: #f4f6fd;
       font-family: "Courier New", monospace;
@@ -230,7 +231,13 @@
     }
     .correction.is-visible { display: block; }
     .correction strong { display: block; margin-bottom: 0.25rem; }
-    .correction-lines { font-family: "Courier New", monospace; font-weight: 700; }
+    .correction-lines {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+    }
 
     .footer-actions { margin-top: 2.6rem; text-align: center; }
     .restart-button {
@@ -438,20 +445,24 @@
       return count;
     }
 
-    // Indique s'il reste au moins une addition ou une soustraction binaire à
-    // effectuer dans le texte (le point "." n'est pas concerné). Sert à
-    // repérer les portions de calcul qui ne sont plus qu'un produit de
-    // plusieurs facteurs : une fois qu'il ne reste que des multiplications
-    // (associatives et commutatives), les regrouper en une seule ligne ne
-    // fait sauter aucune étape de priorité, contrairement à mélanger une
-    // multiplication et une addition/soustraction.
-    function hasBinaryAddSub(raw) {
-      const expr = normalizeExpression(raw);
-      for (let i = 1; i < expr.length; i += 1) {
-        const c = expr[i];
-        if ((c === "+" || c === "-") && /[0-9)]/.test(expr[i - 1])) return true;
-      }
-      return false;
+    // Indique s'il reste un groupe "composé" entre parenthèses/crochets, c'est-à-dire
+    // une sous-expression qui contient encore une opération à effectuer (ex. "(7 - 4)").
+    // Une parenthèse qui ne contient qu'un simple nombre signé (ex. "(-15)") n'est que
+    // de la notation d'affichage et n'est pas considérée comme "à résoudre" : on la
+    // retire avant de vérifier s'il reste autre chose. Une fois qu'il n'y a plus aucun
+    // groupe composé, il ne reste que des multiplications indépendantes
+    // (éventuellement séparées par des additions/soustractions) : leur ordre de
+    // résolution est alors libre, puisque ce sont des opérations indépendantes de même
+    // priorité — contrairement à une parenthèse, qui doit toujours être résolue avant
+    // le reste.
+    function hasCompoundGroup(raw) {
+      let text = normalizeExpression(raw);
+      let previousLength;
+      do {
+        previousLength = text.length;
+        text = text.replace(/\(-?\d+\)/g, "");
+      } while (text.length !== previousLength);
+      return /[()]/.test(text);
     }
 
     // Compte les groupes de parenthèses/crochets encore présents dans une
@@ -470,10 +481,70 @@
     // un simple nombre signé (pas une sous-expression avec une opération à
     // effectuer), pour ne fusionner que des signes déjà "prêts".
     function mergeSigns(text) {
-      return text.replace(/([+-])\s*\(([+-])(\d+(?:[.,]\d+)?)\)/g, (match, outer, inner, num) => {
+      // Le lookahead négatif (?!\s*\.) empêche de fusionner un signe quand le
+      // nombre encore parenthésé est en réalité l'opérande d'une multiplication
+      // qui n'a pas encore été calculée (ex. "+ (-45) . 9"). Fusionner le signe
+      // à ce stade sauterait l'étape naturelle qui consiste à d'abord terminer
+      // cette multiplication ; on attend qu'elle soit résolue avant de proposer
+      // la simplification de signe.
+      return text.replace(/([+-])\s*\(([+-])(\d+(?:[.,]\d+)?)\)(?!\s*\.)/g, (match, outer, inner, num) => {
         const combined = outer === inner ? "+" : "-";
         return ` ${combined} ${num}`;
       });
+    }
+
+    // Repère les signes composés ("+ (-9)", "- (-9)") encore directement
+    // suivis d'une multiplication non résolue - exactement ceux que mergeSigns
+    // refuse lui-même de fusionner (voir son commentaire ci-dessus). Retourne,
+    // pour chacun, la magnitude du nombre et l'opérateur qui le suit.
+    function findGuardedCompoundSigns(text) {
+      const re = /[+-]\([+-](\d+)\)(\.)/g;
+      const found = [];
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        found.push({ magnitude: m[1], operator: m[2] });
+      }
+      return found;
+    }
+
+    function countOccurrences(text, pattern) {
+      const matches = text.match(new RegExp(pattern, "g"));
+      return matches ? matches.length : 0;
+    }
+
+    // Vrai si un signe composé de `referenceText`, encore attaché à une
+    // multiplication non résolue, a été réduit à un signe simple dans
+    // `studentText` alors que cette multiplication n'a pas été calculée : un
+    // signe a été distribué sans que le calcul auquel il est attaché ait été
+    // fait. C'est distinct d'un vrai progrès (le nombre a disparu parce que
+    // l'opération a été calculée) et distinct de la ligne laissée telle quelle
+    // (le signe composé est encore présent).
+    function hasIllegitimateSignMerge(referenceText, studentText) {
+      const refNorm = normalizeExpression(referenceText);
+      const studentNorm = normalizeExpression(studentText);
+      const guarded = findGuardedCompoundSigns(refNorm);
+      const checked = new Set();
+      for (const { magnitude, operator } of guarded) {
+        const key = magnitude + operator;
+        if (checked.has(key)) continue;
+        checked.add(key);
+        const escapedOp = operator === "." ? "\\." : operator;
+        const barePattern = "(?<![(\\d.])" + magnitude + "(?=" + escapedOp + ")";
+        const compoundPattern = "\\([+-]?" + magnitude + "\\)" + escapedOp;
+        // Un même nombre peut apparaître ailleurs dans l'énoncé sans aucun
+        // rapport avec le signe composé qu'on surveille. On compare donc le
+        // nombre d'occurrences "nues" et "composées" avant/après plutôt que
+        // leur simple présence : une fusion illégitime se traduit par une
+        // occurrence composée en moins ET une occurrence nue en plus.
+        const refBareCount = countOccurrences(refNorm, barePattern);
+        const refCompoundCount = countOccurrences(refNorm, compoundPattern);
+        const studentBareCount = countOccurrences(studentNorm, barePattern);
+        const studentCompoundCount = countOccurrences(studentNorm, compoundPattern);
+        if (studentBareCount > refBareCount && studentCompoundCount < refCompoundCount) {
+          return true;
+        }
+      }
+      return false;
     }
 
     // Reprend la liste des étapes d'un modèle et insère, chaque fois que
@@ -825,6 +896,31 @@
         });
       }
 
+      // Insère automatiquement une ligne "libre" déjà validée, avec la valeur
+      // que l'élève vient d'écrire, juste avant la ligne canonique en cours.
+      // Sert quand l'élève a fait un progrès réel et juste mais plus petit (ou
+      // d'un autre regroupement) que l'étape modèle : plutôt que de le pénaliser
+      // parce que son écriture ne correspond pas exactement au regroupement
+      // choisi par le modèle, on capitalise sa ligne comme une étape
+      // supplémentaire valide et on laisse la ligne canonique ouverte.
+      function insertAcceptedFreeRow(beforeEntry, value) {
+        const elements = buildRowElements("+", `Étape supplémentaire du calcul de ${item.expr}`);
+        panel.insertBefore(elements.row, beforeEntry.row);
+        elements.row.classList.add("is-free-step");
+        const freeEntry = { ...elements, attempts: 0, state: "correct", canonicalIndex: null };
+        const beforeArrayIndex = rows.indexOf(beforeEntry);
+        rows.splice(beforeArrayIndex, 0, freeEntry);
+        elements.input.value = value;
+        elements.input.disabled = true;
+        elements.row.classList.add("is-step-correct");
+        elements.statusIcon.textContent = "✓";
+        elements.statusIcon.setAttribute("aria-label", "Étape supplémentaire correcte");
+        elements.input.addEventListener("blur", () => validateFreeRow(freeEntry));
+        elements.input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") { event.preventDefault(); elements.input.blur(); }
+        });
+      }
+
       function unlockNext(entry) {
         const idx = rows.indexOf(entry);
         const next = rows[idx + 1];
@@ -960,21 +1056,44 @@
         // simple recopie de la ligne précédente comme si c'était un progrès.
         const previousText = stepIndex === 0 ? item.expr : targetTexts[stepIndex - 1];
         const isSignSimplificationStep = targetOpCounts[stepIndex] === countBinaryOps(previousText);
-        // Dès qu'il ne reste plus que des multiplications à effectuer (plus
-        // aucune addition/soustraction dans ce qui reste à calculer), on
-        // n'impose plus de faire une seule multiplication à la fois : les
-        // regrouper, voire aller directement au résultat final, ne fait
-        // sauter aucune priorité (toutes les opérations restantes sont du
-        // même type), donc on l'accepte.
-        const pureProductRemaining = !hasBinaryAddSub(previousText);
+        // Dès qu'il ne reste plus aucun groupe composé à résoudre (plus de
+        // parenthèse/crochet contenant une opération — seulement, éventuellement,
+        // des nombres signés entre parenthèses pour l'écriture), l'ordre dans
+        // lequel les multiplications restantes sont effectuées est libre : ce
+        // sont des opérations indépendantes de même priorité, et les regrouper
+        // (voire aller directement au résultat final) ne fait sauter aucune
+        // étape de priorité. On l'accepte donc sans exiger un nombre
+        // d'opérations précis.
+        const noCompoundGroupRemaining = !hasCompoundGroup(previousText);
         let paceCorrect = opsMatchTarget;
-        if (pureProductRemaining) {
+        if (noCompoundGroupRemaining) {
           paceCorrect = true;
         } else if (isSignSimplificationStep) {
           const previousParenCount = countParenGroups(previousText);
           const studentParenCount = countParenGroups(entry.input.value);
           paceCorrect = opsMatchTarget && studentParenCount < previousParenCount;
         }
+
+        // Le point de comparaison réel pour cette ligne : la dernière étape
+        // effectivement acceptée pour cet exercice (une étape libre
+        // précédente, s'il y en a une), sinon l'étape canonique précédente.
+        const rowPositionForCheck = rows.indexOf(entry);
+        const immediatelyPriorRowForCheck = rowPositionForCheck > 0 ? rows[rowPositionForCheck - 1] : null;
+        const lastAcceptedText =
+          immediatelyPriorRowForCheck &&
+          immediatelyPriorRowForCheck.canonicalIndex === null &&
+          immediatelyPriorRowForCheck.state === "correct"
+            ? immediatelyPriorRowForCheck.input.value
+            : previousText;
+
+        // Un signe composé encore attaché à une multiplication non résolue
+        // (celui que mergeSigns refuse justement de fusionner) ne peut pas
+        // être distribué tout seul : soit on laisse ce signe composé tel
+        // quel, soit on calcule entièrement la multiplication à laquelle il
+        // est attaché. Ce garde-fou l'emporte sur toute autre règle, y compris
+        // la liberté d'ordre une fois qu'aucun groupe composé ne subsiste.
+        const illegitimateSignMerge = hasIllegitimateSignMerge(lastAcceptedText, entry.input.value);
+        if (illegitimateSignMerge) paceCorrect = false;
 
         entry.attempts += 1;
 
@@ -990,40 +1109,84 @@
           return;
         }
 
-        // Un élève peut légitimement regrouper plusieurs étapes du modèle en
-        // une seule ligne (ex. résoudre une parenthèse ET la multiplication
-        // qui suit en même temps). Si sa valeur est juste et que le nombre
-        // d'opérations qu'il lui reste à faire correspond exactement à celui
-        // d'une étape PLUS LOIN dans le modèle, on considère qu'il a aussi
-        // résolu toutes les étapes intermédiaires : on les remplit
-        // automatiquement (avec leur propre forme canonique) plutôt que de
-        // le bloquer sur une étape qu'il a déjà dépassée.
-        if (valueCorrect && isReduced && !paceCorrect && studentOpCount < targetOpCounts[stepIndex]) {
-          const matchIndex = targetOpCounts.findIndex((oc, idx) => idx > stepIndex && oc === studentOpCount);
-          if (matchIndex !== -1) {
-            entry.state = "correct";
-            entry.row.classList.remove("is-step-error");
-            entry.row.classList.add("is-step-correct");
-            entry.statusIcon.textContent = "✓";
-            entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} correcte`);
-            entry.hint.textContent = "";
-            entry.input.disabled = true;
-
-            let lastEntry = entry;
-            for (let idx = stepIndex + 1; idx <= matchIndex; idx += 1) {
-              const skippedEntry = rows.find((r) => r.canonicalIndex === idx);
-              if (!skippedEntry) continue;
-              skippedEntry.state = "correct";
-              skippedEntry.input.value = targetTexts[idx];
-              skippedEntry.input.disabled = true;
-              skippedEntry.row.classList.remove("is-step-error");
-              skippedEntry.row.classList.add("is-step-correct");
-              skippedEntry.statusIcon.textContent = "✓";
-              skippedEntry.statusIcon.setAttribute("aria-label", `Étape ${idx + 1} obtenue directement`);
-              skippedEntry.hint.textContent = "";
-              lastEntry = skippedEntry;
+        if (valueCorrect && isReduced && !paceCorrect) {
+          // Cas 1 : l'élève a regroupé plusieurs étapes du modèle en une
+          // seule ligne (ex. résoudre une parenthèse ET la multiplication
+          // qui suit en même temps) et retombe exactement sur le nombre
+          // d'opérations d'une étape PLUS LOIN dans le modèle. On considère
+          // qu'il a aussi résolu toutes les étapes intermédiaires : on les
+          // remplit automatiquement (avec leur propre forme canonique)
+          // plutôt que de le bloquer sur une étape qu'il a déjà dépassée.
+          if (!illegitimateSignMerge && studentOpCount < targetOpCounts[stepIndex]) {
+            // Plusieurs étapes plus loin peuvent partager le même nombre
+            // d'opérations : une étape de pure fusion de signes ne change
+            // JAMAIS le nombre d'opérations, seulement le nombre de
+            // parenthèses. On choisit donc, parmi les étapes plus loin qui
+            // ont le même nombre d'opérations, celle dont le nombre de
+            // parenthèses correspond exactement à ce que l'élève a écrit ;
+            // à défaut, on retombe sur la première (le plus prudent).
+            const studentParenCountForSkip = countParenGroups(entry.input.value);
+            const tiedCandidates = [];
+            for (let idx = stepIndex + 1; idx < targetOpCounts.length; idx += 1) {
+              if (targetOpCounts[idx] === studentOpCount) tiedCandidates.push(idx);
             }
-            unlockNext(lastEntry);
+            const exactParenMatch = tiedCandidates.find(
+              (idx) => countParenGroups(targetTexts[idx]) === studentParenCountForSkip
+            );
+            const matchIndex = tiedCandidates.length > 0 ? (exactParenMatch !== undefined ? exactParenMatch : tiedCandidates[0]) : -1;
+            if (matchIndex !== -1) {
+              entry.state = "correct";
+              entry.row.classList.remove("is-step-error");
+              entry.row.classList.add("is-step-correct");
+              entry.statusIcon.textContent = "✓";
+              entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} correcte`);
+              entry.hint.textContent = "";
+              entry.input.disabled = true;
+
+              let lastEntry = entry;
+              for (let idx = stepIndex + 1; idx <= matchIndex; idx += 1) {
+                const skippedEntry = rows.find((r) => r.canonicalIndex === idx);
+                if (!skippedEntry) continue;
+                skippedEntry.state = "correct";
+                skippedEntry.input.value = targetTexts[idx];
+                skippedEntry.input.disabled = true;
+                skippedEntry.row.classList.remove("is-step-error");
+                skippedEntry.row.classList.add("is-step-correct");
+                skippedEntry.statusIcon.textContent = "✓";
+                skippedEntry.statusIcon.setAttribute("aria-label", `Étape ${idx + 1} obtenue directement`);
+                skippedEntry.hint.textContent = "";
+                lastEntry = skippedEntry;
+              }
+              unlockNext(lastEntry);
+              return;
+            }
+          }
+
+          // Cas 2 : l'élève a fait un progrès réel (moins d'opérations qu'à
+          // la ligne précédente, avec une valeur juste) mais qui ne tombe
+          // exactement sur AUCUNE étape reconnue du modèle - ni celle-ci, ni
+          // une étape plus loin (par exemple en ne résolvant qu'UNE seule des
+          // opérations prioritaires indépendantes, ou en résolvant le groupe
+          // composé en même temps que l'une d'elles seulement). La valeur
+          // juste garantit que le calcul est mathématiquement valide : on
+          // capitalise cette ligne comme une étape supplémentaire plutôt que
+          // de refuser une écriture pourtant correcte, et on laisse la ligne
+          // canonique ouverte pour la suite.
+          //
+          // Le progrès doit toutefois être réel par rapport à la DERNIÈRE
+          // ligne effectivement acceptée pour cet exercice - pas seulement
+          // par rapport à l'énoncé de départ. Sinon, un élève pourrait
+          // ré-écrire une ligne déjà acceptée en distribuant un signe encore
+          // attaché à une multiplication non résolue et obtenir un crédit
+          // pour une étape supplémentaire qui n'a rien fait avancer.
+          if (!illegitimateSignMerge && !opsMatchTarget && studentOpCount < countBinaryOps(lastAcceptedText)) {
+            entry.attempts -= 1;
+            insertAcceptedFreeRow(entry, entry.input.value);
+            entry.input.value = "";
+            entry.row.classList.remove("is-step-error");
+            entry.hint.textContent = "";
+            announce("Étape intermédiaire acceptée, continue le calcul.");
+            window.setTimeout(() => entry.input.focus({ preventScroll: true }), 50);
             return;
           }
         }

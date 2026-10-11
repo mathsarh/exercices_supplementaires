@@ -130,6 +130,7 @@
       margin: 0 0 0.95rem;
       padding: 0.75rem 0.95rem;
       overflow-x: auto;
+      white-space: nowrap;
       border-radius: 10px;
       background: #f4f6fd;
       font-family: "Courier New", monospace;
@@ -197,6 +198,22 @@
     .step-row.is-step-error .step-hint { display: block; color: var(--error); }
     .step-row.is-step-revealed .step-hint { display: block; color: var(--correction-line); }
 
+    .add-step-button {
+      justify-self: start;
+      margin-top: 0.15rem;
+      padding: 0.35rem 0.65rem;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--indigo-dark);
+      font-size: 0.82rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .add-step-button:hover { background: #eef1fc; }
+    .add-step-button[hidden] { display: none; }
+    .step-row.is-free-step .step-number { background: #fff4d9; color: #8a5a00; }
+
     .card-status { margin: 0.9rem 0 0; font-size: 0.9rem; font-weight: 650; min-height: 1.2em; }
     .card-status.correct { color: var(--success); }
     .card-status.incorrect { color: var(--correction-line); }
@@ -214,7 +231,13 @@
     }
     .correction.is-visible { display: block; }
     .correction strong { display: block; margin-bottom: 0.25rem; }
-    .correction-lines { font-family: "Courier New", monospace; font-weight: 700; }
+    .correction-lines {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+    }
 
     .footer-actions { margin-top: 2.6rem; text-align: center; }
     .restart-button {
@@ -423,6 +446,25 @@
       return matches ? matches.length : 0;
     }
 
+    // Indique s'il reste un groupe "composé" entre parenthèses/crochets, c'est-à-dire
+    // une sous-expression qui contient encore une opération à effectuer (ex. "(7 - 4)").
+    // Une parenthèse qui ne contient qu'un simple nombre signé (ex. "(-15)") n'est que
+    // de la notation d'affichage et n'est pas considérée comme "à résoudre" : on la
+    // retire avant de vérifier s'il reste autre chose. Une fois qu'il n'y a plus aucun
+    // groupe composé, il ne reste que des additions et soustractions de même priorité,
+    // à effectuer dans l'ordre où elles se présentent : les regrouper en une seule
+    // ligne ne fait sauter aucune étape de priorité, contrairement à une parenthèse,
+    // qui doit toujours être résolue avant le reste.
+    function hasCompoundGroup(raw) {
+      let text = normalizeExpression(raw);
+      let previousLength;
+      do {
+        previousLength = text.length;
+        text = text.replace(/\(-?\d+\)/g, "");
+      } while (text.length !== previousLength);
+      return /[()]/.test(text);
+    }
+
     // Fusionne les doubles signes d'une expression : "+ (-9)" devient "- 9",
     // "- (-9)" devient "+ 9", etc. Ne touche qu'aux parenthèses qui contiennent
     // un simple nombre signé (pas une sous-expression avec une opération à
@@ -443,7 +485,15 @@
       for (let i = 1; i < steps.length; i += 1) {
         const previous = expanded[expanded.length - 1];
         const merged = mergeSigns(previous);
-        if (merged !== previous && merged !== steps[i] && !expanded.includes(merged)) {
+        // Comparaison sur la forme normalisée (espaces ignorés) : la fusion
+        // de signes peut introduire un espace superflu (ex. double espace),
+        // ce qui créerait sinon une étape "dupliquée" en apparence différente
+        // de l'étape déjà écrite manuellement dans le modèle.
+        const mergedNorm = normalizeExpression(merged);
+        const sameAsPrevious = mergedNorm === normalizeExpression(previous);
+        const sameAsNext = mergedNorm === normalizeExpression(steps[i]);
+        const alreadyPresent = expanded.some((s) => normalizeExpression(s) === mergedNorm);
+        if (!sameAsPrevious && !sameAsNext && !alreadyPresent) {
           expanded.push(merged);
         }
         expanded.push(steps[i]);
@@ -661,15 +711,17 @@
       const targetOpCounts = targetTexts.map((t) => countBinaryOps(t));
       const rows = [];
       let cardHadReveal = false;
-      let resolvedCount = 0;
 
-      targetTexts.forEach((text, stepIndex) => {
+      // Construit la structure DOM commune à une ligne (numérotée ou "+"),
+      // utilisée aussi bien pour les lignes du modèle que pour une ligne
+      // ajoutée librement par l'élève.
+      function buildRowElements(labelText, ariaLabel) {
         const row = document.createElement("div");
         row.className = "step-row";
 
         const number = document.createElement("span");
         number.className = "step-number";
-        number.textContent = String(stepIndex + 1);
+        number.textContent = labelText;
         number.setAttribute("aria-hidden", "true");
 
         const group = document.createElement("div");
@@ -683,9 +735,9 @@
         const input = document.createElement("input");
         input.type = "text";
         input.className = "line-input";
-        input.setAttribute("aria-label", `Étape ${stepIndex + 1} du calcul de ${item.expr}`);
+        input.setAttribute("aria-label", ariaLabel);
         input.autocomplete = "off";
-        if (stepIndex > 0) input.disabled = true;
+        input.disabled = true;
         input.addEventListener("focus", () => { focusedInput = input; });
 
         const statusIcon = document.createElement("span");
@@ -696,10 +748,148 @@
 
         group.append(equals, input, statusIcon);
         row.append(number, group, hint);
-        panel.appendChild(row);
+        return { row, input, statusIcon, hint };
+      }
 
-        rows.push({ row, input, statusIcon, hint, attempts: 0, state: "pending" });
+      targetTexts.forEach((text, canonicalIndex) => {
+        const elements = buildRowElements(String(canonicalIndex + 1), `Étape ${canonicalIndex + 1} du calcul de ${item.expr}`);
+        panel.appendChild(elements.row);
+        const entry = { ...elements, attempts: 0, state: "pending", canonicalIndex };
+        rows.push(entry);
+        elements.input.addEventListener("blur", () => validateRow(entry));
+        elements.input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") { event.preventDefault(); elements.input.blur(); }
+        });
       });
+      rows[0].input.disabled = false;
+
+      const addStepButton = document.createElement("button");
+      addStepButton.type = "button";
+      addStepButton.className = "add-step-button";
+      addStepButton.textContent = "+ Ajouter une ligne de calcul";
+      addStepButton.setAttribute("aria-label", `Ajouter une ligne de calcul supplémentaire pour ${item.expr}`);
+      addStepButton.addEventListener("click", () => {
+        const activeEntry = rows.find((r) => r.state === "pending" && !r.input.disabled);
+        if (!activeEntry) return;
+        insertFreeRow(activeEntry);
+      });
+      panel.appendChild(addStepButton);
+
+      function insertFreeRow(beforeEntry) {
+        const elements = buildRowElements("+", `Étape supplémentaire du calcul de ${item.expr}`);
+        panel.insertBefore(elements.row, beforeEntry.row);
+        elements.row.classList.add("is-free-step");
+        const freeEntry = { ...elements, attempts: 0, state: "pending", canonicalIndex: null };
+        const beforeArrayIndex = rows.indexOf(beforeEntry);
+        rows.splice(beforeArrayIndex, 0, freeEntry);
+
+        beforeEntry.input.disabled = true;
+        elements.input.disabled = false;
+        window.setTimeout(() => elements.input.focus({ preventScroll: true }), 50);
+
+        elements.input.addEventListener("blur", () => validateFreeRow(freeEntry));
+        elements.input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") { event.preventDefault(); elements.input.blur(); }
+        });
+      }
+
+      // Insère automatiquement une ligne "libre" déjà validée, avec la valeur
+      // que l'élève vient d'écrire, juste avant la ligne canonique en cours.
+      // Sert quand l'élève a fait un progrès réel et juste mais plus petit (ou
+      // d'un autre regroupement) que l'étape modèle : plutôt que de le pénaliser
+      // parce que son écriture ne correspond pas exactement au regroupement
+      // choisi par le modèle, on capitalise sa ligne comme une étape
+      // supplémentaire valide et on laisse la ligne canonique ouverte.
+      function insertAcceptedFreeRow(beforeEntry, value) {
+        const elements = buildRowElements("+", `Étape supplémentaire du calcul de ${item.expr}`);
+        panel.insertBefore(elements.row, beforeEntry.row);
+        elements.row.classList.add("is-free-step");
+        const freeEntry = { ...elements, attempts: 0, state: "correct", canonicalIndex: null };
+        const beforeArrayIndex = rows.indexOf(beforeEntry);
+        rows.splice(beforeArrayIndex, 0, freeEntry);
+        elements.input.value = value;
+        elements.input.disabled = true;
+        elements.row.classList.add("is-step-correct");
+        elements.statusIcon.textContent = "✓";
+        elements.statusIcon.setAttribute("aria-label", "Étape supplémentaire correcte");
+        elements.input.addEventListener("blur", () => validateFreeRow(freeEntry));
+        elements.input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") { event.preventDefault(); elements.input.blur(); }
+        });
+      }
+
+      function unlockNext(entry) {
+        const idx = rows.indexOf(entry);
+        const next = rows[idx + 1];
+        if (next) {
+          next.input.disabled = false;
+          window.setTimeout(() => next.input.focus({ preventScroll: true }), 200);
+        } else {
+          addStepButton.hidden = true;
+          finishCard();
+        }
+      }
+
+      // Validation permissive pour une ligne ajoutée librement par l'élève :
+      // elle doit simplement conserver la même valeur que la ligne
+      // précédente (peu importe la forme exacte), pour lui permettre de
+      // détailler un calcul en plusieurs lignes plutôt qu'une seule.
+      function validateFreeRow(entry) {
+        if (entry.state !== "pending") return;
+        if (!entry.input.value.trim()) return;
+
+        const idx = rows.indexOf(entry);
+        const previousEntry = idx > 0 ? rows[idx - 1] : null;
+        let previousValue;
+        try {
+          previousValue = previousEntry ? safeEvaluate(previousEntry.input.value) : safeEvaluate(item.expr);
+        } catch (err) {
+          previousValue = NaN;
+        }
+
+        let studentValue;
+        try {
+          studentValue = safeEvaluate(entry.input.value);
+        } catch (err) {
+          studentValue = NaN;
+        }
+
+        entry.attempts += 1;
+        const valueCorrect = nearlyEqual(studentValue, previousValue);
+
+        if (valueCorrect) {
+          entry.state = "correct";
+          entry.row.classList.add("is-step-correct");
+          entry.statusIcon.textContent = "✓";
+          entry.hint.textContent = "";
+          entry.input.disabled = true;
+          unlockNext(entry);
+          return;
+        }
+
+        entry.row.classList.remove("is-step-error");
+        void entry.row.offsetWidth;
+        entry.row.classList.add("is-step-error");
+        entry.statusIcon.textContent = "✗";
+
+        if (entry.attempts >= MAX_ATTEMPTS) {
+          cardHadReveal = true;
+          entry.state = "revealed";
+          entry.row.classList.remove("is-step-error");
+          entry.row.classList.add("is-step-revealed");
+          entry.statusIcon.textContent = "!";
+          entry.input.value = Number.isFinite(previousValue) ? String(previousValue) : entry.input.value;
+          entry.input.disabled = true;
+          entry.hint.textContent = "Cette ligne supplémentaire est laissée de côté ; continue avec la suite du calcul.";
+          unlockNext(entry);
+          return;
+        }
+
+        entry.hint.textContent = !Number.isFinite(studentValue)
+          ? "Ton expression n'est pas reconnue : vérifie qu'elle est bien écrite."
+          : "Cette ligne doit avoir la même valeur que la ligne précédente : vérifie ton calcul.";
+        announce(entry.hint.textContent);
+      }
 
       function finishCard() {
         if (cardHadReveal) {
@@ -719,13 +909,6 @@
         updateScore();
       }
 
-      function unlockRow(nextIndex) {
-        if (nextIndex >= rows.length) { finishCard(); return; }
-        const next = rows[nextIndex];
-        next.input.disabled = false;
-        window.setTimeout(() => next.input.focus({ preventScroll: true }), 200);
-      }
-
       function revealRow(entry, stepIndex) {
         cardHadReveal = true;
         entry.state = "revealed";
@@ -737,11 +920,11 @@
         entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} révélée`);
         entry.hint.textContent = "Solution révélée pour débloquer la suite.";
         announce(`Étape ${stepIndex + 1} révélée : ${targetTexts[stepIndex]}.`);
-        unlockRow(stepIndex + 1);
+        unlockNext(entry);
       }
 
-      function validateRow(stepIndex) {
-        const entry = rows[stepIndex];
+      function validateRow(entry) {
+        const stepIndex = entry.canonicalIndex;
         if (entry.state !== "pending") return;
         if (!entry.input.value.trim()) return;
 
@@ -752,7 +935,7 @@
           studentValue = NaN;
         }
 
-        const isLast = stepIndex === rows.length - 1;
+        const isLast = stepIndex === targetTexts.length - 1;
         const isReduced = !isLast || isBareNumber(entry.input.value);
         const studentOpCount = Number.isFinite(studentValue) ? countBinaryOps(entry.input.value) : NaN;
         const valueCorrect = nearlyEqual(studentValue, targetValues[stepIndex]);
@@ -770,12 +953,35 @@
         // simple recopie de la ligne précédente comme si c'était un progrès.
         const previousText = stepIndex === 0 ? item.expr : targetTexts[stepIndex - 1];
         const isSignSimplificationStep = targetOpCounts[stepIndex] === countBinaryOps(previousText);
+        // Dès qu'il ne reste plus aucun groupe composé à résoudre (plus de
+        // parenthèse/crochet contenant une opération — seulement, éventuellement,
+        // des nombres signés entre parenthèses pour l'écriture), l'ordre dans
+        // lequel les additions et soustractions restantes sont effectuées est libre : ce
+        // sont des opérations indépendantes de même priorité, et les regrouper
+        // (voire aller directement au résultat final) ne fait sauter aucune
+        // étape de priorité. On l'accepte donc sans exiger un nombre
+        // d'opérations précis.
+        const noCompoundGroupRemaining = !hasCompoundGroup(previousText);
         let paceCorrect = opsMatchTarget;
-        if (isSignSimplificationStep) {
+        if (noCompoundGroupRemaining) {
+          paceCorrect = true;
+        } else if (isSignSimplificationStep) {
           const previousParenCount = countParenGroups(previousText);
           const studentParenCount = countParenGroups(entry.input.value);
           paceCorrect = opsMatchTarget && studentParenCount < previousParenCount;
         }
+
+        // Le point de comparaison réel pour cette ligne : la dernière étape
+        // effectivement acceptée pour cet exercice (une étape libre
+        // précédente, s'il y en a une), sinon l'étape canonique précédente.
+        const rowPositionForCheck = rows.indexOf(entry);
+        const immediatelyPriorRowForCheck = rowPositionForCheck > 0 ? rows[rowPositionForCheck - 1] : null;
+        const lastAcceptedText =
+          immediatelyPriorRowForCheck &&
+          immediatelyPriorRowForCheck.canonicalIndex === null &&
+          immediatelyPriorRowForCheck.state === "correct"
+            ? immediatelyPriorRowForCheck.input.value
+            : previousText;
 
         entry.attempts += 1;
 
@@ -787,8 +993,89 @@
           entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} correcte`);
           entry.hint.textContent = "";
           entry.input.disabled = true;
-          unlockRow(stepIndex + 1);
+          unlockNext(entry);
           return;
+        }
+
+        if (valueCorrect && isReduced && !paceCorrect) {
+          // Cas 1 : l'élève a regroupé plusieurs étapes du modèle en une
+          // seule ligne (ex. résoudre une parenthèse ET l'opération
+          // qui suit en même temps) et retombe exactement sur le nombre
+          // d'opérations d'une étape PLUS LOIN dans le modèle. On considère
+          // qu'il a aussi résolu toutes les étapes intermédiaires : on les
+          // remplit automatiquement (avec leur propre forme canonique)
+          // plutôt que de le bloquer sur une étape qu'il a déjà dépassée.
+          if (studentOpCount < targetOpCounts[stepIndex]) {
+            // Plusieurs étapes plus loin peuvent partager le même nombre
+            // d'opérations : une étape de pure fusion de signes ne change
+            // JAMAIS le nombre d'opérations, seulement le nombre de
+            // parenthèses. On choisit donc, parmi les étapes plus loin qui
+            // ont le même nombre d'opérations, celle dont le nombre de
+            // parenthèses correspond exactement à ce que l'élève a écrit ;
+            // à défaut, on retombe sur la première (le plus prudent).
+            const studentParenCountForSkip = countParenGroups(entry.input.value);
+            const tiedCandidates = [];
+            for (let idx = stepIndex + 1; idx < targetOpCounts.length; idx += 1) {
+              if (targetOpCounts[idx] === studentOpCount) tiedCandidates.push(idx);
+            }
+            const exactParenMatch = tiedCandidates.find(
+              (idx) => countParenGroups(targetTexts[idx]) === studentParenCountForSkip
+            );
+            const matchIndex = tiedCandidates.length > 0 ? (exactParenMatch !== undefined ? exactParenMatch : tiedCandidates[0]) : -1;
+            if (matchIndex !== -1) {
+              entry.state = "correct";
+              entry.row.classList.remove("is-step-error");
+              entry.row.classList.add("is-step-correct");
+              entry.statusIcon.textContent = "✓";
+              entry.statusIcon.setAttribute("aria-label", `Étape ${stepIndex + 1} correcte`);
+              entry.hint.textContent = "";
+              entry.input.disabled = true;
+
+              let lastEntry = entry;
+              for (let idx = stepIndex + 1; idx <= matchIndex; idx += 1) {
+                const skippedEntry = rows.find((r) => r.canonicalIndex === idx);
+                if (!skippedEntry) continue;
+                skippedEntry.state = "correct";
+                skippedEntry.input.value = targetTexts[idx];
+                skippedEntry.input.disabled = true;
+                skippedEntry.row.classList.remove("is-step-error");
+                skippedEntry.row.classList.add("is-step-correct");
+                skippedEntry.statusIcon.textContent = "✓";
+                skippedEntry.statusIcon.setAttribute("aria-label", `Étape ${idx + 1} obtenue directement`);
+                skippedEntry.hint.textContent = "";
+                lastEntry = skippedEntry;
+              }
+              unlockNext(lastEntry);
+              return;
+            }
+          }
+
+          // Cas 2 : l'élève a fait un progrès réel (moins d'opérations qu'à
+          // la ligne précédente, avec une valeur juste) mais qui ne tombe
+          // exactement sur AUCUNE étape reconnue du modèle - ni celle-ci, ni
+          // une étape plus loin (par exemple en ne résolvant qu'UNE seule des
+          // opérations prioritaires indépendantes, ou en résolvant le groupe
+          // composé en même temps que l'une d'elles seulement). La valeur
+          // juste garantit que le calcul est mathématiquement valide : on
+          // capitalise cette ligne comme une étape supplémentaire plutôt que
+          // de refuser une écriture pourtant correcte, et on laisse la ligne
+          // canonique ouverte pour la suite.
+          //
+          // Le progrès doit toutefois être réel par rapport à la DERNIÈRE
+          // ligne effectivement acceptée pour cet exercice - pas seulement
+          // par rapport à l'énoncé de départ. Sinon, un élève pourrait
+          // ré-écrire une ligne déjà acceptée et obtenir un crédit pour une
+          // étape supplémentaire qui n'a rien fait avancer.
+          if (!opsMatchTarget && studentOpCount < countBinaryOps(lastAcceptedText)) {
+            entry.attempts -= 1;
+            insertAcceptedFreeRow(entry, entry.input.value);
+            entry.input.value = "";
+            entry.row.classList.remove("is-step-error");
+            entry.hint.textContent = "";
+            announce("Étape intermédiaire acceptée, continue le calcul.");
+            window.setTimeout(() => entry.input.focus({ preventScroll: true }), 50);
+            return;
+          }
         }
 
         entry.row.classList.remove("is-step-error");
@@ -802,24 +1089,29 @@
           return;
         }
 
-        if (valueCorrect && !isReduced) {
+        // On distingue d'abord les erreurs de VALEUR (résultat numérique faux)
+        // des erreurs de FORME (bon résultat mais écriture ou rythme incorrects),
+        // pour ne jamais afficher un conseil sur les priorités d'opérations
+        // quand le problème est en réalité une erreur de calcul ou de signe.
+        if (!Number.isFinite(studentValue)) {
+          entry.hint.textContent = "Ton expression n'est pas reconnue : vérifie qu'elle est bien écrite (parenthèses bien fermées, pas de symbole en trop...).";
+        } else if (!valueCorrect) {
+          if (nearlyEqual(Math.abs(studentValue), Math.abs(targetValues[stepIndex]))) {
+            entry.hint.textContent = "Tu n'es pas loin : ta réponse a la même distance à zéro que le résultat attendu, vérifie le signe.";
+          } else {
+            entry.hint.textContent = "Ce résultat n'est pas correct. Reprends le calcul à partir de la ligne précédente.";
+          }
+        } else if (!isReduced) {
           entry.hint.textContent = "Ta valeur est juste, mais cette dernière ligne doit contenir uniquement le résultat final (un seul nombre).";
-        } else if (valueCorrect && isSignSimplificationStep && !paceCorrect) {
+        } else if (isSignSimplificationStep && !paceCorrect) {
           entry.hint.textContent = "Simplifie d'abord les signes successifs (par exemple \"+ (-9)\" devient \"- 9\") avant de calculer.";
-        } else if (valueCorrect && paceCorrect === false && studentOpCount < targetOpCounts[stepIndex]) {
-          entry.hint.textContent = "Ta valeur finale est correcte, mais tu es allé trop vite : n'effectue qu'une seule opération prioritaire à la fois sur cette ligne.";
+        } else if (paceCorrect === false && studentOpCount < targetOpCounts[stepIndex]) {
+          entry.hint.textContent = "Ta valeur finale est correcte, mais tu es allé trop vite : n'effectue qu'une seule opération prioritaire à la fois sur cette ligne (parenthèse ou crochet).";
         } else {
           entry.hint.textContent = GENERIC_HINTS[Math.min(entry.attempts - 1, GENERIC_HINTS.length - 1)];
         }
         announce(entry.hint.textContent);
       }
-
-      rows.forEach((entry, stepIndex) => {
-        entry.input.addEventListener("blur", () => validateRow(stepIndex));
-        entry.input.addEventListener("keydown", (event) => {
-          if (event.key === "Enter") { event.preventDefault(); entry.input.blur(); }
-        });
-      });
 
       return card;
     }
