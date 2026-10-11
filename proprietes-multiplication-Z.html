@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propriétés de la multiplication dans ℤ</title>
+  <style>
+    :root {
+      --slate: #1e2a3a;
+      --paper: #f0f4ff;
+      --ink: #172033;
+      --muted: #64748b;
+      --indigo: #4f6ef7;
+      --indigo-dark: #3f57d9;
+      --success: #22c55e;
+      --error: #ef4444;
+      --amber: #f59e0b;
+      --line: #dbe3f4;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+    }
+    button, select, input { font: inherit; }
+    button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid rgba(79, 110, 247, 0.4);
+      outline-offset: 3px;
+    }
+    .app-shell {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(79, 110, 247, 0.14), transparent 24rem),
+        linear-gradient(180deg, var(--slate) 0 15rem, var(--paper) 15rem 100%);
+    }
+    .main-width { width: min(100% - 2rem, 840px); margin-inline: auto; }
+    .hero { padding: 2.6rem 0 2rem; color: white; }
+    .hero-title { margin: 0; letter-spacing: -0.03em; font-weight: 800; font-size: clamp(1.7rem, 4.6vw, 2.3rem); }
+    .hero-subtitle { max-width: 40rem; margin: 0.8rem 0 0; line-height: 1.6; opacity: 0.92; }
+    .content { padding-bottom: 4rem; }
+
+    .score-panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 18px 44px rgba(30, 42, 58, 0.12);
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 1.25rem;
+      margin-top: -0.6rem;
+      padding: 1.25rem;
+    }
+    .score-values { min-width: 150px; }
+    .score-line { font-size: 0.88rem; color: var(--muted); }
+    .score-line strong { display: block; font-weight: 800; font-size: 1.5rem; color: var(--indigo); }
+    .score-label { margin: 0 0 0.45rem; font-weight: 700; }
+    .progress-track { height: 11px; overflow: hidden; border-radius: 999px; background: #e5eaf6; }
+    .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f6ef7, #7890ff); transition: width 350ms ease; }
+
+    .section-block { margin-top: 2.4rem; }
+    .section-heading { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+    .section-number {
+      flex: none;
+      width: 2.1rem; height: 2.1rem;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+    }
+    .section-title { margin: 0; font-size: 1.15rem; font-weight: 800; }
+    .section-instructions { margin: 0 0 1.1rem 3.1rem; color: var(--muted); line-height: 1.55; font-size: 0.95rem; }
+
+    .exercise-list { display: grid; gap: 1rem; }
+    .exercise-card {
+      background: white;
+      padding: 1.25rem 1.3rem;
+      border: 2px solid transparent;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      transition: border-color 180ms ease;
+    }
+    .exercise-card.is-correct { border-color: var(--success); }
+    .exercise-card.is-incorrect { border-color: var(--error); }
+    .exercise-card.is-shaking { animation: shake 340ms ease; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+    }
+
+    .item-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); margin: 0 0 0.5rem; }
+    .equality {
+      font-family: "Courier New", monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #192238;
+      background: #f4f6fd;
+      padding: 0.7rem 0.9rem;
+      border-radius: 10px;
+      margin: 0 0 0.9rem;
+      overflow-x: auto;
+    }
+
+    .options-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.9rem; }
+    .option-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.85rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 999px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      user-select: none;
+      transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+    .option-chip input { accent-color: var(--indigo); }
+    .option-chip.is-selected { border-color: var(--indigo); background: #eef2ff; color: var(--indigo-dark); font-weight: 700; }
+    .option-chip.is-disabled { cursor: default; opacity: 0.75; }
+
+    .method-list { display: grid; gap: 0.5rem; margin-bottom: 0.9rem; }
+    .method-option {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: "Courier New", monospace;
+      font-size: 0.93rem;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+    .method-option.is-selected { border-color: var(--indigo); background: #eef2ff; }
+    .method-option.is-disabled { cursor: default; opacity: 0.85; }
+    .method-tag {
+      flex: none;
+      width: 1.6rem; height: 1.6rem;
+      border-radius: 50%;
+      background: var(--slate);
+      color: white;
+      font-weight: 800;
+      font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .numeric-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+    .numeric-row .equality-part { font-family: "Courier New", monospace; font-weight: 700; }
+    .numeric-input {
+      width: 100px;
+      min-height: 40px;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 8px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      text-align: center;
+    }
+    .numeric-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+    .blank-steps { display: grid; gap: 0.55rem; margin-bottom: 0.9rem; }
+    .blank-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 2.1;
+    }
+    .blank-line .fixed { white-space: pre; }
+    .blank-input {
+      width: 4.5em;
+      min-width: 64px;
+      min-height: 34px;
+      padding: 0.2rem 0.25rem;
+      border: 1px solid #ccd6ee;
+      border-radius: 7px;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .blank-input.is-disabled { background: #f4f6fd; opacity: 0.85; }
+
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .feedback { margin: 0; font-size: 0.9rem; font-weight: 650; flex: 1; min-width: 200px; }
+    .feedback.correct { color: var(--success); }
+    .feedback.incorrect { color: var(--error); }
+
+    .validate-button {
+      min-height: 40px;
+      padding: 0.6rem 1rem;
+      border: 0;
+      border-radius: 10px;
+      background: var(--indigo);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .validate-button:disabled { cursor: default; opacity: 0.5; }
+    .steps-toggle {
+      min-height: 40px;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .correction {
+      display: none;
+      margin-top: 0.9rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      background: #fff7e7;
+      color: #8a5200;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+    .correction.is-visible { display: block; }
+    .correction strong { display: block; margin-bottom: 0.25rem; }
+
+    .intro-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(40, 54, 82, 0.08);
+      padding: 1.3rem 1.4rem;
+      margin-top: 1.6rem;
+      line-height: 1.6;
+    }
+    .intro-card h3 { margin: 0 0 0.6rem; font-size: 1.02rem; }
+    .intro-prop { margin: 0 0 1.1rem; }
+    .intro-prop:last-child { margin-bottom: 0; }
+    .intro-prop p { margin: 0.15rem 0; }
+    .intro-prop .prop-name { font-weight: 700; }
+    .intro-example {
+      font-family: "Courier New", monospace;
+      font-size: 0.92rem;
+      background: #f4f6fd;
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      margin: 0.4rem 0 0;
+      overflow-x: auto;
+    }
+    .intro-new {
+      margin-top: 1.3rem;
+      padding-top: 1.1rem;
+      border-top: 1px dashed var(--line);
+    }
+    .match-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.9rem;
+    }
+    .match-select {
+      flex: 0 0 auto;
+      min-width: 15rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      font-size: 0.92rem;
+    }
+    .match-select:disabled { opacity: 0.75; }
+    .calc-line {
+      font-family: "Courier New", monospace;
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin: 0.15rem 0 0.5rem;
+    }
+    .step-block { margin: 0 0 1.1rem; padding-bottom: 0.9rem; border-bottom: 1px dashed var(--line); transition: opacity 0.2s ease; }
+    .step-block:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+    .step-title { font-weight: 700; font-size: 0.78rem; letter-spacing: 0.03em; text-transform: uppercase; color: #6366f1; margin: 0 0 0.45rem; }
+    .step-locked { opacity: 0.4; pointer-events: none; }
+    .step-block.is-correct .step-title { color: #16a34a; }
+    .step-block.is-incorrect .step-title { color: #dc2626; }
+    .sign-options { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .sign-option {
+      padding: 0.55rem 1.1rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--ink);
+    }
+    .sign-option.is-selected { background: #4f6ef7; color: white; border-color: #4f6ef7; }
+    .sign-option:disabled { opacity: 0.55; cursor: not-allowed; }
+    .hint-note { font-size: 0.85rem; color: var(--muted); font-style: italic; margin: 0.4rem 0 0; }
+    .footer-actions { margin-top: 2.6rem; text-align: center; }
+    .restart-button {
+      min-height: 46px;
+      padding: 0.75rem 1.3rem;
+      border: 0;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--indigo-dark);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    @media (max-width: 620px) {
+      .score-panel { grid-template-columns: 1fr; }
+      .card-actions { flex-direction: column; align-items: stretch; }
+      .validate-button, .steps-toggle { width: 100%; }
+      .section-instructions { margin-left: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="main-width">
+        <h1 class="hero-title">Propriétés de la multiplication dans ℤ</h1>
+        <p class="hero-subtitle">Commutativité, associativité, élément neutre, élément absorbant et règle des signes : relie, complète et calcule en t'appuyant sur les propriétés de la multiplication avec des nombres entiers positifs et négatifs.</p>
+        <button id="new-exercises-button" class="restart-button" type="button" style="margin-top:1.2rem;background:#4f6ef7;color:white;border:0;">Nouveaux exercices</button>
+      </div>
+    </header>
+    <main class="main-width content">
+      <section class="score-panel" aria-labelledby="score-caption">
+        <div class="score-values" aria-live="polite">
+          <div class="score-line"><strong id="resolved-score">0 / 20</strong>corrigés</div>
+        </div>
+        <div>
+          <p id="score-caption" class="score-label">Progression</p>
+          <div id="progress-track" class="progress-track" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="16" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION B : théorie -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">B</span>
+          <h2 class="section-title">Propriétés de la multiplication</h2>
+        </div>
+        <p class="section-instructions">Les propriétés de la multiplication vues avec les nombres naturels restent bien évidemment vraies avec les nombres entiers.</p>
+        <div class="intro-card">
+          <div class="intro-prop">
+            <p><span class="prop-name">1. La multiplication des nombres entiers est commutative.</span><br>Dans un produit, changer l'ordre des facteurs ne modifie pas le résultat.</p>
+            <p class="intro-example">5 . (-3) = -15     et     (-3) . 5 = -15     donc     5 . (-3) = (-3) . 5</p>
+          </div>
+          <div class="intro-prop">
+            <p><span class="prop-name">2. La multiplication des nombres entiers est associative.</span><br>Dans un produit, déplacer, supprimer ou introduire des parenthèses ne modifie pas le résultat.</p>
+            <p class="intro-example">(-9 . 3) . 5 = -27 . 5 = -135     et     -9 . (3 . 5) = -9 . 15 = -135     donc     (-9 . 3) . 5 = -9 . (3 . 5)</p>
+          </div>
+          <div class="intro-prop">
+            <p><span class="prop-name">3. La multiplication des nombres entiers admet 1 comme élément neutre.</span><br>Dans un produit, le facteur 1 ne modifie pas le résultat.</p>
+            <p class="intro-example">-6 . 1 = -6     et     1 . (-6) = -6     donc     -6 . 1 = -6 = 1 . (-6)</p>
+          </div>
+          <div class="intro-prop intro-new">
+            <p><span class="prop-name">4. La multiplication des nombres entiers admet 0 comme élément absorbant.</span><br>Dans un produit, le facteur 0 annule le résultat.</p>
+            <p class="intro-example">-5 . 0 = 0     et     0 . (-5) = 0     donc     -5 . 0 = 0 = 0 . (-5)</p>
+            <p style="margin-top:1rem;"><strong>Remarque</strong> — Pour calculer le produit de plusieurs nombres entiers :</p>
+            <p style="margin:0.2rem 0;">• On multiplie leurs distances à zéro.</p>
+            <p style="margin:0.2rem 0 0;">• On détermine le signe du produit en comptant le nombre de facteurs négatifs : s'il est <strong>pair</strong>, le produit est <strong>positif</strong> ; s'il est <strong>impair</strong>, le produit est <strong>négatif</strong>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 1 : RELIE -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">1</span>
+          <h2 class="section-title">Relie chaque calcul à la propriété qu'il illustre</h2>
+        </div>
+        <p class="section-instructions">Pour chaque égalité, choisis dans la liste la propriété de la multiplication qu'elle illustre.</p>
+        <div id="match-list" class="exercise-list"></div>
+      </section>
+
+      <!-- SECTION 2 : COMPLÈTE -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">2</span>
+          <h2 class="section-title">Complète les pointillés par la propriété appliquée</h2>
+        </div>
+        <p class="section-instructions">Pour chaque étape du calcul, indique la propriété de la multiplication qui justifie le passage à la ligne suivante.</p>
+        <div id="complete-list" class="exercise-list"></div>
+      </section>
+
+      <!-- SECTION 3 : CALCULE en utilisant les propriétés -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">3</span>
+          <h2 class="section-title">Calcule en utilisant les propriétés</h2>
+        </div>
+        <p class="section-instructions">Recopie chaque étape du calcul dans les pointillés. Chaque étape est vérifiée l'une après l'autre : tu dois valider une étape avant de passer à la suivante. Tu as 3 essais par étape avant que la correction ne s'affiche.</p>
+        <div id="calc-list" class="exercise-list"></div>
+      </section>
+
+      <!-- SECTION 4 : CALCULE en déterminant le signe -->
+      <section class="section-block">
+        <div class="section-heading">
+          <span class="section-number">4</span>
+          <h2 class="section-title">Calcule en déterminant d'abord le signe du produit</h2>
+        </div>
+        <p class="section-instructions">Travaille en deux temps : trouve d'abord le signe du produit (compte le nombre de facteurs négatifs), puis calcule le résultat final. La deuxième étape ne se débloque qu'une fois le signe validé. Tu as 3 essais par étape avant que la correction ne s'affiche.</p>
+        <p class="hint-note">N'hésite pas à travailler au brouillon si nécessaire.</p>
+        <div id="sign-list" class="exercise-list"></div>
+      </section>
+
+      <div class="footer-actions">
+        <button id="restart-button" class="restart-button" type="button">Générer d'autres exercices</button>
+      </div>
+    </main>
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script>
+    const state = { resolved: 0, total: 0 };
+    const liveRegion = document.getElementById("live-region");
+    const resolvedScore = document.getElementById("resolved-score");
+    const progressTrack = document.getElementById("progress-track");
+    const progressFill = document.getElementById("progress-fill");
+
+    function announce(message) {
+      liveRegion.textContent = "";
+      window.setTimeout(() => { liveRegion.textContent = message; }, 30);
+    }
+
+    function updateGlobalScore() {
+      resolvedScore.textContent = `${state.resolved} / ${state.total}`;
+      const pct = state.total ? (state.resolved / state.total) * 100 : 0;
+      progressFill.style.width = `${pct}%`;
+      progressTrack.setAttribute("aria-valuemax", String(state.total));
+      progressTrack.setAttribute("aria-valuenow", String(state.resolved));
+    }
+
+    function markResolved() {
+      state.resolved += 1;
+      updateGlobalScore();
+    }
+
+    function sameSet(a, b) {
+      if (a.length !== b.length) return false;
+      const numeric = (x, y) => x - y;
+      const sa = [...a].sort(numeric);
+      const sb = [...b].sort(numeric);
+      return sa.every((v, i) => v === sb[i]);
+    }
+
+    // Toutes les permutations d'un tableau d'indices (utilisé pour accepter les groupes
+    // de parenthèses dans n'importe quel ordre lors de la correction)
+    function permutations(arr) {
+      if (arr.length <= 1) return [arr];
+      const result = [];
+      arr.forEach((item, idx) => {
+        const rest = arr.slice(0, idx).concat(arr.slice(idx + 1));
+        permutations(rest).forEach((p) => result.push([item, ...p]));
+      });
+      return result;
+    }
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function pickRandom(bank, count) {
+      return shuffle(bank).slice(0, count);
+    }
+
+    function pickOne(bank) {
+      return bank[Math.floor(Math.random() * bank.length)];
+    }
+
+    function letterLabel(index) {
+      return `${String.fromCharCode(97 + index)})`;
+    }
+
+    function makeBlankInput(ariaLabel) {
+      const input = document.createElement("input");
+      input.className = "blank-input";
+      input.type = "text";
+      input.autocomplete = "off";
+      input.setAttribute("aria-label", ariaLabel);
+      return input;
+    }
+
+    function fixedSpan(text) {
+      const span = document.createElement("span");
+      span.className = "fixed";
+      span.textContent = text;
+      return span;
+    }
+
+    // Écrit un nombre pour affichage dans une somme : un nombre négatif qui suit un "+"
+    // doit être entre parenthèses (ex. "72 + (-22)"), mais pas s'il est en tête d'expression
+    // (ex. "-58 + 158"). isLeading = true pour le tout premier terme d'un (sous-)groupe.
+    function fmt(n, isLeading = false) {
+      return (!isLeading && n < 0) ? `(${n})` : `${n}`;
+    }
+
+    // Joint une liste de nombres avec " + ", en parenthésant tout terme négatif
+    // qui n'est pas le premier de la liste.
+    function joinSigned(nums) {
+      return nums.map((n, i) => fmt(n, i === 0)).join(" + ");
+    }
+
+    // Lit la valeur d'un champ de saisie en acceptant les parenthèses que l'élève
+    // peut légitimement taper autour d'un nombre négatif (ex. "(-136)" ou "(-136").
+    // Sans ce nettoyage, un champ type="number" considère cette saisie invalide
+    // et renvoie une valeur vide, ce qui bloquait la vérification à tort.
+    function parseSigned(raw) {
+      if (raw === null || raw === undefined) return NaN;
+      const cleaned = String(raw).replace(/[()\s]/g, "");
+      if (cleaned === "" || cleaned === "-") return NaN;
+      return Number(cleaned);
+    }
+
+    function isEmptyInput(el) {
+      return String(el.value).replace(/[()\s]/g, "") === "";
+    }
+
+    // ---------- Propriétés de la multiplication (nombres entiers relatifs) ----------
+    function finalizeCard(card, resolvedRef, allInputs, feedback, validateBtn, correction, isCorrectFn, maxAttempts = 3) {
+      let attempts = 0;
+      const validate = () => {
+        if (resolvedRef.done) return;
+        if (allInputs.some((el) => isEmptyInput(el))) {
+          feedback.textContent = "Complète toutes les cases avant de vérifier.";
+          feedback.className = "feedback";
+          return;
+        }
+
+        attempts += 1;
+        const isCorrect = isCorrectFn();
+
+        if (isCorrect) {
+          resolvedRef.done = true;
+          markResolved();
+          allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+          validateBtn.disabled = true;
+          card.classList.add("is-correct");
+          feedback.className = "feedback correct";
+          feedback.textContent = "Bonne réponse !";
+          announce("Bonne réponse.");
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          resolvedRef.done = true;
+          markResolved();
+          allInputs.forEach((el) => { el.disabled = true; el.classList.add("is-disabled"); });
+          validateBtn.disabled = true;
+          card.classList.add("is-incorrect");
+          feedback.className = "feedback incorrect";
+          feedback.textContent = "Ce n'est pas tout à fait ça, regarde la correction.";
+          correction.classList.add("is-visible");
+          announce("Réponse incorrecte, correction affichée.");
+          return;
+        }
+
+        const remaining = maxAttempts - attempts;
+        feedback.className = "feedback incorrect";
+        feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+        card.classList.remove("is-shaking");
+        void card.offsetWidth;
+        card.classList.add("is-shaking");
+        announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+      };
+      return validate;
+    }
+
+    const propertyLabels = {
+      commutativite: "La multiplication est commutative",
+      associativite: "La multiplication est associative",
+      neutre: "La multiplication admet 1 comme élément neutre",
+      absorbant: "La multiplication admet 0 comme élément absorbant"
+    };
+
+    function joinMul(nums) {
+      return nums.map((n, i) => fmt(n, i === 0)).join(" . ");
+    }
+
+    // ---------- SECTION 1 : RELIE (association calcul → propriété) ----------
+    const matchBank = [
+      { calc: "5 . 3 . 2 = 5 . 2 . 3", correct: "commutativite" },
+      { calc: "(-3) . 4 . 5 = (-3) . 5 . 4", correct: "commutativite" },
+      { calc: "(-7) . 6 = 6 . (-7)", correct: "commutativite" },
+      { calc: "1 . (-5) = -5", correct: "neutre" },
+      { calc: "(-8) . 1 = -8", correct: "neutre" },
+      { calc: "1 . 23 = 23", correct: "neutre" },
+      { calc: "(-3) . 0 = 0", correct: "absorbant" },
+      { calc: "0 . 12 = 0", correct: "absorbant" },
+      { calc: "0 . (-46) = 0", correct: "absorbant" },
+      { calc: "4 . 25 . (-3) = (4 . 25) . (-3)", correct: "associativite" },
+      { calc: "(-6) . (2 . 9) = [(-6) . 2] . 9", correct: "associativite" },
+      { calc: "((-5) . 8) . 3 = -5 . (8 . 3)", correct: "associativite" }
+    ];
+    const MATCH_COUNT = 4;
+
+    function buildSection1() {
+      const container = document.getElementById("match-list");
+      const items = pickRandom(matchBank, MATCH_COUNT);
+
+      items.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "exercise-card";
+
+        const itemLabel = document.createElement("p");
+        itemLabel.className = "item-label";
+        itemLabel.textContent = letterLabel(index);
+        card.appendChild(itemLabel);
+
+        const row = document.createElement("div");
+        row.className = "match-row";
+        const equality = document.createElement("span");
+        equality.className = "equality";
+        equality.style.margin = "0";
+        equality.textContent = item.calc;
+
+        const select = document.createElement("select");
+        select.className = "match-select";
+        select.setAttribute("aria-label", `Propriété illustrée par ${item.calc}`);
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "— Choisis une propriété —";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        select.appendChild(placeholder);
+        Object.entries(propertyLabels).forEach(([key, text]) => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.textContent = text;
+          select.appendChild(option);
+        });
+
+        row.appendChild(equality);
+        row.appendChild(select);
+        card.appendChild(row);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        const validateBtn = document.createElement("button");
+        validateBtn.className = "validate-button";
+        validateBtn.type = "button";
+        validateBtn.textContent = "Vérifier";
+        actions.appendChild(feedback);
+        actions.appendChild(validateBtn);
+        card.appendChild(actions);
+
+        const correction = document.createElement("div");
+        correction.className = "correction";
+        correction.innerHTML = `<strong>Réponse attendue :</strong>${propertyLabels[item.correct]}`;
+        card.appendChild(correction);
+
+        let resolved = false;
+        validateBtn.addEventListener("click", () => {
+          if (resolved) return;
+          if (!select.value) {
+            feedback.textContent = "Choisis une propriété avant de vérifier.";
+            feedback.className = "feedback";
+            return;
+          }
+          resolved = true;
+          markResolved();
+          select.disabled = true;
+          validateBtn.disabled = true;
+
+          const isCorrect = select.value === item.correct;
+          card.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+          feedback.className = `feedback ${isCorrect ? "correct" : "incorrect"}`;
+          feedback.textContent = isCorrect ? "Bonne réponse !" : "Ce n'est pas tout à fait ça, regarde la correction.";
+          if (!isCorrect) correction.classList.add("is-visible");
+          announce(isCorrect ? "Bonne réponse." : "Réponse incorrecte, correction affichée.");
+        });
+
+        container.appendChild(card);
+      });
+
+      return items.length;
+    }
+
+    // ---------- SECTION 2 : COMPLÈTE (chaîne de propriétés) ----------
+    const completeBank = [
+      {
+        given: "(-4) . (-6) . 25 . 1",
+        lines: [
+          { text: "= (-4) . (-6) . 25", type: "property", correct: ["neutre"] },
+          { text: "= (-4) . 25 . (-6)", type: "property", correct: ["commutativite"] },
+          { text: "= [(-4) . 25] . (-6)", type: "property", correct: ["associativite"] },
+          { text: "= -100 . (-6)", type: "calc" },
+          { text: "= 600", type: "calc" }
+        ]
+      },
+      {
+        given: "(-8) . 1 . 125 . (-2)",
+        lines: [
+          { text: "= (-8) . 125 . (-2)", type: "property", correct: ["neutre"] },
+          { text: "= (-8) . (-2) . 125", type: "property", correct: ["commutativite"] },
+          { text: "= [(-8) . (-2)] . 125", type: "property", correct: ["associativite"] },
+          { text: "= 16 . 125", type: "calc" },
+          { text: "= 2000", type: "calc" }
+        ]
+      },
+      {
+        given: "(-5) . 1 . 7 . (-8)",
+        lines: [
+          { text: "= (-5) . 7 . (-8)", type: "property", correct: ["neutre"] },
+          { text: "= (-5) . (-8) . 7", type: "property", correct: ["commutativite"] },
+          { text: "= [(-5) . (-8)] . 7", type: "property", correct: ["associativite"] },
+          { text: "= 40 . 7", type: "calc" },
+          { text: "= 280", type: "calc" }
+        ]
+      }
+    ];
+    const COMPLETE_COUNT = 2;
+
+    function buildSection2() {
+      const container = document.getElementById("complete-list");
+      const items = pickRandom(completeBank, COMPLETE_COUNT);
+
+      items.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "exercise-card";
+
+        const itemLabel = document.createElement("p");
+        itemLabel.className = "item-label";
+        itemLabel.textContent = letterLabel(index);
+        card.appendChild(itemLabel);
+
+        const given = document.createElement("p");
+        given.className = "equality";
+        given.textContent = item.given;
+        card.appendChild(given);
+
+        const propertyLines = item.lines.filter((l) => l.type === "property");
+        const lineSelections = propertyLines.map(() => new Set());
+        let propIndex = 0;
+
+        item.lines.forEach((line) => {
+          if (line.type === "calc") {
+            const calcP = document.createElement("p");
+            calcP.className = "calc-line";
+            calcP.textContent = line.text;
+            card.appendChild(calcP);
+            return;
+          }
+
+          const currentIndex = propIndex;
+          propIndex += 1;
+
+          const equality = document.createElement("p");
+          equality.className = "equality";
+          equality.textContent = line.text;
+          card.appendChild(equality);
+
+          const optionsRow = document.createElement("div");
+          optionsRow.className = "options-row";
+          const selected = lineSelections[currentIndex];
+
+          Object.entries(propertyLabels).forEach(([key, text]) => {
+            const chip = document.createElement("label");
+            chip.className = "option-chip";
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = key;
+            checkbox.addEventListener("change", () => {
+              if (checkbox.checked) selected.add(key); else selected.delete(key);
+              chip.classList.toggle("is-selected", checkbox.checked);
+            });
+            chip.appendChild(checkbox);
+            chip.appendChild(document.createTextNode(text));
+            optionsRow.appendChild(chip);
+          });
+          card.appendChild(optionsRow);
+        });
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        const validateBtn = document.createElement("button");
+        validateBtn.className = "validate-button";
+        validateBtn.type = "button";
+        validateBtn.textContent = "Vérifier";
+        actions.appendChild(feedback);
+        actions.appendChild(validateBtn);
+        card.appendChild(actions);
+
+        const correction = document.createElement("div");
+        correction.className = "correction";
+        const correctionLines = propertyLines
+          .map((line) => `${line.text} → ${line.correct.map((k) => propertyLabels[k]).join(", ")}`)
+          .join("<br>");
+        correction.innerHTML = `<strong>Réponse attendue :</strong>${correctionLines}`;
+        card.appendChild(correction);
+
+        let resolved = false;
+        validateBtn.addEventListener("click", () => {
+          if (resolved) return;
+          if (lineSelections.some((s) => s.size === 0)) {
+            feedback.textContent = "Coche au moins une propriété pour chaque ligne avant de vérifier.";
+            feedback.className = "feedback";
+            return;
+          }
+          resolved = true;
+          markResolved();
+          card.querySelectorAll(".options-row input").forEach((cb) => { cb.disabled = true; });
+          card.querySelectorAll(".option-chip").forEach((c) => c.classList.add("is-disabled"));
+          validateBtn.disabled = true;
+
+          const isCorrect = propertyLines.every((line, i) => sameSet([...lineSelections[i]], line.correct));
+          card.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+          feedback.className = `feedback ${isCorrect ? "correct" : "incorrect"}`;
+          feedback.textContent = isCorrect ? "Bonne réponse !" : "Ce n'est pas tout à fait ça, regarde la correction.";
+          if (!isCorrect) correction.classList.add("is-visible");
+          announce(isCorrect ? "Bonne réponse." : "Réponse incorrecte, correction affichée.");
+        });
+
+        container.appendChild(card);
+      });
+
+      return items.length;
+    }
+
+    // ---------- Système générique de carte à étapes verrouillées (l'une après l'autre) ----------
+    function buildStepGatedCard(container, label, headerText, stepDefs) {
+      const card = document.createElement("article");
+      card.className = "exercise-card";
+
+      const itemLabel = document.createElement("p");
+      itemLabel.className = "item-label";
+      itemLabel.textContent = label;
+      card.appendChild(itemLabel);
+
+      if (headerText) {
+        const header = document.createElement("p");
+        header.className = "equality";
+        header.textContent = headerText;
+        card.appendChild(header);
+      }
+
+      const builts = [];
+      const stepEls = [];
+      const buttons = [];
+
+      stepDefs.forEach((stepDef, idx) => {
+        const stepEl = document.createElement("div");
+        stepEl.className = "step-block";
+        if (idx > 0) stepEl.classList.add("step-locked");
+
+        const title = document.createElement("p");
+        title.className = "step-title";
+        title.textContent = stepDef.title;
+        stepEl.appendChild(title);
+
+        const bodyEl = document.createElement("div");
+        stepEl.appendChild(bodyEl);
+
+        const built = stepDef.build(bodyEl);
+        built.setEnabled(idx === 0);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const feedback = document.createElement("p");
+        feedback.className = "feedback";
+        const validateBtn = document.createElement("button");
+        validateBtn.className = "validate-button";
+        validateBtn.type = "button";
+        validateBtn.textContent = "Vérifier";
+        if (idx > 0) validateBtn.disabled = true;
+        actions.appendChild(feedback);
+        actions.appendChild(validateBtn);
+        stepEl.appendChild(actions);
+
+        const correction = document.createElement("div");
+        correction.className = "correction";
+        correction.innerHTML = `<strong>Correction :</strong>${built.correctionHtml}`;
+        stepEl.appendChild(correction);
+
+        card.appendChild(stepEl);
+        builts.push(built);
+        stepEls.push(stepEl);
+        buttons.push(validateBtn);
+
+        let attempts = 0;
+        let stepDone = false;
+        const maxAttempts = 3;
+
+        validateBtn.addEventListener("click", () => {
+          if (stepDone) return;
+          if (built.isEmpty()) {
+            feedback.textContent = "Complète toutes les cases avant de vérifier.";
+            feedback.className = "feedback";
+            return;
+          }
+
+          attempts += 1;
+          const isCorrect = built.isCorrect();
+
+          if (isCorrect || attempts >= maxAttempts) {
+            stepDone = true;
+            built.setEnabled(false);
+            validateBtn.disabled = true;
+            stepEl.classList.remove("step-locked");
+            stepEl.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+            feedback.className = `feedback ${isCorrect ? "correct" : "incorrect"}`;
+            feedback.textContent = isCorrect ? "Bonne réponse !" : "Ce n'est pas tout à fait ça, regarde la correction.";
+            if (!isCorrect) correction.classList.add("is-visible");
+            announce(isCorrect ? "Bonne réponse." : "Réponse incorrecte, correction affichée.");
+
+            const isLastStep = idx === stepDefs.length - 1;
+            if (isLastStep) {
+              markResolved();
+              card.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+            } else {
+              const nextEl = stepEls[idx + 1];
+              const nextBuilt = builts[idx + 1];
+              const nextBtn = buttons[idx + 1];
+              nextEl.classList.remove("step-locked");
+              nextBuilt.setEnabled(true);
+              nextBtn.disabled = false;
+            }
+          } else {
+            const remaining = maxAttempts - attempts;
+            feedback.className = "feedback incorrect";
+            feedback.textContent = `Ce n'est pas ça, réessaie. Il te reste ${remaining} essai${remaining > 1 ? "s" : ""}.`;
+            stepEl.classList.remove("is-shaking");
+            void stepEl.offsetWidth;
+            stepEl.classList.add("is-shaking");
+            announce(`Réponse incorrecte. Il reste ${remaining} essai${remaining > 1 ? "s" : ""}.`);
+          }
+        });
+      });
+
+      container.appendChild(card);
+      return 1;
+    }
+
+    // ---------- SECTION 3 : calcule en utilisant les propriétés, étape par étape ----------
+    // Chaque exercice compte 3 étapes vérifiées l'une après l'autre : regrouper les facteurs,
+    // calculer chaque groupe (nombre de cases proportionnel au nombre de facteurs), puis conclure.
+    const calcBank = [
+      { expr: "-8 . 25 . (-4) . 10", pairs: [[-8, -4], [25, 10]], final: 8000 },
+      { expr: "2 . 3 . (-5) . 7", pairs: [[2, -5], [3, 7]], final: -210 },
+      { expr: "125 . 5 . 8 . 2 . 7", pairs: [[125, 8], [5, 2]], single: 7, final: 70000 },
+      { expr: "2 . (-4) . 3 . 5 . 25", pairs: [[2, 5], [-4, 25]], single: 3, final: -3000 },
+      { expr: "-6 . 25 . (-4) . 3", pairs: [[-6, -4], [25, 3]], final: 1800 },
+      { expr: "4 . 9 . (-25) . (-1)", pairs: [[4, -25], [9, -1]], final: 900 },
+      { expr: "5 . 8 . (-2) . (-10)", pairs: [[5, -2], [8, -10]], final: 800 },
+      { expr: "-20 . 7 . (-5) . 2", pairs: [[-20, -5], [7, 2]], final: 1400 }
+    ];
+    const CALC_COUNT = 6;
+
+    function buildRegroupStep(config) {
+      return (bodyEl) => {
+        const pairBlanks = config.pairs.map(() => [makeBlankInput("facteur"), makeBlankInput("facteur")]);
+        const singleBlank = config.single !== undefined ? makeBlankInput("facteur isolé") : null;
+
+        const line = document.createElement("div");
+        line.className = "blank-line";
+        line.appendChild(fixedSpan("= "));
+        pairBlanks.forEach((pair, i) => {
+          line.appendChild(fixedSpan("("));
+          line.appendChild(pair[0]);
+          line.appendChild(fixedSpan(" . "));
+          line.appendChild(pair[1]);
+          line.appendChild(fixedSpan(")"));
+          if (i < pairBlanks.length - 1) line.appendChild(fixedSpan(" . "));
+        });
+        if (singleBlank) {
+          line.appendChild(fixedSpan(" . "));
+          line.appendChild(singleBlank);
+        }
+        bodyEl.appendChild(line);
+
+        const allInputs = pairBlanks.flat().concat(singleBlank ? [singleBlank] : []);
+        const groupsText = config.pairs.map((p) => `(${fmt(p[0], true)} . ${fmt(p[1])})`).join(" . ")
+          + (config.single !== undefined ? ` . ${fmt(config.single)}` : "");
+
+        return {
+          setEnabled(enabled) { allInputs.forEach((el) => { el.disabled = !enabled; }); },
+          isEmpty() { return allInputs.some((el) => isEmptyInput(el)); },
+          isCorrect() {
+            const idxs = config.pairs.map((_, i) => i);
+            const perms = permutations(idxs);
+            const pairsOk = perms.some((perm) => pairBlanks.every((pair, i) =>
+              sameSet([parseSigned(pair[0].value), parseSigned(pair[1].value)], config.pairs[perm[i]])
+            ));
+            const singleOk = singleBlank ? parseSigned(singleBlank.value) === config.single : true;
+            return pairsOk && singleOk;
+          },
+          correctionHtml: `= ${groupsText}`
+        };
+      };
+    }
+
+    function buildProductsStep(config) {
+      return (bodyEl) => {
+        const count = config.pairs.length + (config.single !== undefined ? 1 : 0);
+        const blanks = Array.from({ length: count }, () => makeBlankInput("produit partiel"));
+
+        const line = document.createElement("div");
+        line.className = "blank-line";
+        line.appendChild(fixedSpan("= "));
+        blanks.forEach((b, i) => {
+          line.appendChild(b);
+          if (i < blanks.length - 1) line.appendChild(fixedSpan(" . "));
+        });
+        bodyEl.appendChild(line);
+
+        const expected = config.pairs.map((p) => p[0] * p[1]).concat(config.single !== undefined ? [config.single] : []);
+
+        return {
+          setEnabled(enabled) { blanks.forEach((el) => { el.disabled = !enabled; }); },
+          isEmpty() { return blanks.some((el) => isEmptyInput(el)); },
+          isCorrect() { return sameSet(blanks.map((b) => parseSigned(b.value)), expected); },
+          correctionHtml: `= ${joinMul(expected)}`
+        };
+      };
+    }
+
+    function buildFinalStep(config) {
+      return (bodyEl) => {
+        const blank = makeBlankInput("résultat final");
+        const line = document.createElement("div");
+        line.className = "blank-line";
+        line.appendChild(fixedSpan("= "));
+        line.appendChild(blank);
+        bodyEl.appendChild(line);
+
+        return {
+          setEnabled(enabled) { blank.disabled = !enabled; },
+          isEmpty() { return isEmptyInput(blank); },
+          isCorrect() { return parseSigned(blank.value) === config.final; },
+          correctionHtml: `= ${config.final}`
+        };
+      };
+    }
+
+    function buildSection3() {
+      const container = document.getElementById("calc-list");
+      const items = pickRandom(calcBank, CALC_COUNT);
+
+      items.forEach((config, index) => {
+        buildStepGatedCard(container, letterLabel(index), config.expr, [
+          { title: "Étape 1 — Regroupe les facteurs", build: buildRegroupStep(config) },
+          { title: "Étape 2 — Calcule chaque groupe", build: buildProductsStep(config) },
+          { title: "Étape 3 — Résultat final", build: buildFinalStep(config) }
+        ]);
+      });
+
+      return items.length;
+    }
+
+    // ---------- SECTION 4 : calcule en déterminant d'abord le signe (2 étapes) ----------
+    const signBank = [
+      { expr: "-2 . 3 . (-4) . (-5)", negCount: 3, hasZero: false, answer: -120, distances: "2 . 3 . 4 . 5 = 120" },
+      { expr: "6 . (-1) . 2 . (-2)", negCount: 2, hasZero: false, answer: 24, distances: "6 . 1 . 2 . 2 = 24" },
+      { expr: "-7 . (-6) . 2 . (-4) . (-5)", negCount: 4, hasZero: false, answer: 1680, distances: "7 . 6 . 2 . 4 . 5 = 1680" },
+      { expr: "3 . (-1) . (-2) . 2 . 1 . (-3)", negCount: 3, hasZero: false, answer: -36, distances: "3 . 1 . 2 . 2 . 1 . 3 = 36" },
+      { expr: "-1 . 1 . (-1) . (-1) . (-1) . 1 . 1 . (-1)", negCount: 5, hasZero: false, answer: -1, distances: "toutes les distances valent 1" },
+      { expr: "125 . (-15) . (-20) . 0 . (-52) . 36", negCount: 3, hasZero: true, answer: 0, distances: "un facteur est 0" },
+      { expr: "-50 . (-1) . (-2) . (-4) . (-10)", negCount: 5, hasZero: false, answer: -4000, distances: "50 . 1 . 2 . 4 . 10 = 4000" },
+      { expr: "-8 . 5 . (-15) . 4 . (-6) . 125", negCount: 3, hasZero: false, answer: -1800000, distances: "8 . 5 . 15 . 4 . 6 . 125 = 1 800 000" },
+      { expr: "-3 . (-3) . (-3) . (-3)", negCount: 4, hasZero: false, answer: 81, distances: "3 . 3 . 3 . 3 = 81" },
+      { expr: "2 . (-1) . (-1) . (-1)", negCount: 3, hasZero: false, answer: -2, distances: "2 . 1 . 1 . 1 = 2" },
+      { expr: "-10 . (-10) . (-10)", negCount: 3, hasZero: false, answer: -1000, distances: "10 . 10 . 10 = 1000" },
+      { expr: "7 . 0 . (-99) . 5", negCount: 2, hasZero: true, answer: 0, distances: "un facteur est 0" }
+    ];
+    const SIGN_COUNT = 8;
+
+    function signOf(config) {
+      if (config.hasZero) return "zero";
+      return config.negCount % 2 === 0 ? "positive" : "negative";
+    }
+
+    function buildSignStep(config) {
+      return (bodyEl) => {
+        const row = document.createElement("div");
+        row.className = "sign-options";
+        const options = [
+          { key: "positive", label: "Positif (+)" },
+          { key: "negative", label: "Négatif (−)" },
+          { key: "zero", label: "Nul (produit = 0)" }
+        ];
+        let selected = null;
+        const buttonsEls = options.map((opt) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "sign-option";
+          btn.textContent = opt.label;
+          btn.addEventListener("click", () => {
+            selected = opt.key;
+            buttonsEls.forEach((b) => b.classList.toggle("is-selected", b === btn));
+          });
+          row.appendChild(btn);
+          return btn;
+        });
+        bodyEl.appendChild(row);
+
+        const expected = signOf(config);
+        const reasoning = config.hasZero
+          ? "Un facteur est 0 → le produit est nul, quel que soit le signe des autres facteurs."
+          : `${config.negCount} facteur${config.negCount > 1 ? "s" : ""} négatif${config.negCount > 1 ? "s" : ""} (${config.negCount % 2 === 0 ? "pair" : "impair"}) → produit ${expected === "positive" ? "positif" : "négatif"}.`;
+
+        return {
+          setEnabled(enabled) { buttonsEls.forEach((b) => { b.disabled = !enabled; }); },
+          isEmpty() { return selected === null; },
+          isCorrect() { return selected === expected; },
+          correctionHtml: reasoning
+        };
+      };
+    }
+
+    function buildSignFinalStep(config) {
+      return (bodyEl) => {
+        const blank = makeBlankInput("résultat final");
+        const line = document.createElement("div");
+        line.className = "blank-line";
+        line.appendChild(fixedSpan("= "));
+        line.appendChild(blank);
+        bodyEl.appendChild(line);
+
+        return {
+          setEnabled(enabled) { blank.disabled = !enabled; },
+          isEmpty() { return isEmptyInput(blank); },
+          isCorrect() { return parseSigned(blank.value) === config.answer; },
+          correctionHtml: config.hasZero ? "= 0 (élément absorbant)" : `= ${config.distances} → ${fmt(config.answer)}`
+        };
+      };
+    }
+
+    function buildSection4() {
+      const container = document.getElementById("sign-list");
+      const items = pickRandom(signBank, SIGN_COUNT);
+
+      items.forEach((config, index) => {
+        buildStepGatedCard(container, letterLabel(index), `${config.expr} =`, [
+          { title: "Étape 1 — Quel est le signe du produit ?", build: buildSignStep(config) },
+          { title: "Étape 2 — Résultat final", build: buildSignFinalStep(config) }
+        ]);
+      });
+
+      return items.length;
+    }
+
+    function buildAll() {
+      document.getElementById("match-list").replaceChildren();
+      document.getElementById("complete-list").replaceChildren();
+      document.getElementById("calc-list").replaceChildren();
+      document.getElementById("sign-list").replaceChildren();
+      state.resolved = 0;
+
+      const n1 = buildSection1();
+      const n2 = buildSection2();
+      const n3 = buildSection3();
+      const n4 = buildSection4();
+
+      state.total = n1 + n2 + n3 + n4;
+      updateGlobalScore();
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const active = document.activeElement;
+      if (!active || active.tagName !== "INPUT" || active.type === "checkbox") return;
+      const card = active.closest(".exercise-card");
+      if (!card) return;
+      const validateBtn = card.querySelector(".validate-button");
+      if (validateBtn && !validateBtn.disabled) {
+        event.preventDefault();
+        validateBtn.click();
+      }
+    });
+
+    document.getElementById("restart-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.getElementById("new-exercises-button").addEventListener("click", () => {
+      buildAll();
+      announce("De nouveaux exercices ont été générés.");
+    });
+
+    // Appuyer sur Entrée dans un champ (ou une liste déroulante) déclenche le bouton
+    // "Vérifier" le plus proche (celui de l'étape en cours pour les cartes à étapes,
+    // sinon celui de la carte).
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const target = e.target;
+      if (!target.matches("input, select")) return;
+      const scope = target.closest(".step-block") || target.closest(".exercise-card");
+      if (!scope) return;
+      const btn = scope.querySelector(".validate-button");
+      if (btn && !btn.disabled) {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+
+    buildAll();
+  </script>
+</body>
+</html>
