@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La bissectrice d'un angle — Exercices supplémentaires</title>
+<style>
+:root{--bf:#1d3557;--b:#457b9d;--bc:#a8dadc;--fond:#f1f4f8;--pan:#fff;--tx:#1f2937;--v:#2a9d5c;--vf:#e6f6ec;--r:#d64545;--rf:#fbe9e9;--g:#6b7280;--gc:#e2e6ec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fond:#12161f;--pan:#1b2130;--tx:#e8ebf1;--gc:#2b3242;--vf:#16301f;--rf:#3a1c1c}}
+:root[data-theme="dark"]{--fond:#12161f;--pan:#1b2130;--tx:#e8ebf1;--gc:#2b3242;--vf:#16301f;--rf:#3a1c1c}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--fond);color:var(--tx);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--bf);color:#fff;padding:12px 20px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header h1{margin:0 0 8px;font-size:1.1rem}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600}
+nav button.on{background:var(--bc);color:var(--bf)}
+main{max-width:1000px;margin:0 auto;padding:18px}
+section{display:none}section.on{display:block}
+.card{background:var(--pan);border:1px solid var(--gc);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 6px;color:var(--b);font-size:1.15rem}
+p.c{margin:0 0 12px;font-size:.92rem;line-height:1.5}
+.it{border:1px solid var(--gc);border-radius:8px;padding:8px 10px;background:var(--fond);margin-bottom:8px}
+.ok{border-color:var(--v)!important;background:var(--vf)!important}
+.err{border-color:var(--r)!important;background:var(--rf)!important}
+select,input[type=text]{padding:6px;border-radius:6px;border:1px solid var(--g);background:var(--pan);color:var(--tx);font-size:.9rem;max-width:100%}
+input[type=text]{width:80px}
+.btn{padding:9px 16px;background:var(--bf);color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer;margin-right:8px;margin-top:8px}
+.btn.s{background:transparent;color:var(--bf);border:1px solid var(--bf)}
+@media (prefers-color-scheme:dark){.btn.s{color:var(--bc);border-color:var(--bc)}}
+.msg{display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:.9rem;line-height:1.4}
+.msg.succes{display:block;background:var(--vf);color:var(--v);border:1px solid var(--v)}
+.msg.erreur{display:block;background:var(--rf);color:var(--r);border:1px solid var(--r)}
+.ex{display:none;font-size:.82rem;color:var(--g);margin-top:3px}
+.show .ex{display:block}
+.mem{background:var(--fond);border-left:4px solid var(--b);padding:8px 12px;font-size:.88rem;margin-bottom:12px;border-radius:4px}
+.fig{max-width:360px;margin:0 auto 12px}
+.fig svg{width:100%;height:auto;color:var(--tx)}
+.sv{flex:0 0 130px;width:130px}.sv svg{width:130px;height:auto;display:block;color:var(--tx)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+<h1>📐 La bissectrice d'un angle — exercices supplémentaires (S1)</h1>
+<nav id="nav"></nav>
+</header>
+<main>
+<div class="mem"><b>À retenir :</b> la bissectrice d'un angle est la droite qui passe par le sommet et partage l'angle en deux angles de même amplitude. Si OM est la bissectrice de l'angle AOB : |AOM| = |MOB| = |AOB| : 2.</div>
+
+<section id="s0" class="on card">
+<h2>Exercice 1 — Moitié ou double ?</h2>
+<p class="c">OM est la bissectrice de l'angle AOB (M est à l'intérieur de l'angle). Dans chacune des 4 lignes, une amplitude est donnée : calcule celle qui est demandée. Réfléchis : faut-il diviser ou multiplier par 2 ? (Tu peux écrire une virgule : 87,5.)</p>
+<div id="l1"></div>
+<button class="btn" onclick="chk1()">Vérifier</button><button class="btn s" onclick="init1()">Recommencer</button>
+<div class="msg" id="m1"></div>
+</section>
+
+<section id="s2" class="card">
+<h2>Exercice 2 — Quelle droite est la bissectrice ?</h2>
+<p class="c">Sur la figure, un angle est codé : |AOB| = 30°. Les angles entre deux demi-droites voisines sont tous des multiples de 30°. Pour chaque angle, choisis la demi-droite qui est sa bissectrice, ou « aucune » si elle n'est pas dessinée. (On parle de l'angle le plus petit, ≤ 180°.)</p>
+<div class="fig" id="f3"></div>
+<div id="l3"></div>
+<button class="btn" onclick="chk3()">Vérifier</button><button class="btn s" onclick="init3()">Recommencer</button>
+<div class="msg" id="m3"></div>
+</section>
+
+<section id="s3" class="card">
+<h2>Exercice 3 — Vrai ou faux ?</h2>
+<p class="c">Choisis la bonne réponse. Une explication apparaît après vérification.</p>
+<div id="l4"></div>
+<button class="btn" onclick="chk4()">Vérifier</button><button class="btn s" onclick="init4()">Recommencer</button>
+<div class="msg" id="m4"></div>
+</section>
+
+<section id="s4" class="card">
+<h2>Exercice 4 — Construire au compas : remets les étapes dans l'ordre</h2>
+<p class="c">Voici les 5 étapes de la construction de la bissectrice d'un angle de sommet A (compas et latte). Chaque étape est illustrée : observe bien les dessins. Numérote-les de 1 à 5.</p>
+<div id="l5"></div>
+<button class="btn" onclick="chk5()">Vérifier</button><button class="btn s" onclick="init5()">Recommencer</button>
+<div class="msg" id="m5"></div>
+</section>
+
+<section id="s5" class="card">
+<h2>Exercice 5 — Bissectrices successives</h2>
+<p class="c"><b>A.</b> |AOB| = 120°. OM est la bissectrice de AOB, puis ON est la bissectrice de AOM.</p>
+<div class="row it" id="r6a">|AOM| = <input type="text" id="a6"> ° &nbsp; |AON| = <input type="text" id="b6"> ° &nbsp; |NOB| = <input type="text" id="c6"> °</div>
+<p class="c"><b>B.</b> On veut construire un angle de 22,5°. En partant d'un angle droit, combien de bissectrices successives faut-il tracer ?</p>
+<div class="it" id="r6b"><select id="d6"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+<button class="btn" onclick="chk6()">Vérifier</button><button class="btn s" onclick="init6()">Recommencer</button>
+<div class="msg" id="m6"></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const num=id=>{const v=$(id).value.trim().replace(',','.');return v===''?NaN:parseFloat(v)};
+const mark=(el,ok)=>{el.classList.remove('ok','err');el.classList.add(ok?'ok':'err')};
+function msg(id,ok,tot,txt){const e=$(id);e.className='msg '+(ok===tot?'succes':'erreur');e.textContent=ok===tot?`Bravo ! Tout est juste (${ok}/${tot}).`:`${ok}/${tot} correct. ${txt||''}`}
+['Ex. 1 · Calculs','Ex. 2 · Figure','Ex. 3 · Vrai/Faux','Ex. 4 · Compas','Ex. 5 · Bissectrices successives'].forEach((t,i)=>{
+ const b=document.createElement('button');b.textContent=t;if(!i)b.className='on';
+ b.onclick=()=>{document.querySelectorAll('nav button').forEach((x,j)=>x.classList.toggle('on',j===i));document.querySelectorAll('section').forEach((s,j)=>s.classList.toggle('on',j===i))};
+ $('nav').appendChild(b)});
+
+/* Ex 1 : calculs mélangés (moitié / double) */
+const E1=[['|AOB|',80,'|AOM|',40],['|AOM|',35,'|AOB|',70],['|MOB|',63,'|AOB|',126],['|AOB|',175,'|MOB|',87.5]];
+const fmt=x=>String(x).replace('.',',');
+function init1(){
+ $('l1').innerHTML=E1.map((q,i)=>`<div class="it row" id="e1-${i}">${q[0]} = ${fmt(q[1])}° &nbsp;→ ${q[2]} = <input type="text" id="e1i-${i}"> °</div>`).join('');$('m1').className='msg'}
+function chk1(){let ok=0;E1.forEach((q,i)=>{const g=num('e1i-'+i)===q[3];if(g)ok++;mark($('e1-'+i),g)});
+ msg('m1',ok,E1.length,'Si OM est la bissectrice : |AOM| = |MOB| = |AOB| : 2. Selon la donnée, il faut donc diviser ou multiplier par 2.')}
+
+/* Ex 3 */
+const R={A:0,B:30,C:60,D:90,E:120,F:150,G:210,H:270};
+const Q3=[['A','C','B'],['B','D','C'],['D','F','E'],['B','F','D'],['A','E','C'],['A','D','aucune'],['C','G','aucune'],['F','H','G']];
+function init3(){
+ const p=(a,l)=>[150+l*Math.cos(a*Math.PI/180),150-l*Math.sin(a*Math.PI/180)].map(v=>v.toFixed(1));
+ let s='<svg viewBox="0 0 300 300">';
+ for(const k in R){const e=p(R[k],125),q=p(R[k],95),r=(R[k]+90)*Math.PI/180,t=[+q[0]+14*Math.cos(r),+q[1]-14*Math.sin(r)].map(v=>v.toFixed(1));s+=`<line x1="150" y1="150" x2="${e[0]}" y2="${e[1]}" stroke="#457b9d" stroke-width="2.5"/><circle cx="${q[0]}" cy="${q[1]}" r="4.5" fill="#457b9d"/><text x="${t[0]}" y="${t[1]}" text-anchor="middle" dominant-baseline="middle" font-weight="700" fill="currentColor">${k}</text>`}
+ {const a=p(0,45),b=p(30,45),t=p(15,70);s+=`<path d="M${a[0]} ${a[1]} A45 45 0 0 0 ${b[0]} ${b[1]}" fill="none" stroke="#e07a1f" stroke-width="2"/><text x="${t[0]}" y="${t[1]}" text-anchor="middle" dominant-baseline="middle" font-size="12" font-weight="700" fill="#e07a1f">30°</text>`}
+ s+='<circle cx="150" cy="150" r="4" fill="currentColor"/><text x="150" y="168" text-anchor="middle" fill="currentColor" font-weight="700">O</text></svg>';
+ $('f3').innerHTML=s;
+ const opts='<option value="">—</option>'+Object.keys(R).map(k=>`<option>[O${k}</option>`).join('')+'<option>aucune</option>';
+ $('l3').innerHTML=Q3.map((q,i)=>`<div class="it row" id="q3-${i}">Bissectrice de l'angle <b>${q[0]}O${q[1]}</b> : <select id="s3-${i}">${opts}</select></div>`).join('');
+ $('m3').className='msg'}
+function chk3(){let ok=0;Q3.forEach((q,i)=>{const v=$('s3-'+i).value;const g=q[2]==='aucune'?v==='aucune':v==='[O'+q[2];if(g)ok++;mark($('q3-'+i),g)});
+ msg('m3',ok,Q3.length,'Calcule l\'amplitude de l\'angle, divise par 2, puis cherche la demi-droite située à cette amplitude de la première.')}
+
+/* Ex 4 */
+const Q4=[
+['La bissectrice d\'un angle passe par son sommet.',1,'Par définition, elle part du sommet de l\'angle.'],
+['La bissectrice d\'un angle de 60° forme deux angles de 20°.',0,'60° : 2 = 30° : on obtient deux angles de 30°.'],
+['Si OM est la bissectrice de AOB, alors |AOM| = |MOB|.',1,'C\'est la propriété de la bissectrice : deux angles de même amplitude.'],
+['La bissectrice d\'un angle plat forme deux angles droits.',1,'180° : 2 = 90°. Elle est perpendiculaire à la droite.'],
+['Pour construire une bissectrice au compas, il faut connaître l\'amplitude de l\'angle.',0,'Au compas et à la latte, on n\'a besoin d\'aucune mesure.'],
+['Si |AOM| = |MOB|, alors OM est toujours la bissectrice de AOB.',0,'Il faut aussi que M soit à l\'intérieur de l\'angle AOB.'],
+['La bissectrice d\'un angle aigu partage cet angle en deux angles aigus.',1,'La moitié d\'un angle de moins de 90° mesure moins de 45°.'],
+['La bissectrice d\'un angle de 90° forme deux angles de 45°.',1,'90° : 2 = 45°.']];
+function init4(){
+ $('l4').innerHTML=Q4.map((q,i)=>`<div class="it" id="q4-${i}">${i+1}. ${q[0]}<br><label><input type="radio" name="q${i}" value="1"> Vrai</label> &nbsp; <label><input type="radio" name="q${i}" value="0"> Faux</label><div class="ex">${q[2]}</div></div>`).join('');
+ $('l4').classList.remove('show');$('m4').className='msg'}
+function chk4(){let ok=0;Q4.forEach((q,i)=>{const r=document.querySelector(`input[name=q${i}]:checked`);const g=r&&+r.value===q[1];if(g)ok++;mark($('q4-'+i),g)});
+ $('l4').classList.add('show');msg('m4',ok,Q4.length,'Lis les explications sous chaque affirmation.')}
+
+/* Illustrations des étapes (compas) */
+function stepSvg(n){
+ const L='stroke="currentColor" stroke-width="2"',T=(x,y,t)=>`<text x="${x}" y="${y}" font-size="11" font-weight="700" fill="currentColor">${t}</text>`;
+ let g=`<line x1="15" y1="60" x2="92.8" y2="5.5" ${L}/><line x1="15" y1="60" x2="92.8" y2="114.5" ${L}/>`;
+ g+=`<path d="M72.3 100.1 A70 70 0 0 0 72.3 19.9" fill="none" stroke="#e07a1f" stroke-width="2"/>`+T(-2,76,'A')+T(76,112,'B')+T(76,16,'C')+'<circle cx="15" cy="60" r="2.8" fill="currentColor"/><circle cx="72.3" cy="100.1" r="2.8" fill="currentColor"/><circle cx="72.3" cy="19.9" r="2.8" fill="currentColor"/>';
+ if(n>=2)g+=`<path d="M114.2 47.1 A50 50 0 0 1 86.9 67.7" fill="none" stroke="#2a9d5c" stroke-width="2"/>`;
+ if(n>=3)g+=`<path d="M86.9 52.3 A50 50 0 0 1 114.2 72.9" fill="none" stroke="#2a9d5c" stroke-width="2"/>`;
+ if(n>=4)g+=`<circle cx="102.2" cy="60" r="3" fill="#2a9d5c"/>`+T(117,56,'D');
+ if(n>=5)g+=`<line x1="-10" y1="60" x2="128" y2="60" stroke="#d64545" stroke-width="2.5"/><path d="M45 60 A30 30 0 0 0 39.6 42.8" fill="none" stroke="#d64545" stroke-width="1.5"/><path d="M55 60 A40 40 0 0 1 47.8 82.9" fill="none" stroke="#d64545" stroke-width="1.5"/><line x1="40.8" y1="51.9" x2="46.5" y2="50.1" stroke="#d64545" stroke-width="1.5"/><line x1="50.3" y1="71.1" x2="56" y2="72.9" stroke="#d64545" stroke-width="1.5"/>`;
+ return `<svg viewBox="-12 0 142 120">${g}</svg>`}
+/* Ex 5 */
+const S5=[['On note D l\'intersection des deux arcs de cercle.',4],['On place la pointe sèche en A et on trace un arc de cercle qui coupe les deux côtés en B et en C.',1],['On trace la droite AD, la bissectrice de l\'angle, et on code la figure.',5],['Avec une ouverture de compas supérieure à la moitié de [BC], on trace un arc de cercle de centre C.',2],['Avec la même ouverture de compas, on trace un arc de cercle de centre B.',3]];
+function init5(){
+ $('l5').innerHTML=S5.map((s,i)=>`<div class="it row" id="q5-${i}"><select id="s5-${i}"><option value="">—</option>${[1,2,3,4,5].map(n=>`<option>${n}</option>`).join('')}</select><div class="sv">${stepSvg(s[1])}</div><span style="flex:1;min-width:200px">${s[0]}</span></div>`).join('');$('m5').className='msg'}
+function chk5(){let ok=0;S5.forEach((s,i)=>{const g=+$('s5-'+i).value===s[1];if(g)ok++;mark($('q5-'+i),g)});
+ msg('m5',ok,S5.length,'Commence par l\'arc centré en A, termine par le tracé de AD.')}
+
+/* Ex 6 */
+function init6(){['a6','b6','c6','d6'].forEach(x=>{$(x).value='';$(x).classList.remove('ok','err')});['r6a','r6b'].forEach(x=>$(x).classList.remove('ok','err'));$('m6').className='msg'}
+function chk6(){
+ const r=[['a6',60],['b6',30],['c6',90]].map(([id,v])=>{const g=num(id)===v;mark($(id),g);return g});
+ const b=$('d6').value==='2';mark($('d6'),b);
+ const ok=r.filter(Boolean).length+(b?1:0);
+ msg('m6',ok,4,'Indice A : la bissectrice partage l\'angle en deux angles égaux ; recommence avec le nouvel angle pour ON, puis utilise |NÔB| = |AÔB| − |AÔN|. Indice B : pars de 90° et divise par 2 autant de fois que nécessaire pour atteindre 22,5°.')}
+/* chapeau sur le sommet : AOB -> AÔB (lettre du milieu + U+0302) */
+const RE=/(?<![A-Za-z])([A-Z])([A-Z])([A-Z])(?![A-Za-z])/g;
+function hat(root){
+ const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;const a=[];
+ while(n=w.nextNode())if(!/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName))a.push(n);
+ a.forEach(t=>{const v=t.nodeValue.replace(RE,'$1$2\u0302$3');if(v!==t.nodeValue)t.nodeValue=v});
+}
+new MutationObserver(m=>m.forEach(r=>r.addedNodes.forEach(x=>hat(x.nodeType===1?x:x.parentNode)))).observe(document.body,{childList:true,subtree:true});
+init1();init3();init4();init5();hat(document.body);
+</script>
+</body>
+</html>

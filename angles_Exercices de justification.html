@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Les angles — Exercices supplémentaires</title>
+<style>
+:root{--bf:#1d3557;--b:#457b9d;--bc:#a8dadc;--fond:#f1f4f8;--pan:#fff;--tx:#1f2937;--v:#2a9d5c;--vf:#e6f6ec;--r:#d64545;--rf:#fbe9e9;--g:#6b7280;--gc:#e2e6ec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fond:#12161f;--pan:#1b2130;--tx:#e8ebf1;--gc:#2b3242;--vf:#16301f;--rf:#3a1c1c}}
+:root[data-theme="dark"]{--fond:#12161f;--pan:#1b2130;--tx:#e8ebf1;--gc:#2b3242;--vf:#16301f;--rf:#3a1c1c}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--fond);color:var(--tx);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--bf);color:#fff;padding:12px 20px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header h1{margin:0 0 8px;font-size:1.1rem}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600}
+nav button.on{background:var(--bc);color:var(--bf)}
+main{max-width:1000px;margin:0 auto;padding:18px}
+section{display:none}section.on{display:block}
+.card{background:var(--pan);border:1px solid var(--gc);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 6px;color:var(--b);font-size:1.15rem}
+p.c{margin:0 0 12px;font-size:.92rem;line-height:1.5}
+.it{border:1px solid var(--gc);border-radius:8px;padding:8px 10px;background:var(--fond);margin-bottom:8px}
+.ok{border-color:var(--v)!important;background:var(--vf)!important}
+.err{border-color:var(--r)!important;background:var(--rf)!important}
+select,input[type=text]{padding:6px;border-radius:6px;border:1px solid var(--g);background:var(--pan);color:var(--tx);font-size:.9rem;max-width:100%}
+input[type=text]{width:70px}
+.btn{padding:9px 16px;background:var(--bf);color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer;margin-right:8px;margin-top:8px}
+.btn.s{background:transparent;color:var(--bf);border:1px solid var(--bf)}
+@media (prefers-color-scheme:dark){.btn.s{color:var(--bc);border-color:var(--bc)}}
+.msg{display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:.9rem;line-height:1.4}
+.msg.succes{display:block;background:var(--vf);color:var(--v);border:1px solid var(--v)}
+.msg.erreur{display:block;background:var(--rf);color:var(--r);border:1px solid var(--r)}
+.ex{display:none;font-size:.82rem;color:var(--g);margin-top:3px}
+.show .ex{display:block}
+.mem{background:var(--pan);border-left:4px solid var(--b);padding:8px 12px;font-size:.88rem;margin-bottom:12px;border-radius:4px;line-height:1.5}
+.fig{max-width:500px;margin:0 auto 12px}
+.fig svg{width:100%;height:auto;color:var(--tx)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.j6{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:8px}.j6 .fig{flex:0 1 380px;max-width:380px;margin:0 auto}.j6 .jl{flex:1 1 320px;min-width:0}
+.st{background:var(--fond);border:1px dashed var(--b);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:.92rem}
+</style>
+</head>
+<body>
+<header>
+<h1>📐 Les angles — exercices supplémentaires</h1>
+<nav id="nav"></nav>
+</header>
+<main>
+<div class="mem"><b>À retenir :</b> deux angles <b>opposés par le sommet</b> ont la même amplitude · deux angles <b>complémentaires</b> : somme = 90° · deux angles <b>supplémentaires</b> : somme = 180° · autour d’un point, la somme fait <b>360°</b> · si la droite OM est la <b>bissectrice</b> de AOB (M à l'intérieur de l'angle) : |AOM| = |MOB| = |AOB| : 2. Ne mesure rien : calcule et justifie !</div>
+
+<section id="s0" class="on card">
+<h2>Exercice 1 — Deux droites sécantes</h2>
+<div class="st">Les droites AC et BD se coupent en O. On sait que |AOB| = 65°.</div>
+<div class="fig" id="f1"></div>
+<div id="l1"></div>
+<button class="btn" onclick="ck('1')">Vérifier</button><button class="btn s" onclick="mk('1')">Recommencer</button>
+<div class="msg" id="m1"></div>
+</section>
+
+<section id="s1" class="card">
+<h2>Exercice 2 — Un angle droit dans la figure</h2>
+<div class="st">A, O et B sont alignés. La droite OD est perpendiculaire à la droite AB. On sait que |BOC| = 40° et |DOE| = 35°.</div>
+<div class="fig" id="f2"></div>
+<div id="l2"></div>
+<button class="btn" onclick="ck('2')">Vérifier</button><button class="btn s" onclick="mk('2')">Recommencer</button>
+<div class="msg" id="m2"></div>
+</section>
+
+<section id="s2" class="card">
+<h2>Exercice 3 — Bissectrice et angles opposés</h2>
+<div class="st">Les droites AB et CD se coupent en O. On sait que |AOC| = 70° et que la droite OE est la bissectrice de AOC.</div>
+<div class="fig" id="f3"></div>
+<div id="l3"></div>
+<button class="btn" onclick="ck('3')">Vérifier</button><button class="btn s" onclick="mk('3')">Recommencer</button>
+<div class="msg" id="m3"></div>
+</section>
+
+<section id="s3" class="card">
+<h2>Exercice 4 — Deux bissectrices : que constates-tu ?</h2>
+<div class="st">A, O et B sont alignés. la droite OD est la bissectrice de AOC et la droite OE est la bissectrice de COB. On sait que |AOC| = 140°.</div>
+<div class="fig" id="f4"></div>
+<div id="l4"></div>
+<div class="it row" id="c4r">Conclusion : les droites OD et OE sont
+<select id="c4"><option value="">—</option><option value="p">perpendiculaires</option><option value="n">parallèles</option><option value="x">sécantes mais pas perpendiculaires</option></select> <button class="btn s" style="padding:4px 10px;margin:0" onclick="ckc()">Vérifier</button> <span id="t4c"></span></div>
+<button class="btn" onclick="ck('4')">Vérifier</button><button class="btn s" onclick="mk('4')">Recommencer</button>
+<div class="msg" id="m4"></div>
+</section>
+
+<section id="s4" class="card">
+<h2>Exercice 5 — Vrai ou faux ?</h2>
+<p class="c">Choisis la bonne réponse. Une explication apparaît après vérification.</p>
+<div id="l5"></div>
+<button class="btn" onclick="ck5()">Vérifier</button><button class="btn s" onclick="mk5()">Recommencer</button>
+<div class="msg" id="m5"></div>
+</section>
+<section id="s5" class="card">
+<h2>Exercice 6 — Rédiger une justification</h2>
+<p class="c">Complète chaque phrase du raisonnement. Vérifie chaque ligne avec son bouton. Quand toutes les lignes d’une partie sont justes, la justification complète s’affiche : c’est le modèle à retenir.</p>
+<h3 style="margin:8px 0;font-size:1rem">A. Montrer que des points sont alignés</h3>
+<div class="st">On sait que |AOC| = 80° et |COB| = 100°. Justifie que les points A, O et B sont alignés.</div>
+<div class="j6"><div class="fig" id="f6a"></div><div class="jl"><div id="l6a"></div><div class="mem" id="rc6a" style="display:none"></div></div></div>
+<h3 style="margin:14px 0 8px;font-size:1rem">B. Montrer que des droites sont perpendiculaires</h3>
+<div class="st">On sait que |BOC| = 25° et |COD| = 65°. Justifie que les droites OB et OD sont perpendiculaires.</div>
+<div class="j6"><div class="fig" id="f6b"></div><div class="jl"><div id="l6b"></div><div class="mem" id="rc6b" style="display:none"></div></div></div>
+<h3 style="margin:14px 0 8px;font-size:1rem">C. Montrer que deux angles ont la même amplitude</h3>
+<div class="st">Les droites AC et BD se coupent en O et |AOB| = 70°. Justifie que |COD| = 70°.</div>
+<div class="j6"><div class="fig" id="f6c"></div><div class="jl"><div id="l6c"></div><div class="mem" id="rc6c" style="display:none"></div></div></div>
+<h3 style="margin:14px 0 8px;font-size:1rem">D. Utiliser une bissectrice</h3>
+<div class="st">La droite OM est la bissectrice de l’angle AOB et |AOB| = 130°. Justifie que |MOB| = 65°.</div>
+<div class="j6"><div class="fig" id="f6d"></div><div class="jl"><div id="l6d"></div><div class="mem" id="rc6d" style="display:none"></div></div></div>
+<h3 style="margin:14px 0 8px;font-size:1rem">E. Angles autour d’un point</h3>
+<div class="st">Les trois angles AOB, BOC et COA entourent le point O. |AOB| = 120° et |BOC| = 130°. Justifie que |COA| = 110°.</div>
+<div class="j6"><div class="fig" id="f6e"></div><div class="jl"><div id="l6e"></div><div class="mem" id="rc6e" style="display:none"></div></div></div>
+<button class="btn" onclick="ck6()">Vérifier</button><button class="btn s" onclick="mk6()">Recommencer</button>
+<div class="msg" id="m6"></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const num=id=>{const v=$(id).value.trim().replace(',','.');return v===''?NaN:parseFloat(v)};
+const mark=(el,ok)=>{el.classList.remove('ok','err');el.classList.add(ok?'ok':'err')};
+function msg(id,ok,tot,txt){const e=$(id);e.className='msg '+(ok===tot?'succes':'erreur');e.textContent=ok===tot?`Bravo ! Tout est juste (${ok}/${tot}).`:`${ok}/${tot} correct. ${txt||''}`}
+['Ex. 1 · Sécantes','Ex. 2 · Angle droit','Ex. 3 · Bissectrice','Ex. 4 · Deux bissectrices','Ex. 5 · Vrai/Faux','Ex. 6 · Justifier'].forEach((t,i)=>{
+ const b=document.createElement('button');b.textContent=t;if(!i)b.className='on';
+ b.onclick=()=>{document.querySelectorAll('nav button').forEach((x,j)=>x.classList.toggle('on',j===i));document.querySelectorAll('section').forEach((s,j)=>s.classList.toggle('on',j===i))};
+ $('nav').appendChild(b)});
+
+const J={s:'angles adjacents supplémentaires',c:'angles adjacents complémentaires',o:'angles opposés par le sommet',b:'bissectrice',a:'somme de deux angles adjacents'};
+const pt=(a,r)=>[150+r*Math.cos(a*Math.PI/180),150-r*Math.sin(a*Math.PI/180)].map(v=>v.toFixed(1));
+const HALO='style="stroke:var(--pan);stroke-width:3.5px;paint-order:stroke;stroke-linejoin:round"';
+function fig(R,arcs,sq,cod){
+ let s='<svg viewBox="15 15 270 270">';const ang=[];
+ R.forEach(([n,a,bis])=>{ang.push(a%360);const c=bis?'#2a9d5c':'#457b9d';
+  if(bis){ang.push((a+180)%360);const f=pt(a+180,125);s+=`<line x1="150" y1="150" x2="${f[0]}" y2="${f[1]}" stroke="${c}" stroke-width="1.5"/>`}
+  const e=pt(a,125),d=pt(a,100),t=[150+102*Math.cos(a*Math.PI/180)-12*Math.sin(a*Math.PI/180),150-102*Math.sin(a*Math.PI/180)-12*Math.cos(a*Math.PI/180)].map(v=>v.toFixed(1));
+  s+=`<line x1="150" y1="150" x2="${e[0]}" y2="${e[1]}" stroke="${c}" stroke-width="1.5"/><circle cx="${d[0]}" cy="${d[1]}" r="2.6" fill="${c}"/><text x="${t[0]}" y="${t[1]}" text-anchor="middle" dominant-baseline="middle" font-size="10.5" font-weight="700" fill="currentColor" ${HALO}>${n}</text>`});
+ ang.sort((x,y)=>x-y);let gm=0,mid=0;ang.forEach((x,i)=>{const y=i+1<ang.length?ang[i+1]:ang[0]+360,g=y-x;if(g>gm){gm=g;mid=x+g/2}});
+ (arcs||[]).forEach(([a,b,r,l,la,col])=>{col=col||'#e07a1f';const p=pt(a,r),q=pt(b,r),t=pt(la,r+17);s+=`<path d="M${p} A${r} ${r} 0 0 0 ${q}" fill="none" stroke="${col}" stroke-width="1.5"/><text x="${t[0]}" y="${t[1]}" text-anchor="middle" dominant-baseline="middle" font-size="9.5" fill="${col}" font-weight="700" ${HALO}>${l}</text>`});
+ (sq||[]).forEach(a=>{const p=pt(a,14),q=pt(a+90,14),m=[+p[0]+ +q[0]-150,+p[1]+ +q[1]-150];s+=`<polyline points="${p} ${m} ${q}" fill="none" stroke="#d64545" stroke-width="1.5"/>`});
+ (cod||[]).forEach(([a,b,r,n])=>{const p=pt(a,r),q=pt(b,r),m=(a+b)/2;s+=`<path d="M${p} A${r} ${r} 0 0 0 ${q}" fill="none" stroke="#d64545" stroke-width="1.5"/>`;
+  for(let k=0;k<n;k++){const mm=m+(k-(n-1)/2)*(n>1?6:0),u=pt(mm,r-4),v=pt(mm,r+4);s+=`<line x1="${u[0]}" y1="${u[1]}" x2="${v[0]}" y2="${v[1]}" stroke="#d64545" stroke-width="1.5"/>`}});
+ const o=pt(mid,19);
+ return s+`<circle cx="150" cy="150" r="3" fill="currentColor"/><text x="${o[0]}" y="${o[1]}" text-anchor="middle" dominant-baseline="middle" font-size="10.5" fill="currentColor" font-weight="700" ${HALO}>O</text></svg>`}
+
+/* [texte, réponse, justifications acceptées, arc [a1,a2,rayon,angle de l'étiquette]] */
+const D={
+'1':{R:[['A',20],['B',85],['C',200],['D',265]],G:[[20,85,40,'65°',52]],
+ h:'Les angles opposés par le sommet ont la même amplitude ; deux angles adjacents dont les côtés extérieurs sont alignés sont supplémentaires (180°).',
+ i:[['|BOC| =',115,'s',[85,200,40,142]],['|COD| =',65,'os',[200,265,40,232]],['|DOA| =',115,'os',[265,380,40,322]]]},
+'2':{R:[['B',0],['C',40],['D',90],['E',125],['A',180]],G:[[0,40,36,'40°',20],[90,125,36,'35°',108]],S:[0],
+ h:'Comme OD ⊥ AB, |BOD| = |DOA| = 90°. Utilise ensuite les angles complémentaires, supplémentaires ou la somme d\'angles adjacents.',
+ i:[['|COD| =',50,'c',[40,90,30,65]],['|EOA| =',55,'c',[125,180,36,152]],['|COE| =',85,'a',[40,125,62,62]],['|COA| =',140,'sa',[40,180,88,152]]]},
+'3':{R:[['A',0],['E',35,1],['C',70],['B',180],['D',250]],G:[[0,70,40,'70°',52]],
+ h:'La bissectrice partage l\'angle en deux angles de même amplitude. Les points A, O, B sont alignés, ainsi que C, O, D.',
+ i:[['|AOE| =',35,'b',[0,35,56,17],[[0,35,24,1],[35,70,24,1]]],['|AOD| =',110,'s',[250,360,40,305]],['|BOD| =',70,'o',[180,250,40,235]],['|EOB| =',145,'s',[35,180,62,108]]]},
+'4':{R:[['B',0],['E',20,1],['C',40],['D',110,1],['A',180]],G:[[40,180,30,'140°',166]],
+ h:'Calcule d\'abord |COB| (angles supplémentaires), puis les moitiés (bissectrices), puis additionne |DOC| et |COE|. Un angle de 90° signifie que les droites sont perpendiculaires.',
+ i:[['|COB| =',40,'s',[0,40,62,30]],['|DOC| =',70,'b',[40,110,50,75],[[40,110,40,1],[110,180,40,1]]],['|COE| =',20,'b',[20,40,36,30],[[0,20,20,2],[20,40,20,2]]],['|DOE| =',90,'a',[20,110,80,65]]]}};
+const found={};const PAL=['#8e44ad','#d81b60','#8d6e63','#3949ab','#9a7d0a'];
+function draw(p){const d=D[p],ex=[...found[p]].map(i=>{const q=d.i[i],r=q[3];return [r[0],r[1],r[2],q[1]+'°',r[3],PAL[i%5]]});
+ $('f'+p).innerHTML=fig(d.R,d.G.concat(ex),d.S,[...found[p]].flatMap(i=>d.i[i][4]||[]))}
+function mk(p){const d=D[p];found[p]=new Set();draw(p);
+ $('l'+p).innerHTML=d.i.map((q,i)=>`<div class="it row" id="r${p}-${i}"><b style="color:${PAL[i%5]};font-size:1.1em">●</b> ${q[0]} <input type="text" id="v${p}-${i}"> ° &nbsp; Justification :
+ <select id="j${p}-${i}"><option value="">—</option>${Object.entries(J).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+ <button class="btn s" style="padding:4px 10px;margin:0" onclick="ckl('${p}',${i})">Vérifier</button> <span id="t${p}-${i}"></span></div>`).join('');
+ if(p==='4'){$('c4').value='';$('c4r').classList.remove('ok','err');$('t4c').textContent=''}
+ $('m'+p).className='msg'}
+function ckl(p,i){const q=D[p].i[i],j=$(`j${p}-${i}`).value,vv=num(`v${p}-${i}`);
+ const g=vv===q[1]&&j!==''&&q[2].includes(j);mark($(`r${p}-${i}`),g);
+ $(`t${p}-${i}`).textContent=g?'✓':(vv===q[1]?'amplitude juste, justification à revoir':'à revoir');
+ if(g){found[p].add(i);draw(p)}return g}
+function ckc(){const g=$('c4').value==='p';mark($('c4r'),g);$('t4c').textContent=g?'✓':'à revoir';return g}
+function ck(p){const d=D[p];let ok=0,t=d.i.length;
+ d.i.forEach((q,i)=>{if(ckl(p,i))ok++});
+ if(p==='4'){t++;if(ckc())ok++}
+ msg('m'+p,ok,t,'Chaque ligne doit avoir la bonne amplitude ET la bonne justification. '+d.h)}
+
+/* Ex 5 */
+const Q5=[
+['Deux angles opposés par le sommet sont toujours supplémentaires.',0,'Ils ont la même amplitude. Ils ne sont supplémentaires que s\'ils mesurent chacun 90°.'],
+['Deux angles adjacents et supplémentaires forment un angle plat.',1,'Leur somme vaut 180° et ils ont un côté commun : les côtés extérieurs sont alignés.'],
+['Un angle de 40° et un angle de 140° sont toujours adjacents.',0,'Ils sont supplémentaires (40° + 140° = 180°), mais rien ne dit qu\'ils ont un côté commun.'],
+['Deux angles complémentaires sont forcément tous les deux aigus.',1,'Leur somme vaut 90° : chacun mesure donc moins de 90°.'],
+['Si la droite OM est la bissectrice de AOB et |AOB| = 50°, alors |MOB| = 100°.',0,'|MOB| = 50° : 2 = 25°. On divise par 2, on ne double pas.'],
+['Si deux angles adjacents sont complémentaires, leurs côtés non communs sont perpendiculaires.',1,'Ensemble, ils forment un angle de 90° : un angle droit.']];
+function mk5(){$('l5').innerHTML=Q5.map((q,i)=>`<div class="it" id="q5-${i}">${i+1}. ${q[0]}<br><label><input type="radio" name="q${i}" value="1"> Vrai</label> &nbsp; <label><input type="radio" name="q${i}" value="0"> Faux</label><div class="ex">${q[2]}</div></div>`).join('');
+ $('l5').classList.remove('show');$('m5').className='msg'}
+function ck5(){let ok=0;Q5.forEach((q,i)=>{const r=document.querySelector(`input[name=q${i}]:checked`);const g=r&&+r.value===q[1];if(g)ok++;mark($('q5-'+i),g)});
+ $('l5').classList.add('show');msg('m5',ok,Q5.length,'Lis les explications sous chaque affirmation.')}
+
+
+/* Ex 6 : justification guidée, ligne par ligne */
+const AD=[['adjacents','opposés par le sommet'],0],CS=['complémentaires','supplémentaires'];
+const P6={a:{f:fig([['A',150],['C',70],['B',330]],[[70,150,30,'80°',110],[330,70,30,'100°',20]]),
+ s:[['Les angles AOC et COB ont le même ___, partagent un ___ et sont situés ___ de ce côté : ils sont ___.',[[['sommet','côté','centre'],0],[['côté','sommet','point'],0],[['de part et d’autre','du même côté'],0],AD]],
+ ['|AOC| + |COB| = ___ ° + ___ ° = ___ °',[80,100,180]],
+ ['Leur somme vaut ___ °, donc les angles AOC et COB sont ___.',[180,[CS,1]]],
+ ['Deux angles ___ et ___ forment un angle ___.',[AD,[CS,1],[['droit','plat','plein'],1]]],
+ ['Conclusion : l’angle AOB est ___, donc ses côtés sont dans le ___ l’un de l’autre et les points A, O et B sont ___.',[[['plat','droit'],0],[['prolongement','même côté'],0],[['alignés','perpendiculaires'],0]]]]},
+b:{f:fig([['B',0],['C',25],['D',90]],[[0,25,40,'25°',12],[25,90,30,'65°',60]]),
+ s:[['Les angles BOC et COD ont le même ___, partagent un ___ et sont situés ___ de ce côté : ils sont ___.',[[['sommet','côté','centre'],0],[['côté','sommet','point'],0],[['de part et d’autre','du même côté'],0],AD]],
+ ['|BOC| + |COD| = ___ ° + ___ ° = ___ °',[25,65,90]],
+ ['Leur somme vaut ___ °, donc les angles BOC et COD sont ___.',[90,[CS,0]]],
+ ['Deux angles ___ et ___ forment un angle ___.',[AD,[CS,0],[['droit','plat','plein'],0]]],
+ ['Conclusion : l’angle BOD est ___, donc les droites OB et OD sont ___.',[[['droit','plat'],0],[['perpendiculaires','parallèles','confondues'],0]]]]},
+c:{f:fig([['A',20],['B',90],['C',200],['D',270]],[[20,90,38,'70°',55],[200,270,38,'?',235]]),
+ s:[['Les droites AC et BD sont ___ en O.',[[['sécantes','parallèles'],0]]],
+ ['Les angles AOB et COD ont le même ___ et leurs côtés sont dans le ___ l’un de l’autre : ils sont ___.',[[['sommet','côté'],0],[['prolongement','même sens'],0],[['opposés par le sommet','adjacents'],0]]],
+ ['Deux angles opposés par le sommet ont la même ___.',[[['longueur','amplitude'],1]]],
+ ['Donc |COD| = |AOB| = ___ °.',[70]]]},
+d:{f:fig([['A',160],['M',95,1],['B',30]],[[30,160,60,'130°',128]]),fa:[[['A',160],['M',95,1],['B',30]],[[30,160,60,'130°',128]],null,[[30,95,44,1],[95,160,44,1]]],codLine:0,
+ s:[['La droite OM est la ___ de l’angle AOB : elle passe par le ___ et le partage en deux angles de ___ amplitude.',[[['bissectrice','médiatrice'],0],[['sommet','milieu'],0],[['même','double'],0]]],
+ ['Donc |MOB| = |AOB| : ___ = ___ ° : ___ = ___ °.',[2,130,2,65]]]},
+e:{f:fig([['A',30],['B',150],['C',280]],[[30,150,34,'120°',90],[150,280,34,'130°',215],[280,390,34,'?',335]]),
+ s:[['Les angles AOB, BOC et COA recouvrent ___ le plan autour du point O.',[[['tout','une partie'],0]]],
+ ['Leur somme est donc un angle ___ : ___ °.',[[['plein','plat'],0],360]],
+ ['|COA| = 360° − ___ ° − ___ ° = ___ °.',[120,130,110]]]}};
+function mk6(){['a','b','c','d','e'].forEach(k=>{const d=P6[k];$('f6'+k).innerHTML=d.f;
+ $('l6'+k).innerHTML=d.s.map((q,i)=>{let c=0;return `<div class="it" id="r6${k}${i}">${i+1}. `+q[0].replace(/___/g,()=>{const b=q[1][c],id=`v6${k}${i}_${c++}`;
+  return typeof b==='number'?`<input type="text" id="${id}" style="width:52px">`:`<select id="${id}"><option value="">—</option>${b[0].map((o,j)=>`<option value="${j}">${o}</option>`).join('')}</select>`})
+  +` <button class="btn s" style="padding:4px 10px;margin:0 0 0 6px" onclick="cl6('${k}',${i},1)">Vérifier</button> <span id="s6${k}${i}"></span></div>`}).join('');
+ $('rc6'+k).style.display='none'});$('m6').className='msg'}
+function ev6(k,i,mk_){const q=P6[k].s[i];let n=0;q[1].forEach((b,c)=>{const id=`v6${k}${i}_${c}`,e=$(id);
+ const g=typeof b==='number'?num(id)===b:(e.value!==''&&+e.value===b[1]);if(g)n++;if(mk_)mark(e,g)});return n}
+function cl6(k,i,single){const q=P6[k].s[i],n=ev6(k,i,1),all=n===q[1].length;
+ if(all&&P6[k].codLine===i)$('f6'+k).innerHTML=fig(...P6[k].fa);
+ mark($(`r6${k}${i}`),all);$(`s6${k}${i}`).textContent=all?'✓':`${n}/${q[1].length}`;
+ const full=P6[k].s.every((x,j)=>ev6(k,j,0)===x[1].length),r=$('rc6'+k);
+ if(full){r.style.display='block';r.innerHTML='<b>Justification complète :</b><br>'+P6[k].s.map(x=>{let c=0;return x[0].replace(/___/g,()=>{const b=x[1][c++];return '<b>'+(typeof b==='number'?b:b[0][b[1]])+'</b>'})}).join('<br>')}else r.style.display='none';
+ return n}
+function ck6(){let ok=0,t=0;['a','b','c','d','e'].forEach(k=>P6[k].s.forEach((q,i)=>{t+=q[1].length;ok+=cl6(k,i)}));
+ msg('m6',ok,t,'Relis la propriété utilisée à chaque ligne : adjacents, opposés par le sommet, bissectrice, somme des amplitudes (90°, 180° ou 360°).')}
+
+/* chapeau sur le sommet : AOB -> AÔB */
+const RE=/(?<![A-Za-z])([A-Z])([A-Z])([A-Z])(?![A-Za-z])/g;
+function hat(root){
+ const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;const a=[];
+ while(n=w.nextNode())if(!/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName))a.push(n);
+ a.forEach(t=>{const v=t.nodeValue.replace(RE,'$1$2\u0302$3');if(v!==t.nodeValue)t.nodeValue=v});
+}
+new MutationObserver(m=>m.forEach(r=>r.addedNodes.forEach(x=>hat(x.nodeType===1?x:x.parentNode)))).observe(document.body,{childList:true,subtree:true});
+['1','2','3','4'].forEach(mk);mk5();mk6();hat(document.body);
+</script>
+</body>
+</html>

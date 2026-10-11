@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Angles — Reconnaître, identifier, nommer</title>
+<style>
+  :root{
+    --bleu-fonce: #1d3557;
+    --bleu: #457b9d;
+    --bleu-clair: #a8dadc;
+    --fond: #f1f4f8;
+    --panneau: #ffffff;
+    --texte: #1f2937;
+    --vert: #2a9d5c;
+    --vert-fond: #e6f6ec;
+    --rouge: #d64545;
+    --rouge-fond: #fbe9e9;
+    --gris: #6b7280;
+    --gris-clair: #e2e6ec;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --fond:#12161f; --panneau:#1b2130; --texte:#e8ebf1; --gris-clair:#2b3242;
+    }
+  }
+  :root[data-theme="dark"]{
+    --fond:#12161f; --panneau:#1b2130; --texte:#e8ebf1; --gris-clair:#2b3242;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    font-family:"Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background:var(--fond); color:var(--texte);
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+
+  #bandeau{
+    min-height:64px; background:var(--bleu-fonce); color:#fff;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 24px; flex-wrap:wrap; gap:10px;
+    position:sticky; top:0; z-index:5;
+    padding-top:calc(10px + env(safe-area-inset-top,0px));
+  }
+  #bandeau .titre-app{ font-size:1.15rem; font-weight:700; }
+  #nav-exercices{ display:flex; gap:8px; flex-wrap:wrap; }
+  .btn-nav-ex{
+    background:rgba(255,255,255,0.12); color:#fff; border:1px solid rgba(255,255,255,0.25);
+    padding:8px 14px; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:600;
+  }
+  .btn-nav-ex:hover{ background:rgba(255,255,255,0.25); }
+  .btn-nav-ex.actif{ background:var(--bleu-clair); color:var(--bleu-fonce); border-color:var(--bleu-clair); }
+
+  #conteneur-principal{ width:100%; }
+  .section-exercice{ display:none; padding:20px; }
+  .section-exercice.active{ display:block; }
+
+  .layout{ display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start; max-width:1300px; margin:0 auto; }
+  .panneau-consigne{
+    flex:1 1 320px; min-width:280px; background:var(--panneau); border:1px solid var(--gris-clair);
+    border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:14px;
+  }
+  .panneau-figure{
+    flex:1 1 480px; min-width:300px; background:var(--panneau); border:1px solid var(--gris-clair);
+    border-radius:10px; padding:14px; display:flex; align-items:center; justify-content:center;
+  }
+  .panneau-figure svg{ width:100%; height:auto; display:block; max-width:600px; }
+
+  h3.titre-ex{ margin:0; color:var(--bleu-fonce); font-size:1.15rem; }
+  p.consigne{ font-size:0.92rem; line-height:1.5; margin:0; color:var(--texte); }
+
+  .ligne-angle{
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px;
+    border:1px solid var(--gris-clair); background:var(--fond);
+  }
+  .pastille{ width:18px; height:18px; border-radius:4px; flex-shrink:0; border:1px solid rgba(0,0,0,0.15); }
+  .ligne-angle .nom-angle{ font-weight:700; min-width:85px; }
+  .ligne-angle select, .ligne-angle input[type="text"]{
+    flex:1; padding:6px 8px; border-radius:6px; border:1px solid var(--gris); font-size:0.9rem;
+    background:var(--panneau); color:var(--texte); outline:none; min-width:70px;
+  }
+  .statut-icone{ width:22px; text-align:center; font-weight:800; font-size:1rem; }
+  .ligne-angle.ok{ border-color:var(--vert); background:var(--vert-fond); }
+  .ligne-angle.err{ border-color:var(--rouge); background:var(--rouge-fond); }
+  .ligne-angle.active-row{ outline:2px solid var(--bleu); outline-offset:1px; }
+
+  #etat-ex1{ min-height:1.4em; border-radius:8px; transition: background .1s, color .1s; }
+  #etat-ex1.info{ font-style:italic; font-weight:400; color:var(--texte); }
+  #etat-ex1.ok{ background:var(--vert-fond); color:var(--vert); border:1px solid #b7e3c6; padding:9px 11px; font-weight:800; font-style:normal; }
+  #etat-ex1.err{
+    background:var(--rouge-fond); color:var(--rouge); border:2px solid var(--rouge);
+    padding:9px 11px; font-weight:800; font-style:normal; font-size:1rem;
+    animation: secousse-ex1 0.4s;
+  }
+  @keyframes secousse-ex1{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px); }
+    40%{ transform:translateX(8px); }
+    60%{ transform:translateX(-6px); }
+    80%{ transform:translateX(6px); }
+  }
+  @keyframes flash-point-erreur{
+    0%,100%{ fill:#1d3557; }
+    35%{ fill:var(--rouge); }
+  }
+  .point-flash-erreur{ animation: flash-point-erreur 0.55s ease; }
+  .btn-repondre{
+    padding:5px 10px; border-radius:6px; border:1px solid var(--bleu-fonce);
+    background:var(--panneau); color:var(--bleu-fonce); font-size:0.78rem; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .btn-repondre:hover{ background:var(--bleu-clair); }
+
+  .groupe-nom{ display:inline-flex; gap:3px; align-items:flex-end; }
+  .case-lettre{
+    width:26px; height:32px; text-align:center; text-transform:uppercase;
+    font-weight:700; font-size:0.95rem; border:1px solid var(--gris); border-radius:4px;
+    padding:0; background:var(--panneau); color:var(--texte); outline:none;
+  }
+  .case-lettre.case-petite{ width:24px; }
+  .case-sommet-wrap{ position:relative; display:inline-block; padding-top:15px; }
+  .case-sommet-wrap::before{
+    content:'\02C6'; position:absolute; top:0; left:0; right:0; text-align:center;
+    font-weight:900; color:var(--bleu-fonce); font-size:1rem; line-height:1;
+  }
+  .demi-droite{ display:inline-flex; align-items:center; gap:2px; font-weight:700; font-size:1rem; }
+
+  .btn-action{ padding:10px; background:var(--bleu-fonce); color:#fff; border:none; border-radius:8px; font-size:0.92rem; font-weight:700; cursor:pointer; }
+  .btn-action:hover{ background:var(--bleu); }
+  .btn-secondaire{ padding:9px; background:transparent; color:var(--bleu-fonce); border:1px solid var(--bleu-fonce); border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; }
+
+  .zone-retour-msg{ display:none; padding:12px; border-radius:8px; font-size:0.88rem; line-height:1.4; }
+  .zone-retour-msg.succes{ display:block; background:var(--vert-fond); color:var(--vert); border:1px solid #b7e3c6; }
+  .zone-retour-msg.erreur{ display:block; background:var(--rouge-fond); color:var(--rouge); border:1px solid #f0bcbc; }
+
+  details.indice{ font-size:0.85rem; color:var(--bleu); }
+  details.indice summary{ cursor:pointer; font-weight:600; }
+  details.indice .contenu-indice{ background:var(--fond); border:1px dashed var(--bleu-clair); border-radius:6px; padding:8px; margin-top:4px; color:var(--texte); }
+
+  .figures-multi{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; max-width:1300px; margin:0 auto 18px; }
+  .fig-box{ background:var(--panneau); border:1px solid var(--gris-clair); border-radius:10px; padding:10px; width:300px; }
+  .fig-box h4{ margin:0 0 8px; text-align:center; color:var(--bleu-fonce); font-size:0.95rem; }
+  .fig-box svg{ width:100%; height:auto; display:block; }
+
+  table.tableau-ex2{ width:100%; max-width:1300px; margin:0 auto; border-collapse:collapse; background:var(--panneau); border-radius:10px; overflow:hidden; }
+  table.tableau-ex2 th, table.tableau-ex2 td{ padding:9px 8px; border-bottom:1px solid var(--gris-clair); text-align:center; font-size:0.87rem; }
+  table.tableau-ex2 th{ background:var(--bleu-fonce); color:#fff; }
+  table.tableau-ex2 select, table.tableau-ex2 input[type="text"]{
+    width:100%; padding:6px; border-radius:6px; border:1px solid var(--gris); font-size:0.87rem;
+    background:var(--panneau); color:var(--texte);
+  }
+  tr.ok td{ background:var(--vert-fond); }
+  tr.err td{ background:var(--rouge-fond); }
+
+  .barre-actions{ max-width:1300px; margin:16px auto 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  #msg-ex2{ max-width:1300px; margin:12px auto 0; }
+</style>
+</head>
+<body>
+
+<div id="bandeau">
+  <div class="titre-app">📐 Angles : reconnaître, identifier, nommer</div>
+  <div id="nav-exercices">
+    <button class="btn-nav-ex actif" onclick="changerExercice(0)">Exercice 1 — Identifier les angles</button>
+    <button class="btn-nav-ex" onclick="changerExercice(1)">Exercice 2 — Nommer les angles</button>
+  </div>
+</div>
+
+<div id="conteneur-principal">
+
+  <!-- EXERCICE 1 -->
+  <div class="section-exercice active" id="ex-0">
+    <div class="layout">
+      <div class="panneau-consigne">
+        <h3 class="titre-ex">Exercice 1 — Identifie chaque angle sur la figure</h3>
+        <p class="consigne">Choisis un angle ci-dessous avec « Répondre », puis clique <b>directement sur la figure</b> : d'abord le sommet, puis les deux points qui appartiennent à ses côtés (dans n'importe quel ordre).</p>
+        <div id="liste-angles-ex1"></div>
+        <p id="etat-ex1" class="consigne" style="font-style:italic; min-height:1.3em;"></p>
+        <button class="btn-secondaire" onclick="reinitialiserExercice1()">Réinitialiser</button>
+        <div id="msg-ex1" class="zone-retour-msg"></div>
+      </div>
+      <div class="panneau-figure">
+        <svg id="svg-ex1" viewBox="0 0 600 500"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXERCICE 2 (anciennement Exercice 3) -->
+  <div class="section-exercice" id="ex-1">
+    <div class="layout">
+      <div class="panneau-consigne">
+        <h3 class="titre-ex">Exercice 2 — Écris le nom de chaque angle</h3>
+        <p class="consigne">La figure ci-contre montre 6 angles déjà coloriés. Pour chaque couleur, écris le nom de l'angle correspondant (3 lettres, sommet au milieu).</p>
+        <div id="liste-angles-ex3"></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-action" style="flex:1" onclick="verifierExercice3()">Vérifier</button>
+          <button class="btn-secondaire" onclick="reinitialiserExercice3()">Réinitialiser</button>
+        </div>
+        <div id="msg-ex3" class="zone-retour-msg"></div>
+      </div>
+      <div class="panneau-figure">
+        <svg id="svg-ex3" viewBox="0 0 500 420"></svg>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- Outils SVG génériques ---------- */
+function ns(tag){ return document.createElementNS('http://www.w3.org/2000/svg', tag); }
+
+function sectorPath(vx, vy, ax, ay, bx, by, r){
+  const a1 = Math.atan2(ay - vy, ax - vx);
+  const a2raw = Math.atan2(by - vy, bx - vx);
+  let diff = a2raw - a1;
+  while (diff <= -Math.PI) diff += 2*Math.PI;
+  while (diff >  Math.PI) diff -= 2*Math.PI;
+  const a2 = a1 + diff;
+  const x1 = vx + r*Math.cos(a1), y1 = vy + r*Math.sin(a1);
+  const x2 = vx + r*Math.cos(a2), y2 = vy + r*Math.sin(a2);
+  const sweep = diff > 0 ? 1 : 0;
+  return `M ${vx} ${vy} L ${x1} ${y1} A ${r} ${r} 0 0 ${sweep} ${x2} ${y2} Z`;
+}
+
+function notationAngle(lettres){
+  // ex: "CDA" -> "CD̂A" (accent circonflexe sur le sommet, la lettre du milieu)
+  return lettres[0] + lettres[1] + '\u0302' + lettres[2];
+}
+
+function drawFigure(svgId, points, edges, labelOffsets, clickHandler){
+  const svg = document.getElementById(svgId);
+  edges.forEach(([p,q]) => {
+    const [x1,y1] = points[p], [x2,y2] = points[q];
+    const l = ns('line');
+    l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+    l.setAttribute('stroke', '#374151'); l.setAttribute('stroke-width', '2.5');
+    svg.appendChild(l);
+  });
+  Object.keys(points).forEach(k => {
+    const [x,y] = points[k];
+    if (clickHandler){
+      const hit = ns('circle');
+      hit.setAttribute('cx',x); hit.setAttribute('cy',y); hit.setAttribute('r',16);
+      hit.setAttribute('fill', 'transparent');
+      hit.style.cursor = 'pointer';
+      hit.addEventListener('click', () => clickHandler(k));
+      svg.appendChild(hit);
+    }
+    const c = ns('circle');
+    c.setAttribute('cx',x); c.setAttribute('cy',y); c.setAttribute('r',5);
+    c.setAttribute('fill', '#1d3557');
+    c.setAttribute('id', 'pt-'+svgId+'-'+k);
+    if (clickHandler){ c.style.cursor = 'pointer'; c.addEventListener('click', () => clickHandler(k)); }
+    svg.appendChild(c);
+    const off = (labelOffsets && labelOffsets[k]) || [10,-10];
+    const t = ns('text');
+    t.setAttribute('x', x+off[0]); t.setAttribute('y', y+off[1]);
+    t.setAttribute('font-size','20'); t.setAttribute('font-weight','700'); t.setAttribute('fill','#1d3557');
+    t.textContent = k;
+    if (clickHandler){ t.style.cursor = 'pointer'; t.addEventListener('click', () => clickHandler(k)); }
+    svg.appendChild(t);
+  });
+}
+
+function drawSector(svgId, points, vertex, p1, p2, r, color){
+  const svg = document.getElementById(svgId);
+  const [vx,vy] = points[vertex], [ax,ay] = points[p1], [bx,by] = points[p2];
+  const path = ns('path');
+  path.setAttribute('d', sectorPath(vx,vy,ax,ay,bx,by,r));
+  path.setAttribute('fill', color); path.setAttribute('fill-opacity','0.42');
+  path.setAttribute('stroke', color); path.setAttribute('stroke-width','2');
+  svg.insertBefore(path, svg.firstChild);
+  return path;
+}
+
+/* ---- Groupe "nom en 3 lettres" avec accent déjà positionné sur le sommet ---- */
+function htmlGroupeNom(idPrefix){
+  return `<span class="groupe-nom">
+    <input class="case-lettre" maxlength="1" id="${idPrefix}-1">
+    <span class="case-sommet-wrap"><input class="case-lettre" maxlength="1" id="${idPrefix}-2"></span>
+    <input class="case-lettre" maxlength="1" id="${idPrefix}-3">
+  </span>`;
+}
+function lireGroupeNom(idPrefix){
+  const a = document.getElementById(`${idPrefix}-1`).value.trim().toUpperCase();
+  const b = document.getElementById(`${idPrefix}-2`).value.trim().toUpperCase();
+  const c = document.getElementById(`${idPrefix}-3`).value.trim().toUpperCase();
+  return a + b + c;
+}
+function viderGroupeNom(idPrefix){
+  ['1','2','3'].forEach(n => document.getElementById(`${idPrefix}-${n}`).value = '');
+}
+
+/* ============ EXERCICE 1 ============ */
+const EX1_POINTS = { W:[60,400], X:[300,430], Y:[520,250], Z:[340,60] };
+const EX1_EDGES = [['W','X'],['X','Y'],['Y','Z'],['Z','W'],['W','Y']];
+const EX1_LABELS = { W:[-24,10], X:[6,26], Y:[10,-6], Z:[-8,-16] };
+const EX1_ANGLES = [
+  { name:'XWY', color:'#2563eb', colorName:'bleu',   vertex:'W', p1:'X', p2:'Y', r:60 },
+  { name:'YWZ', color:'#dc2626', colorName:'rouge',  vertex:'W', p1:'Y', p2:'Z', r:60 },
+  { name:'WXY', color:'#16a34a', colorName:'vert',   vertex:'X', p1:'W', p2:'Y', r:45 },
+  { name:'WZY', color:'#111827', colorName:'noir',   vertex:'Z', p1:'W', p2:'Y', r:50 },
+];
+
+let ex1Current = null;
+let ex1Buffer = [];
+let ex1AwaitingVertex = true;
+let ex1Solved = EX1_ANGLES.map(() => false);
+
+function setEtatEx1(txt, type){
+  const el = document.getElementById('etat-ex1');
+  const icone = type === 'err' ? '⚠ ' : (type === 'ok' ? '✔ ' : '');
+  el.textContent = icone + txt;
+  el.classList.remove('info','ok','err');
+  void el.offsetWidth; // force le redémarrage de l'animation même si le même type se répète
+  el.classList.add(type === 'err' ? 'err' : (type === 'ok' ? 'ok' : 'info'));
+}
+
+function flashPointErreur(letter){
+  const el = document.getElementById('pt-svg-ex1-' + letter);
+  if (!el) return;
+  el.classList.remove('point-flash-erreur');
+  void el.getBBox && el.offsetWidth; // force reflow
+  el.classList.add('point-flash-erreur');
+}
+
+function choisirAngleEx1(i){
+  ex1Current = i;
+  ex1Buffer = [];
+  ex1AwaitingVertex = true;
+  document.querySelectorAll('#liste-angles-ex1 .ligne-angle').forEach((el,idx) => el.classList.toggle('active-row', idx===i));
+  const sec = document.getElementById('sector-ex1-'+i);
+  if (sec) sec.remove();
+  document.getElementById(`ligne-ex1-${i}`).classList.remove('ok','err');
+  document.getElementById(`stat-ex1-${i}`).textContent = '';
+  document.getElementById(`btn-ex1-${i}`).textContent = 'Répondre';
+  ex1Solved[i] = false;
+  document.getElementById('msg-ex1').className = 'zone-retour-msg';
+  document.getElementById('msg-ex1').textContent = '';
+  setEtatEx1(`Angle ${notationAngle(EX1_ANGLES[i].name)} sélectionné : clique d'abord sur son sommet.`);
+}
+
+function pointClickEx1(letter){
+  if (ex1Current === null){
+    setEtatEx1("Choisis d'abord un angle à gauche avec « Répondre ».", 'err');
+    return;
+  }
+  const target = EX1_ANGLES[ex1Current];
+  if (ex1AwaitingVertex){
+    if (letter === target.vertex){
+      ex1Buffer = [letter];
+      ex1AwaitingVertex = false;
+      setEtatEx1(`Sommet correct (${letter}). Clique maintenant les 2 points qui appartiennent aux côtés.`, 'ok');
+    } else {
+      flashPointErreur(letter);
+      setEtatEx1(`${letter} n'est pas le sommet de cet angle. Réessaie.`, 'err');
+    }
+    return;
+  }
+  if (letter === target.vertex || ex1Buffer.includes(letter)){
+    flashPointErreur(letter);
+    setEtatEx1('Tu as déjà choisi ce point.', 'err');
+    return;
+  }
+  if (letter === target.p1 || letter === target.p2){
+    ex1Buffer.push(letter);
+    if (ex1Buffer.length === 3){
+      const p = drawSector('svg-ex1', EX1_POINTS, target.vertex, target.p1, target.p2, target.r, target.color);
+      p.id = 'sector-ex1-' + ex1Current;
+      document.getElementById(`ligne-ex1-${ex1Current}`).classList.remove('active-row');
+      document.getElementById(`ligne-ex1-${ex1Current}`).classList.add('ok');
+      document.getElementById(`stat-ex1-${ex1Current}`).textContent = '✔';
+      document.getElementById(`stat-ex1-${ex1Current}`).style.color = 'var(--vert)';
+      document.getElementById(`btn-ex1-${ex1Current}`).textContent = 'Refaire';
+      ex1Solved[ex1Current] = true;
+      setEtatEx1('Bravo, cet angle est correctement colorié !', 'ok');
+      ex1Current = null;
+      if (ex1Solved.every(Boolean)){
+        document.getElementById('msg-ex1').className = 'zone-retour-msg succes';
+        document.getElementById('msg-ex1').textContent = 'Bravo ! Les 4 angles sont correctement placés et coloriés.';
+      }
+    } else {
+      setEtatEx1('Bien ! Encore un côté à trouver.', 'ok');
+    }
+  } else {
+    flashPointErreur(letter);
+    setEtatEx1(`${letter} ne fait pas partie de cet angle. Réessaie (le sommet reste sélectionné).`, 'err');
+  }
+}
+
+function initEx1(){
+  drawFigure('svg-ex1', EX1_POINTS, EX1_EDGES, EX1_LABELS, pointClickEx1);
+  const wrap = document.getElementById('liste-angles-ex1');
+  wrap.innerHTML = '';
+  EX1_ANGLES.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'ligne-angle';
+    div.id = 'ligne-ex1-' + i;
+    div.innerHTML = `
+      <span class="pastille" style="background:${a.color}"></span>
+      <span class="nom-angle">${notationAngle(a.name)}</span>
+      <button class="btn-repondre" id="btn-ex1-${i}" onclick="choisirAngleEx1(${i})">Répondre</button>
+      <span class="statut-icone" id="stat-ex1-${i}"></span>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+function reinitialiserExercice1(){
+  ex1Current = null; ex1Buffer = []; ex1AwaitingVertex = true;
+  ex1Solved = EX1_ANGLES.map(() => false);
+  EX1_ANGLES.forEach((a,i) => {
+    document.getElementById(`ligne-ex1-${i}`).classList.remove('ok','err','active-row');
+    document.getElementById(`stat-ex1-${i}`).textContent = '';
+    document.getElementById(`btn-ex1-${i}`).textContent = 'Répondre';
+    const sec = document.getElementById('sector-ex1-'+i);
+    if (sec) sec.remove();
+  });
+  document.getElementById('msg-ex1').className = 'zone-retour-msg';
+  document.getElementById('msg-ex1').textContent = '';
+  setEtatEx1('');
+}
+
+/* ============ EXERCICE 2 (nommer les angles) ============ */
+const EX3_POINTS = { F:[60,70], G:[430,40], H:[460,230], I:[260,390], J:[70,240] };
+const EX3_EDGES = [['F','G'],['G','H'],['H','I'],['I','J'],['J','F'],['F','H'],['G','J']];
+const EX3_LABELS = { F:[-20,-10], G:[10,-10], H:[12,8], I:[-8,26], J:[-26,8] };
+const EX3_ANGLES = [
+  { label:'JFH', color:'#0891b2', vertex:'F', p1:'J', p2:'H', r:50 },
+  { label:'HFG', color:'#8b5cf6', vertex:'F', p1:'H', p2:'G', r:75 },
+  { label:'FGJ', color:'#ec4899', vertex:'G', p1:'F', p2:'J', r:50 },
+  { label:'JGH', color:'#22c55e', vertex:'G', p1:'J', p2:'H', r:75 },
+  { label:'GHI', color:'#eab308', vertex:'H', p1:'G', p2:'I', r:60 },
+  { label:'HIJ', color:'#6b7280', vertex:'I', p1:'H', p2:'J', r:60 },
+];
+
+function initEx3(){
+  EX3_ANGLES.forEach(a => drawSector('svg-ex3', EX3_POINTS, a.vertex, a.p1, a.p2, a.r, a.color));
+  drawFigure('svg-ex3', EX3_POINTS, EX3_EDGES, EX3_LABELS);
+
+  const wrap = document.getElementById('liste-angles-ex3');
+  wrap.innerHTML = '';
+  EX3_ANGLES.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'ligne-angle';
+    div.id = 'ligne-ex3-' + i;
+    div.innerHTML = `
+      <span class="pastille" style="background:${a.color}"></span>
+      ${htmlGroupeNom('rep-ex3-'+i)}
+      <span class="statut-icone" id="stat-ex3-${i}"></span>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+function verifierExercice3(){
+  let tout = true;
+  EX3_ANGLES.forEach((a, i) => {
+    const rep = lireGroupeNom('rep-ex3-'+i);
+    const ligne = document.getElementById(`ligne-ex3-${i}`);
+    const stat = document.getElementById(`stat-ex3-${i}`);
+    ligne.classList.remove('ok','err');
+    const reverse = a.label.split('').reverse().join('');
+    if (rep === a.label || rep === reverse){
+      ligne.classList.add('ok'); stat.textContent = '✔'; stat.style.color = 'var(--vert)';
+    } else {
+      ligne.classList.add('err'); stat.textContent = '✘'; stat.style.color = 'var(--rouge)';
+      tout = false;
+    }
+  });
+  const msg = document.getElementById('msg-ex3');
+  if (tout){
+    msg.className = 'zone-retour-msg succes';
+    msg.textContent = 'Parfait ! Les 6 angles sont correctement nommés.';
+  } else {
+    msg.className = 'zone-retour-msg erreur';
+    msg.textContent = "Certains noms sont incorrects (en rouge). N'oublie pas : le sommet est la lettre du milieu.";
+  }
+}
+
+function reinitialiserExercice3(){
+  EX3_ANGLES.forEach((a,i) => {
+    viderGroupeNom('rep-ex3-'+i);
+    document.getElementById(`ligne-ex3-${i}`).classList.remove('ok','err');
+    document.getElementById(`stat-ex3-${i}`).textContent = '';
+  });
+  document.getElementById('msg-ex3').className = 'zone-retour-msg';
+  document.getElementById('msg-ex3').textContent = '';
+}
+
+/* ============ NAVIGATION ============ */
+function changerExercice(idx){
+  document.querySelectorAll('.btn-nav-ex').forEach((b,i) => b.classList.toggle('actif', i === idx));
+  document.querySelectorAll('.section-exercice').forEach((s,i) => s.classList.toggle('active', i === idx));
+}
+
+window.addEventListener('load', () => {
+  initEx1();
+  initEx3();
+});
+</script>
+</body>
+</html>

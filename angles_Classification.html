@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Classification des angles — Exercices supplémentaires</title>
+<style>
+:root{--bf:#1d3557;--b:#457b9d;--bc:#a8dadc;--fond:#f1f4f8;--pan:#fff;--tx:#1f2937;--v:#2a9d5c;--vf:#e6f6ec;--r:#d64545;--rf:#fbe9e9;--g:#6b7280;--gc:#e2e6ec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fond:#12161f;--pan:#1b2130;--tx:#e8ebf1;--gc:#2b3242;--vf:#16301f;--rf:#3a1c1c}}
+:root[data-theme="dark"]{--fond:#12161f;--pan:#1b2130;--tx:#e8ebf1;--gc:#2b3242;--vf:#16301f;--rf:#3a1c1c}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--fond);color:var(--tx);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--bf);color:#fff;padding:12px 20px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header h1{margin:0 0 8px;font-size:1.1rem}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600}
+nav button.on{background:var(--bc);color:var(--bf)}
+main{max-width:1000px;margin:0 auto;padding:18px}
+section{display:none}section.on{display:block}
+.card{background:var(--pan);border:1px solid var(--gc);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 6px;color:var(--b);font-size:1.15rem}
+p.c{margin:0 0 12px;font-size:.92rem;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.it{border:1px solid var(--gc);border-radius:8px;padding:8px;text-align:center;background:var(--fond)}
+.it svg{width:100%;height:auto;max-width:130px}
+.ok{border-color:var(--v)!important;background:var(--vf)!important}
+.err{border-color:var(--r)!important;background:var(--rf)!important}
+select,input[type=number]{padding:6px;border-radius:6px;border:1px solid var(--g);background:var(--pan);color:var(--tx);font-size:.9rem;max-width:100%}
+input[type=number]{width:80px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:8px;border-bottom:1px solid var(--gc);text-align:left;font-size:.9rem}
+th{background:var(--bf);color:#fff}
+.btn{padding:9px 16px;background:var(--bf);color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer;margin-right:8px;margin-top:8px}
+.btn.s{background:transparent;color:var(--bf);border:1px solid var(--bf)}
+@media (prefers-color-scheme:dark){.btn.s{color:var(--bc);border-color:var(--bc)}}
+.msg{display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:.9rem;line-height:1.4}
+.msg.succes{display:block;background:var(--vf);color:var(--v);border:1px solid var(--v)}
+.msg.erreur{display:block;background:var(--rf);color:var(--r);border:1px solid var(--r)}
+.chk{display:flex;gap:8px;flex-wrap:wrap}
+.chk label{border:1px solid var(--gc);border-radius:8px;padding:7px 12px;cursor:pointer;background:var(--fond)}
+.ex{display:none;font-size:.82rem;color:var(--g);margin-top:3px}
+.show .ex{display:block}
+.mem{background:var(--fond);border-left:4px solid var(--b);padding:8px 12px;font-size:.88rem;margin-bottom:12px;border-radius:4px}
+.wrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<header>
+<h1>📐 Classification des angles — exercices supplémentaires (S1)</h1>
+<nav id="nav"></nav>
+</header>
+<main>
+
+<div class="mem"><b>À retenir :</b> nul = 0° · aigu : entre 0° et 90° · droit = 90° · obtus : entre 90° et 180° · plat = 180° · rentrant : entre 180° et 360° · plein = 360°.</div>
+
+<section id="s0" class="on card">
+<h2>Exercice 1 — Quelle est la nature de chaque angle ?</h2>
+<p class="c">Observe chaque angle (la partie colorée) et choisis sa nature. Sans rapporteur : estime à l'œil !</p>
+<div class="grid" id="g1"></div>
+<button class="btn" onclick="chk1()">Vérifier</button><button class="btn s" onclick="init1()">Nouvelle série</button>
+<div class="msg" id="m1"></div>
+</section>
+
+<section id="s1" class="card">
+<h2>Exercice 2 — Amplitude et nature</h2>
+<p class="c"><b>A.</b> Complète : donne la nature de l'angle dont l'amplitude est indiquée.</p>
+<div class="wrap"><table id="t2"></table></div>
+<p class="c" style="margin-top:14px"><b>B.</b> Coche toutes les amplitudes qui conviennent.</p>
+<div id="b2"></div>
+<button class="btn" onclick="chk2()">Vérifier</button><button class="btn s" onclick="init2()">Recommencer</button>
+<div class="msg" id="m2"></div>
+</section>
+
+<section id="s2" class="card">
+<h2>Exercice 3 — L'horloge</h2>
+<p class="c">Pour chaque horloge, donne l'amplitude de l'angle formé par les deux aiguilles (la grande est sur le 12) puis sa nature. Attention à la consigne sous chaque horloge.</p>
+<div class="grid" id="g3"></div>
+<button class="btn" onclick="chk3()">Vérifier</button><button class="btn s" onclick="init3()">Recommencer</button>
+<div class="msg" id="m3"></div>
+</section>
+
+<section id="s3" class="card">
+<h2>Exercice 4 — Vrai ou faux ?</h2>
+<p class="c">Choisis la bonne réponse. Une explication apparaît après vérification.</p>
+<div id="l4"></div>
+<button class="btn" onclick="chk4()">Vérifier</button><button class="btn s" onclick="init4()">Recommencer</button>
+<div class="msg" id="m4"></div>
+</section>
+
+<section id="s4" class="card">
+<h2>Exercice 5 — La pizza de Guillaume</h2>
+<p class="c"><b>A.</b> Guillaume coupe sa pizza ronde en 4 parts : les 4 angles au centre sont donnés. Coche les découpages <b>possibles</b>.</p>
+<div id="p5" class="chk"></div>
+<p class="c" style="margin-top:14px"><b>B.</b> Il coupe une autre pizza en 4 parts. Trois angles mesurent 90°, 120° et 50°. Quelle est l'amplitude du 4<sup>e</sup> angle ?
+<input type="number" id="a5"> ° &nbsp; Nature : <select id="n5"></select></p>
+<p class="c"><b>C.</b> Pourquoi la proposition « un angle droit, un aigu, un obtus et un plat » est-elle impossible ? Choisis la bonne justification :</p>
+<select id="j5"><option value="">—</option>
+<option value="1">Un angle plat n'existe pas sur une pizza.</option>
+<option value="2">Droit + plat = 270°, et un obtus dépasse déjà 90° : la somme dépasse 360°.</option>
+<option value="3">Il faut toujours 4 angles égaux.</option>
+<option value="4">Un angle aigu et un angle obtus ne peuvent pas être voisins.</option></select>
+<br><button class="btn" onclick="chk5()">Vérifier</button><button class="btn s" onclick="init5()">Recommencer</button>
+<div class="msg" id="m5"></div>
+</section>
+
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const NAT=['nul','aigu','droit','obtus','plat','rentrant','plein'];
+const nat=a=>a===0?'nul':a<90?'aigu':a===90?'droit':a<180?'obtus':a===180?'plat':a<360?'rentrant':'plein';
+const sel=id=>`<select id="${id}"><option value="">—</option>${NAT.map(n=>`<option>${n}</option>`).join('')}</select>`;
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const mark=(el,ok)=>{el.classList.remove('ok','err');el.classList.add(ok?'ok':'err')};
+function msg(id,ok,tot,txt){const e=$(id);e.className='msg '+(ok===tot?'succes':'erreur');e.textContent=ok===tot?`Bravo ! Tout est juste (${ok}/${tot}).`:`${ok}/${tot} correct. ${txt||''}`}
+
+/* navigation */
+['Ex. 1 · Nature','Ex. 2 · Amplitude','Ex. 3 · Horloge','Ex. 4 · Vrai/Faux','Ex. 5 · Pizza'].forEach((t,i)=>{
+ const b=document.createElement('button');b.textContent=t;if(!i)b.className='on';
+ b.onclick=()=>{document.querySelectorAll('nav button').forEach((x,j)=>x.classList.toggle('on',j===i));document.querySelectorAll('section').forEach((s,j)=>s.classList.toggle('on',j===i))};
+ $('nav').appendChild(b)});
+
+/* Ex 1 */
+let A1=[];
+function svgAngle(a,t){
+ const c=60,L=50,r=22,P=(g,l)=>[c+l*Math.cos(g*Math.PI/180),c-l*Math.sin(g*Math.PI/180)];
+ const f=p=>p.map(v=>v.toFixed(1)).join(' ');
+ const s1=P(t,L),s2=P(t+a,L);
+ let d='';
+ if(a===90){const p1=P(t,13),p3=P(t+90,13),m=[p1[0]+p3[0]-c,p1[1]+p3[1]-c];d=`<path d="M${f(p1)} L${f(m)} L${f(p3)}" fill="#8ecae6" stroke="#1d3557" stroke-width="1.5"/>`}
+ else if(a===360)d=`<circle cx="${c}" cy="${c}" r="${r}" fill="#8ecae6" opacity=".7"/>`;
+ else if(a>0)d=`<path d="M${c} ${c} L${f(P(t,r))} A${r} ${r} 0 ${a>180?1:0} 0 ${f(P(t+a,r))} Z" fill="#8ecae6" opacity=".8" stroke="#1d3557"/>`;
+ return `<svg viewBox="0 0 120 120">${d}<line x1="${c}" y1="${c}" x2="${f(s1).split(' ').join('" y2="')}" stroke="#1d3557" stroke-width="2.5"/><line x1="${c}" y1="${c}" x2="${f(s2).split(' ').join('" y2="')}" stroke="#d64545" stroke-width="2.5" stroke-dasharray="${a===0||a===360?'4 4':'0'}"/><circle cx="${c}" cy="${c}" r="3" fill="#1d3557"/></svg>`}
+function init1(){
+ const v=[0,rnd(10,40),rnd(41,85),90,rnd(95,135),rnd(136,175),180,rnd(190,260),rnd(261,350),360];
+ A1=v.sort(()=>Math.random()-.5).slice(0,8);
+ if(!A1.includes(90))A1[0]=90;
+ $('g1').innerHTML=A1.map((a,i)=>`<div class="it" id="i1-${i}">${svgAngle(a,rnd(0,359))}<div>${sel('s1-'+i)}</div><div class="ex" id="e1-${i}">${a}°</div></div>`).join('');
+ $('g1').classList.remove('show');$('m1').className='msg'}
+function chk1(){let ok=0;A1.forEach((a,i)=>{const g=nat(a)===$('s1-'+i).value;if(g)ok++;mark($('i1-'+i),g)});
+ $('g1').classList.add('show');msg('m1',ok,A1.length,'Les amplitudes réelles sont affichées sous chaque angle : compare avec la classification.')}
+
+/* Ex 2 */
+const T2=[90,37,180,124,360,270,0,89,91,179];
+const B2=[{t:'Angles aigus',v:[12,90,89,100,45,0],f:a=>a>0&&a<90},{t:'Angles rentrants',v:[180,181,270,360,359,90],f:a=>a>180&&a<360}];
+function init2(){
+ $('t2').innerHTML='<tr><th>Amplitude</th><th>Nature</th></tr>'+T2.map((a,i)=>`<tr id="r2-${i}"><td>${a}°</td><td>${sel('s2-'+i)}</td></tr>`).join('');
+ $('b2').innerHTML=B2.map((g,k)=>`<div style="margin-bottom:10px" id="bg2-${k}"><b>${g.t} :</b><div class="chk">${g.v.map((a,i)=>`<label><input type="checkbox" id="c2-${k}-${i}"> ${a}°</label>`).join('')}</div></div>`).join('');
+ $('m2').className='msg'}
+function chk2(){let ok=0,tot=T2.length+B2.length;
+ T2.forEach((a,i)=>{const g=nat(a)===$('s2-'+i).value;if(g)ok++;mark($('r2-'+i).children[1],g)});
+ B2.forEach((g,k)=>{const good=g.v.every((a,i)=>$(`c2-${k}-${i}`).checked===g.f(a));if(good)ok++;mark($('bg2-'+k),good)});
+ msg('m2',ok,tot,'Rappelle-toi : 90° est un angle droit (ni aigu, ni obtus) et 180° est un angle plat (ni obtus, ni rentrant).')}
+
+/* Ex 3 */
+const C3=[{h:2},{h:4},{h:6},{h:12},{h:3},{h:9,rent:1}];
+function clock(h){
+ const p=(g,l)=>[60+l*Math.sin(g*Math.PI/180),60-l*Math.cos(g*Math.PI/180)].map(v=>v.toFixed(1));
+ let t='';for(let i=0;i<12;i++){const a=p(i*30,42),b=p(i*30,47);t+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="currentColor"/>`}
+ const hh=p(h*30,28),mm=p(0,40);
+ return `<svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" stroke-width="2"/>${t}<line x1="60" y1="60" x2="${hh[0]}" y2="${hh[1]}" stroke="#d64545" stroke-width="4" stroke-linecap="round"/><line x1="60" y1="60" x2="${mm[0]}" y2="${mm[1]}" stroke="#1d3557" stroke-width="2.5" stroke-linecap="round"/><circle cx="60" cy="60" r="3"/></svg>`}
+function init3(){
+ $('g3').innerHTML=C3.map((c,i)=>`<div class="it" id="i3-${i}">${clock(c.h)}<div><b>${c.h} h 00</b><br><small>${c.rent?'angle rentrant':'angle ≤ 180°'}</small></div><div><input type="number" id="a3-${i}"> °</div><div>${sel('s3-'+i)}</div></div>`).join('');
+ $('m3').className='msg'}
+function chk3(){let ok=0;C3.forEach((c,i)=>{let a=(c.h%12)*30;if(a>180)a=360-a;if(c.rent)a=360-a;
+ const g=+$('a3-'+i).value===a&&$('s3-'+i).value===nat(a)&&$('a3-'+i).value!=='';if(g)ok++;mark($('i3-'+i),g)});
+ msg('m3',ok,C3.length,'Entre deux heures pleines, l\'aiguille des heures avance de 30°. Vérifie aussi la nature.')}
+
+/* Ex 4 */
+const Q4=[
+['Un angle de 90° est un angle aigu.',0,'Un angle droit mesure exactement 90° ; un angle aigu mesure moins de 90°.'],
+['Un angle plat a ses côtés dans le prolongement l\'un de l\'autre.',1,'C\'est sa caractéristique : il mesure 180°.'],
+['Un angle obtus est plus grand qu\'un angle droit.',1,'Un angle obtus mesure entre 90° et 180°.'],
+['Un angle rentrant peut mesurer 180°.',0,'Un angle rentrant mesure strictement entre 180° et 360°.'],
+['Les côtés d\'un angle nul et ceux d\'un angle plein sont confondus.',1,'Dans les deux cas, les deux demi-droites se superposent (0° ou 360°).'],
+['Les côtés d\'un angle droit sont perpendiculaires.',1,'C\'est même la définition de la perpendicularité.'],
+['Un angle de 270° est un angle obtus.',0,'Il dépasse 180° : c\'est un angle rentrant.'],
+['Un angle de 179° est un angle aigu.',0,'Il est compris entre 90° et 180° : c\'est un angle obtus.']];
+function init4(){
+ $('l4').innerHTML=Q4.map((q,i)=>`<div class="it" style="text-align:left;margin-bottom:8px" id="q4-${i}">${i+1}. ${q[0]}<br><label><input type="radio" name="q${i}" value="1"> Vrai</label> &nbsp; <label><input type="radio" name="q${i}" value="0"> Faux</label><div class="ex">${q[2]}</div></div>`).join('');
+ $('l4').classList.remove('show');$('m4').className='msg'}
+function chk4(){let ok=0;Q4.forEach((q,i)=>{const r=document.querySelector(`input[name=q${i}]:checked`);const g=r&&+r.value===q[1];if(g)ok++;mark($('q4-'+i),g)});
+ $('l4').classList.add('show');msg('m4',ok,Q4.length,'Lis les explications sous chaque affirmation.')}
+
+/* Ex 5 */
+const P5=[[90,90,90,90],[180,90,60,30],[120,120,90,45],[100,100,80,80],[180,100,90,80]];
+function init5(){
+ $('p5').innerHTML=P5.map((p,i)=>`<label id="pl-${i}"><input type="checkbox" id="pc-${i}"> ${p.join('° · ')}°</label>`).join('');
+ $('n5').innerHTML='<option value="">—</option>'+NAT.map(n=>`<option>${n}</option>`).join('');
+ $('a5').value='';$('j5').value='';$('m5').className='msg';
+ ['pl-0','pl-1','pl-2','pl-3','pl-4','a5','n5','j5'].forEach(x=>$(x).classList.remove('ok','err'))}
+function chk5(){let ok=0;
+ P5.forEach((p,i)=>{const g=$('pc-'+i).checked===(p.reduce((a,b)=>a+b)===360);if(g)ok++;mark($('pl-'+i),g)});
+ const g1=+$('a5').value===100&&$('a5').value!=='',g2=$('n5').value==='obtus',g3=$('j5').value==='2';
+ mark($('a5'),g1);mark($('n5'),g2);mark($('j5'),g3);
+ const sc=ok===P5.length;
+ const tot=3+1;const n=(sc?1:0)+(g1&&g2?1:0)+(g3?1:0)+0;
+ msg('m5',n,3,'Idée clé : les angles au centre d\'un disque forment un angle plein : leur somme vaut 360°. (A : vérifie chaque somme ; B : 360 − (90+120+50) ; C : 90 + 180 = 270, et il reste moins de 90° pour deux angles alors que l\'obtus dépasse déjà 90°.)')}
+
+init1();init2();init3();init4();init5();
+</script>
+</body>
+</html>
