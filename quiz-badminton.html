@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz Badminton</title>
+<style>
+:root{
+  --court:#0f8a5f; --court-dark:#0a5f42; --shuttle:#ffd23f; --coral:#ff5d73; --sky:#2e86ff;
+  --ink:#1b2a3a; --paper:#ffffff; --bg:#e9f7f0;
+  --ok:#1faa59; --ok-bg:#dff7e8; --ko:#e5384f; --ko-bg:#fde4e8;
+}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{
+  font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  color:var(--ink);
+  background:
+    linear-gradient(90deg,transparent 49.7%,rgba(255,255,255,.7) 49.7% 50.3%,transparent 50.3%),
+    linear-gradient(var(--court),var(--court-dark));
+  display:flex;justify-content:center;align-items:flex-start;
+  padding:16px;
+}
+.app{width:100%;max-width:680px;background:var(--paper);border-radius:24px;box-shadow:0 12px 0 rgba(0,0,0,.18);overflow:hidden;margin:auto 0}
+header{background:var(--ink);color:#fff;padding:16px 22px;display:flex;align-items:center;gap:12px}
+header .logo{font-size:1.8rem}
+header h1{font-size:1.25rem;letter-spacing:.3px}
+main{padding:22px}
+.hidden{display:none!important}
+
+/* Accueil / résultat */
+.center{text-align:center;padding:10px 0}
+.big-emoji{font-size:4rem;display:block;margin-bottom:8px}
+.center h2{font-size:1.7rem;margin-bottom:10px}
+.center p{font-size:1.05rem;line-height:1.5;margin-bottom:20px}
+.score{font-size:3.2rem;font-weight:900;color:var(--court);margin:6px 0}
+
+.btn{
+  font:inherit;font-weight:800;font-size:1.05rem;border:0;cursor:pointer;
+  padding:14px 26px;border-radius:999px;background:var(--coral);color:#fff;
+  box-shadow:0 5px 0 #c63c52;transition:transform .08s,box-shadow .08s;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #c63c52}
+.btn:focus-visible,.opt:focus-visible{outline:4px solid var(--sky);outline-offset:2px}
+
+/* Progression */
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:800}
+.pts{background:var(--shuttle);padding:4px 12px;border-radius:999px;font-size:.95rem}
+.bar{height:14px;background:#dfe9e4;border-radius:999px;overflow:hidden;margin-bottom:22px}
+.bar > div{height:100%;width:0;background:linear-gradient(90deg,var(--sky),var(--court));border-radius:999px;transition:width .4s}
+
+/* Question */
+.q{font-size:1.3rem;line-height:1.35;font-weight:800;margin-bottom:18px}
+.opts{display:grid;gap:10px}
+.opt{
+  font:inherit;font-size:1.05rem;text-align:left;cursor:pointer;
+  display:flex;align-items:center;gap:12px;
+  padding:13px 14px;border-radius:16px;background:#f3f6f9;color:var(--ink);
+  border:3px solid #d3dde6;transition:transform .1s,border-color .1s;
+}
+.opt:hover:not(:disabled){border-color:var(--sky);transform:translateX(3px)}
+.opt .letter{flex:none;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:900}
+.opt:disabled{cursor:default}
+.opt.correct{background:var(--ok-bg);border-color:var(--ok)}
+.opt.correct .letter{background:var(--ok)}
+.opt.wrong{background:var(--ko-bg);border-color:var(--ko)}
+.opt.wrong .letter{background:var(--ko)}
+.opt.dim{opacity:.55}
+
+.expl{margin-top:16px;padding:14px 16px;border-radius:16px;font-size:1rem;line-height:1.5}
+.expl strong{display:block;font-size:1.1rem;margin-bottom:4px}
+.expl.ok{background:var(--ok-bg);border-left:8px solid var(--ok)}
+.expl.ko{background:var(--ko-bg);border-left:8px solid var(--ko)}
+.next{margin-top:18px;text-align:right}
+
+@media (max-width:480px){
+  body{padding:8px}
+  main{padding:16px}
+  .q{font-size:1.15rem}
+  .opt{font-size:1rem}
+  .next .btn{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><span class="logo">🏸</span><h1>Quiz Badminton : les règles</h1></header>
+  <main>
+
+    <section id="start" class="center">
+      <span class="big-emoji">🏸</span>
+      <h2>Prêt à jouer ?</h2>
+      <p>20 questions pour tester tes connaissances des règles du badminton. Après chaque réponse, tu as la correction tout de suite !</p>
+      <button class="btn" id="startBtn">Commencer le quiz</button>
+    </section>
+
+    <section id="game" class="hidden">
+      <div class="top"><span id="counter"></span><span class="pts" id="pts"></span></div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="20" id="barWrap"><div id="bar"></div></div>
+      <h2 class="q" id="question"></h2>
+      <div class="opts" id="options"></div>
+      <div class="expl hidden" id="expl" aria-live="polite"></div>
+      <div class="next hidden" id="nextWrap"><button class="btn" id="nextBtn">Question suivante</button></div>
+    </section>
+
+    <section id="end" class="center hidden">
+      <span class="big-emoji" id="endEmoji"></span>
+      <h2 id="endTitle"></h2>
+      <div class="score" id="finalScore"></div>
+      <p id="endMsg"></p>
+      <button class="btn" id="restartBtn">Recommencer le quiz</button>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const QUESTIONS = [
+  {id:1,question:"Combien de points faut-il marquer pour remporter un set classique en badminton ?",options:["11 points","15 points","21 points","30 points"],answer:2,explanation:"Un set est remporté par l'équipe qui atteint en premier 21 points."},
+  {id:2,question:"Combien de sets faut-il gagner pour remporter un match officiel ?",options:["1 set","2 sets (au meilleur des 3 sets)","3 sets","5 sets"],answer:1,explanation:"Un match officiel se dispute au meilleur des trois sets ; il faut en gagner 2."},
+  {id:3,question:"Quelle est la durée maximale de la pause accordée lorsqu'une équipe atteint 11 points dans un set ?",options:["30 secondes","60 secondes (1 minute)","120 secondes (2 minutes)","5 minutes"],answer:1,explanation:"Une pause maximale de 60 secondes est accordée dès qu'une équipe atteint 11 points."},
+  {id:4,question:"De combien de temps de repos disposent les joueurs entre le premier et le deuxième set ?",options:["30 secondes","60 secondes","120 secondes (2 minutes)","5 minutes"],answer:2,explanation:"Une pause de 120 secondes (2 minutes) est autorisée entre chaque set."},
+  {id:5,question:"Avant le début d'un match, que permet de choisir le gain du tirage au sort ?",options:["La couleur du volant","De servir/recevoir en premier OU le demi-terrain de départ","Le nombre de points du set","Le nom de l'arbitre"],answer:1,explanation:"Le gagnant choisit soit de servir/recevoir, soit son demi-terrain de départ."},
+  {id:6,question:"En simple, depuis quelle zone dois-tu servir si ton score est PAIR (ex : 0, 2 ou 4 points) ?",options:["La zone de service gauche","La zone de service droite","N'importe où derrière la ligne de fond","Au centre du terrain"],answer:1,explanation:"On sert depuis la zone droite quand son score est nul ou pair."},
+  {id:7,question:"En simple, depuis quelle zone dois-tu servir si ton score est IMPAIR (ex : 1, 3 ou 5 points) ?",options:["La zone de service droite","La zone de service gauche","Le milieu du filet","La zone arrière du terrain"],answer:1,explanation:"On sert depuis la zone gauche quand son score est impair."},
+  {id:8,question:"Au moment d'exécuter le service, à quelle hauteur maximale doit se trouver le volant au moment de la frappe ?",options:["Au-dessus des épaules","En dessous de la taille du serveur","Au-dessus de la tête","À n'importe quelle hauteur"],answer:1,explanation:"Le volant doit être frappé sous la taille du serveur."},
+  {id:9,question:"Quelle doit être la position des pieds du serveur et du receveur pendant l'exécution du service ?",options:["Un pied doit être levé en l'air","Les deux pieds doivent rester immobiles en contact avec le sol, sans toucher les lignes","Les joueurs peuvent courir","Les pieds doivent toucher la ligne centrale"],answer:1,explanation:"Les pieds doivent rester immobiles au sol sans toucher les lignes de service."},
+  {id:10,question:"Que se passe-t-il si le serveur frappe le volant alors que le receveur n'était pas prêt et n'a pas tenté de jouer ?",options:["Le serveur marque un point","C'est une faute du receveur","L'arbitre annonce un « Let » et le service est rejoué","Le receveur prend le service"],answer:2,explanation:"Si le receveur n'est pas prêt, l'arbitre annonce un « Let » et le coup est rejoué."},
+  {id:11,question:"Que se passe-t-il si le volant touche exactement une ligne délimitant le terrain ?",options:["Le volant est dehors (out)","Le volant est bon (in)","L'échange est rejoué","Le joueur perd un point de pénalité"],answer:1,explanation:"Les lignes font partie du terrain, le volant tombant sur la ligne est bon."},
+  {id:12,question:"Un joueur touche le filet avec sa raquette pendant un échange. Quelle est la décision ?",options:["L'échange continue","C'est une faute, l'adversaire gagne le point","C'est un « Let »","Le joueur reçoit un simple avertissement oral"],answer:1,explanation:"Toucher le filet avec la raquette ou le corps est une faute."},
+  {id:13,question:"Si le volant touche le t-shirt ou le bras d'un joueur avant de sortir du terrain, que se passe-t-il ?",options:["Le point est pour ce joueur car le volant est sorti","C'est une faute contre ce joueur, l'adversaire gagne le point","L'échange est rejoué","Le jeu continue"],answer:1,explanation:"Si le volant touche le corps ou les vêtements d'un joueur, c'est une faute."},
+  {id:14,question:"Un joueur a-t-il le droit de frapper le volant deux fois d'affilée avec sa raquette ?",options:["Oui, jusqu'à 3 fois","Non, c'est une faute","Oui, si le premier coup était manqué","Oui, uniquement au service"],answer:1,explanation:"Frapper le volant deux fois de suite est interdit."},
+  {id:15,question:"A-t-on le droit de retenir ou de porter le volant sur sa raquette avant de le lancer ?",options:["Oui, si le geste est fluide","Non, c'est une faute (« volant porté »)","Oui, uniquement en double","Oui, lors d'un amorti"],answer:1,explanation:"Porter ou lancer le volant avec la raquette constitue une faute."},
+  {id:16,question:"Combien de plumes naturelles composent un volant de badminton réglementaire ?",options:["12 plumes","14 plumes","16 plumes","20 plumes"],answer:2,explanation:"Un volant en plumes officiel est composé de 16 plumes."},
+  {id:17,question:"Quelle est la hauteur officielle des poteaux qui tiennent le filet de badminton ?",options:["1,40 mètre","1,50 mètre","1,55 mètre","1,80 mètre"],answer:2,explanation:"Les poteaux mesurent 1,55 mètre de hauteur."},
+  {id:18,question:"À quelle hauteur se trouve le filet au centre du terrain ?",options:["1,45 mètre","1,524 mètre","1,55 mètre","1,60 mètre"],answer:1,explanation:"Le bord supérieur du filet est à 1,524 mètre au centre du terrain."},
+  {id:19,question:"Que signifie l'annonce d'un « Let » par l'arbitre pendant un échange ?",options:["La fin du match","Un avertissement pour mauvaise conduite","L'arrêt du jeu et la répétition de l'échange sans point marqué","La victoire automatique du receveur"],answer:2,explanation:"Le « Let » annule l'échange en cours et permet de rejouer le point."},
+  {id:20,question:"Quand un entraîneur ou coach a-t-il le droit de donner des conseils à son joueur ?",options:["Pendant l'échange en criant fort","Uniquement lorsque le volant n'est pas en jeu","N'importe quand","Jamais au cours du match"],answer:1,explanation:"Les conseils sont autorisés uniquement quand le volant n'est pas en jeu."}
+];
+
+const $ = id => document.getElementById(id);
+const LETTERS = ["A","B","C","D"];
+let current = 0, score = 0, answered = false;
+
+function show(section){
+  ["start","game","end"].forEach(s => $(s).classList.toggle("hidden", s !== section));
+}
+
+function startQuiz(){
+  current = 0; score = 0;
+  show("game");
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered = false;
+  const q = QUESTIONS[current], total = QUESTIONS.length;
+  $("counter").textContent = "Question " + (current + 1) + " sur " + total;
+  $("pts").textContent = "⭐ " + score + " pt" + (score > 1 ? "s" : "");
+  $("bar").style.width = (current / total * 100) + "%";
+  $("barWrap").setAttribute("aria-valuenow", current);
+  $("question").textContent = q.question;
+  $("expl").classList.add("hidden");
+  $("nextWrap").classList.add("hidden");
+
+  const box = $("options");
+  box.innerHTML = "";
+  q.options.forEach((text, i) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.type = "button";
+    const l = document.createElement("span");
+    l.className = "letter"; l.textContent = LETTERS[i];
+    const t = document.createElement("span");
+    t.textContent = text;
+    b.append(l, t);
+    b.addEventListener("click", () => choose(i));
+    box.appendChild(b);
+  });
+}
+
+function choose(i){
+  if (answered) return;
+  answered = true;
+  const q = QUESTIONS[current];
+  const btns = document.querySelectorAll(".opt");
+  const good = i === q.answer;
+  if (good) score++;
+
+  btns.forEach((b, idx) => {
+    b.disabled = true;
+    if (idx === q.answer) b.classList.add("correct");
+    else if (idx === i) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+
+  const ex = $("expl");
+  ex.className = "expl " + (good ? "ok" : "ko");
+  ex.innerHTML = "";
+  const h = document.createElement("strong");
+  h.textContent = good ? "✅ Bravo, bonne réponse !" : "❌ Raté ! La bonne réponse était : " + q.options[q.answer];
+  ex.append(h, document.createTextNode(q.explanation));
+
+  $("pts").textContent = "⭐ " + score + " pt" + (score > 1 ? "s" : "");
+  $("bar").style.width = ((current + 1) / QUESTIONS.length * 100) + "%";
+  $("nextBtn").textContent = current === QUESTIONS.length - 1 ? "Voir mon score" : "Question suivante";
+  $("nextWrap").classList.remove("hidden");
+  $("nextBtn").focus({preventScroll:true});
+  ex.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function next(){
+  current++;
+  if (current < QUESTIONS.length) renderQuestion();
+  else finish();
+}
+
+function finish(){
+  const total = QUESTIONS.length;
+  let emoji, title, msg;
+  if (score === total){ emoji="🏆"; title="Parfait, champion·ne !"; msg="Aucune erreur ! Tu connais les règles sur le bout des doigts. Tu peux même arbitrer le prochain match !"; }
+  else if (score >= 16){ emoji="🥇"; title="Excellent !"; msg="Très belle performance ! Il ne te manque presque rien pour être un·e vrai·e expert·e du badminton."; }
+  else if (score >= 12){ emoji="🥈"; title="Bien joué !"; msg="Tu as de bonnes bases. Relis les explications des questions ratées et tu seras bientôt au top."; }
+  else if (score >= 8){ emoji="🥉"; title="Pas mal, continue !"; msg="Tu es sur la bonne voie. Refais le quiz après avoir révisé les règles, tu vas progresser vite !"; }
+  else { emoji="💪"; title="Allez, courage !"; msg="Ce n'est que le début. Les règles s'apprennent en jouant : retente ta chance, tu vas y arriver !"; }
+  $("endEmoji").textContent = emoji;
+  $("endTitle").textContent = title;
+  $("finalScore").textContent = score + " / " + total;
+  $("endMsg").textContent = msg;
+  show("end");
+}
+
+$("startBtn").addEventListener("click", startQuiz);
+$("nextBtn").addEventListener("click", next);
+$("restartBtn").addEventListener("click", startQuiz);
+</script>
+</body>
+</html>
